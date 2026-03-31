@@ -289,19 +289,19 @@ ns-fsm-baseline/
 
 - [X]  MC-TextWorld 安装验证
 - [X]  实现 `env_wrapper.py`
-  - [ ]  封装 reset/step/get_inventory
-  - [ ]  处理 action 成功/失败的返回
-  - [ ]  记录 trajectory
-- [ ]  实现 `llm_interface.py`
-  - [ ]  Ollama 连接（openai 库兼容接口）
-  - [ ]  超时/重试处理
-  - [ ]  Response 解析
-- [ ]  实现 `action_parser.py`
-  - [ ]  精确匹配 + fuzzy matching
-  - [ ]  从 action_lib.json 加载合法 action 列表
-- [ ]  实现 `ground_truth.py`
-  - [ ]  从 action_lib 反向构建 GT dependency graph
-  - [ ]  每个 goal 的最优 action sequence
+  - [X]  封装 reset/step/get_inventory
+  - [X]  处理 action 成功/失败的返回
+  - [X]  记录 trajectory
+- [X]  实现 `llm_interface.py`
+  - [X]  Ollama 连接（openai 库兼容接口）
+  - [X]  超时/重试处理
+  - [X]  Response 解析
+- [X]  实现 `action_parser.py`
+  - [X]  精确匹配 + fuzzy matching
+  - [X]  从 action_lib.json 加载合法 action 列表
+- [X]  实现 `ground_truth.py`
+  - [X]  从 action_lib 反向构建 GT dependency graph
+  - [X]  每个 goal 的最优 action sequence
 
 ### Phase 2: Agent 实现（Day 2）
 

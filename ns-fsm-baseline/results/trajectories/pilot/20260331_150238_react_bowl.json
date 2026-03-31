@@ -1,0 +1,82 @@
+{
+  "goal": "bowl",
+  "success": false,
+  "total_steps": 5,
+  "termination": "dead_loop",
+  "trajectory": [
+    {
+      "step": 1,
+      "action": "mine_clay",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "action mine_clay NOT exist!'",
+      "done": false
+    },
+    {
+      "step": 2,
+      "action": "mine_clay",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "action mine_clay NOT exist!'",
+      "done": false
+    },
+    {
+      "step": 3,
+      "action": "mine_clay",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "action mine_clay NOT exist!'",
+      "done": false
+    },
+    {
+      "step": 4,
+      "action": "mine_clay",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "action mine_clay NOT exist!'",
+      "done": false
+    },
+    {
+      "step": 5,
+      "action": "mine_clay",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "action mine_clay NOT exist!'",
+      "done": false
+    }
+  ],
+  "dead_loop_reason": "same action repeated 5× and all failed: 'mine_clay'",
+  "parse_log": [
+    {
+      "step": 1,
+      "type": "failed",
+      "reason": "无法解析动作：'mine_clay'（不在 action_lib 中，模糊匹配也失败）"
+    },
+    {
+      "step": 2,
+      "type": "failed",
+      "reason": "无法解析动作：'mine_clay'（不在 action_lib 中，模糊匹配也失败）"
+    },
+    {
+      "step": 3,
+      "type": "failed",
+      "reason": "无法解析动作：'mine_clay'（不在 action_lib 中，模糊匹配也失败）"
+    },
+    {
+      "step": 4,
+      "type": "failed",
+      "reason": "无法解析动作：'mine_clay'（不在 action_lib 中，模糊匹配也失败）"
+    },
+    {
+      "step": 5,
+      "type": "failed",
+      "reason": "无法解析动作：'mine_clay'（不在 action_lib 中，模糊匹配也失败）"
+    }
+  ],
+  "elapsed_sec": 12.41
+}

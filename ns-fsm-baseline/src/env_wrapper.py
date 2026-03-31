@@ -16,6 +16,7 @@ class MCTextWorldWrapper:
         self.goal = None
         self.step_count = 0
         self.trajectory = []
+        self._action_lib = None          # lazily cached reference
 
     def reset(self, goal: str) -> dict:
         """
@@ -51,6 +52,11 @@ class MCTextWorldWrapper:
             'message',
             'Action executed successfully' if success else 'Action failed: preconditions not met'
         )
+
+        # Replace MC-TextWorld's unhelpful "unvalid action!" with a diagnostic
+        # that tells the LLM exactly what materials / tools are missing.
+        if not success and message in ('unvalid action!', 'Action failed: preconditions not met'):
+            message = self._diagnose_failure(action, inv_before)
         timeout = self.step_count >= self.max_steps
 
         self.trajectory.append({
@@ -86,6 +92,61 @@ class MCTextWorldWrapper:
             "final_success": any(s["done"] for s in self.trajectory),
             "steps": self.trajectory,
         }
+
+    # ── failure diagnosis ─────────────────────────────────────────────────────
+
+    def _diagnose_failure(self, action: str, inventory: dict) -> str:
+        """
+        Explain *why* an action failed by comparing its requirements against
+        the current inventory.  Returns a human-readable message.
+        """
+        alib = self._get_action_lib()
+
+        # Case 1: action not in library at all
+        if action not in alib:
+            return f"Unknown action '{action}' — not in the action library"
+
+        # Case 2: action exists but no variant's requirements are met.
+        # Pick the variant with the fewest missing items to give the best hint.
+        best_msg = None
+        best_missing_count = float('inf')
+
+        for variant in alib[action]:
+            missing_mat = {}
+            missing_tool = {}
+
+            for item, need in variant.get('precondition', {}).items():
+                have = inventory.get(item, 0)
+                if have < need:
+                    missing_mat[item] = f"need {need}, have {have}"
+
+            for item, need in variant.get('tool', {}).items():
+                have = inventory.get(item, 0)
+                if have < need:
+                    missing_tool[item] = f"need {need}, have {have}"
+
+            n_missing = len(missing_mat) + len(missing_tool)
+            if n_missing == 0:
+                # Shouldn't reach here (env said it failed) — fall back.
+                continue
+            if n_missing < best_missing_count:
+                best_missing_count = n_missing
+                parts = []
+                if missing_tool:
+                    parts.append("missing tool: " + ", ".join(
+                        f"{k} ({v})" for k, v in missing_tool.items()))
+                if missing_mat:
+                    parts.append("missing materials: " + ", ".join(
+                        f"{k} ({v})" for k, v in missing_mat.items()))
+                best_msg = f"Failed {action}: " + "; ".join(parts)
+
+        return best_msg or f"Action '{action}' failed (preconditions not met)"
+
+    def _get_action_lib(self) -> dict:
+        """Lazily cache a reference to the MC-TextWorld action library dict."""
+        if self._action_lib is None:
+            self._action_lib = self.env.action_lib.action_lib
+        return self._action_lib
 
     def _get_obs(self, raw_obs: dict) -> dict:
         return {
