@@ -63,23 +63,59 @@ def _is_all_failed_loop(trajectory: list, window: int) -> bool:
     return all(not s.get("success", False) for s in trajectory[-window:])
 
 
+def _is_recurring_failure(trajectory: list, lookback: int, threshold: int) -> tuple:
+    """Detect a single action that keeps failing across a wider window,
+    even when interspersed with other (possibly successful) actions.
+
+    Scans the last `lookback` steps; if any ONE action has failed
+    >= `threshold` times, returns (True, action_name).
+
+    This catches patterns like:
+        mine_coal_ore ✗ → mine_oak_log ✓ → mine_coal_ore ✗ → craft ✓ → mine_coal_ore ✗ ...
+    where the agent keeps retrying a broken action but does other things in between,
+    bypassing both the tight-loop and thrashing checks.
+    """
+    if len(trajectory) < threshold:
+        return False, ""
+    recent = trajectory[-lookback:]
+    fail_counts = {}
+    for s in recent:
+        if not s.get("success", False):
+            act = s["action"]
+            fail_counts[act] = fail_counts.get(act, 0) + 1
+    for act, cnt in fail_counts.items():
+        if cnt >= threshold:
+            return True, act
+    return False, ""
+
+
 def detect_dead_loop(trajectory: list, window: int = 5) -> tuple:
     """
     Returns (is_loop: bool, reason: str).
 
-    Two checks:
-      1. Same action repeated `window` times AND all failed  (tight loop)
-      2. ANY `window * 2` consecutive failures               (thrashing)
+    Three checks (in order):
+      1. Same action repeated `window` times consecutively AND all failed   (tight loop)
+      2. ANY `window * 2` consecutive failures, any mix of actions          (thrashing)
+      3. One action failed >= `window` times in the last `window * 4` steps (recurring failure)
 
-    Check #2 uses a wider window to give the agent room to try alternatives.
+    Check #3 catches the pattern where the LLM intersperses successful
+    actions between retries of a broken action, dodging checks #1 and #2.
     """
+    # Check 1 — tight loop
     if _is_same_failed_action_loop(trajectory, window):
         repeated = trajectory[-1]["action"]
         return True, f"same action repeated {window}× and all failed: '{repeated}'"
 
+    # Check 2 — thrashing
     thrash_window = window * 2
     if _is_all_failed_loop(trajectory, thrash_window):
         return True, f"last {thrash_window} actions all failed (thrashing)"
+
+    # Check 3 — recurring failure (spread out over a wider window)
+    lookback = window * 4
+    is_recurring, culprit = _is_recurring_failure(trajectory, lookback, threshold=window)
+    if is_recurring:
+        return True, f"'{culprit}' failed {window}+ times in last {lookback} steps (recurring)"
 
     return False, ""
 
