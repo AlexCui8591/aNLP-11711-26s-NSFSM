@@ -1,0 +1,353 @@
+{
+  "oak_log": {},
+  "oak_planks": {
+    "oak_log": 1
+  },
+  "stick": {
+    "oak_planks": 2
+  },
+  "crafting_table": {
+    "oak_planks": 4
+  },
+  "wooden_shovel": {
+    "stick": 2,
+    "oak_planks": 1,
+    "crafting_table": 1
+  },
+  "wooden_pickaxe": {
+    "stick": 2,
+    "oak_planks": 3,
+    "crafting_table": 1
+  },
+  "wooden_axe": {
+    "stick": 2,
+    "oak_planks": 3,
+    "crafting_table": 1
+  },
+  "wooden_hoe": {
+    "stick": 2,
+    "oak_planks": 2,
+    "crafting_table": 1
+  },
+  "wooden_sword": {
+    "stick": 1,
+    "oak_planks": 2,
+    "crafting_table": 1
+  },
+  "chest": {
+    "oak_planks": 8,
+    "crafting_table": 1
+  },
+  "bowl": {
+    "oak_planks": 3,
+    "crafting_table": 1
+  },
+  "ladder": {
+    "stick": 7,
+    "crafting_table": 1
+  },
+  "cobblestone": {
+    "wooden_pickaxe": 1
+  },
+  "stone_shovel": {
+    "stick": 2,
+    "cobblestone": 1,
+    "crafting_table": 1
+  },
+  "stone_pickaxe": {
+    "stick": 2,
+    "cobblestone": 3,
+    "crafting_table": 1
+  },
+  "stone_axe": {
+    "stick": 2,
+    "cobblestone": 3,
+    "crafting_table": 1
+  },
+  "stone_hoe": {
+    "stick": 2,
+    "cobblestone": 2,
+    "crafting_table": 1
+  },
+  "furnace": {
+    "cobblestone": 8,
+    "crafting_table": 1
+  },
+  "charcoal": {
+    "oak_log": 1,
+    "furnace": 1
+  },
+  "smoker": {
+    "furnace": 1,
+    "oak_log": 4,
+    "crafting_table": 1
+  },
+  "stone_sword": {
+    "stick": 1,
+    "cobblestone": 2,
+    "crafting_table": 1
+  },
+  "coal_block": {
+    "coal": 9,
+    "crafting_table": 1
+  },
+  "coal": {
+    "coal_block": 1
+  },
+  "torch": {
+    "stick": 1,
+    "coal": 1
+  },
+  "iron_block": {
+    "iron_ingot": 9,
+    "crafting_table": 1
+  },
+  "iron_ingot": {
+    "iron_block": 1
+  },
+  "iron_shovel": {
+    "stick": 2,
+    "iron_ingot": 1,
+    "crafting_table": 1
+  },
+  "iron_pickaxe": {
+    "stick": 2,
+    "iron_ingot": 3,
+    "crafting_table": 1
+  },
+  "iron_axe": {
+    "stick": 2,
+    "iron_ingot": 3,
+    "crafting_table": 1
+  },
+  "iron_hoe": {
+    "stick": 2,
+    "iron_ingot": 2,
+    "crafting_table": 1
+  },
+  "bucket": {
+    "iron_ingot": 3,
+    "crafting_table": 1
+  },
+  "hopper": {
+    "chest": 1,
+    "iron_ingot": 5,
+    "crafting_table": 1
+  },
+  "rail": {
+    "stick": 1,
+    "iron_ingot": 6,
+    "crafting_table": 1
+  },
+  "iron_sword": {
+    "stick": 1,
+    "iron_ingot": 2,
+    "crafting_table": 1
+  },
+  "shears": {
+    "iron_ingot": 2
+  },
+  "smithing_table": {
+    "oak_planks": 4,
+    "iron_ingot": 2,
+    "crafting_table": 1
+  },
+  "tripwire_hook": {
+    "oak_planks": 1,
+    "stick": 1,
+    "iron_ingot": 1,
+    "crafting_table": 1
+  },
+  "iron_nugget": {
+    "iron_ingot": 1
+  },
+  "chain": {
+    "iron_ingot": 1,
+    "iron_nugget": 2,
+    "crafting_table": 1
+  },
+  "iron_bars": {
+    "iron_ingot": 6,
+    "crafting_table": 1
+  },
+  "stone": {
+    "cobblestone": 1,
+    "furnace": 1
+  },
+  "smooth_stone": {
+    "stone": 1,
+    "furnace": 1
+  },
+  "blast_furnace": {
+    "smooth_stone": 3,
+    "furnace": 1,
+    "iron_ingot": 5,
+    "crafting_table": 1
+  },
+  "stonecutter": {
+    "iron_ingot": 1,
+    "stone": 3,
+    "crafting_table": 1
+  },
+  "gold_block": {
+    "gold_ingot": 9,
+    "crafting_table": 1
+  },
+  "gold_ingot": {
+    "gold_block": 1
+  },
+  "golden_shovel": {
+    "stick": 2,
+    "gold_ingot": 1,
+    "crafting_table": 1
+  },
+  "golden_pickaxe": {
+    "stick": 2,
+    "gold_ingot": 3,
+    "crafting_table": 1
+  },
+  "golden_axe": {
+    "stick": 2,
+    "gold_ingot": 3,
+    "crafting_table": 1
+  },
+  "golden_hoe": {
+    "stick": 2,
+    "gold_ingot": 2,
+    "crafting_table": 1
+  },
+  "golden_sword": {
+    "stick": 1,
+    "gold_ingot": 2,
+    "crafting_table": 1
+  },
+  "diamond_block": {
+    "diamond": 9,
+    "crafting_table": 1
+  },
+  "diamond": {
+    "diamond_block": 1
+  },
+  "diamond_shovel": {
+    "stick": 2,
+    "diamond": 1,
+    "crafting_table": 1
+  },
+  "diamond_pickaxe": {
+    "stick": 2,
+    "diamond": 3,
+    "crafting_table": 1
+  },
+  "diamond_axe": {
+    "stick": 2,
+    "diamond": 3,
+    "crafting_table": 1
+  },
+  "diamond_hoe": {
+    "stick": 2,
+    "diamond": 2,
+    "crafting_table": 1
+  },
+  "diamond_sword": {
+    "stick": 1,
+    "diamond": 2,
+    "crafting_table": 1
+  },
+  "jukebox": {
+    "oak_planks": 8,
+    "diamond": 1,
+    "crafting_table": 1
+  },
+  "redstone_block": {
+    "redstone": 9,
+    "crafting_table": 1
+  },
+  "redstone": {
+    "redstone_block": 1
+  },
+  "piston": {
+    "redstone": 1,
+    "cobblestone": 4,
+    "oak_planks": 3,
+    "iron_ingot": 1,
+    "crafting_table": 1
+  },
+  "redstone_torch": {
+    "stick": 1,
+    "redstone": 1
+  },
+  "activator_rail": {
+    "redstone_torch": 1,
+    "stick": 2,
+    "iron_ingot": 6,
+    "crafting_table": 1
+  },
+  "compass": {
+    "iron_ingot": 4,
+    "redstone": 1,
+    "crafting_table": 1
+  },
+  "dropper": {
+    "redstone": 1,
+    "cobblestone": 7,
+    "crafting_table": 1
+  },
+  "note_block": {
+    "oak_planks": 8,
+    "redstone": 1,
+    "crafting_table": 1
+  },
+  "shield": {
+    "oak_planks": 6,
+    "iron_ingot": 1,
+    "crafting_table": 1
+  },
+  "iron_chestplate": {
+    "iron_ingot": 8,
+    "crafting_table": 1
+  },
+  "iron_boots": {
+    "iron_ingot": 4,
+    "crafting_table": 1
+  },
+  "iron_leggings": {
+    "iron_ingot": 7,
+    "crafting_table": 1
+  },
+  "iron_helmet": {
+    "iron_ingot": 5,
+    "crafting_table": 1
+  },
+  "diamond_helmet": {
+    "diamond": 5,
+    "crafting_table": 1
+  },
+  "diamond_chestplate": {
+    "diamond": 8,
+    "crafting_table": 1
+  },
+  "diamond_leggings": {
+    "diamond": 7,
+    "crafting_table": 1
+  },
+  "diamond_boots": {
+    "diamond": 4,
+    "crafting_table": 1
+  },
+  "golden_helmet": {
+    "gold_ingot": 5,
+    "crafting_table": 1
+  },
+  "golden_leggings": {
+    "gold_ingot": 7,
+    "crafting_table": 1
+  },
+  "golden_boots": {
+    "gold_ingot": 4,
+    "crafting_table": 1
+  },
+  "golden_chestplate": {
+    "gold_ingot": 8,
+    "crafting_table": 1
+  }
+}

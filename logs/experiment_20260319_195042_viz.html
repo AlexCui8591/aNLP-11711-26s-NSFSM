@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>NS-FSM 轨迹可视化</title>
+    <style>
+        body { font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; background: #fdfdfd; color: #333; padding: 30px; line-height: 1.6; margin: 0; }
+        h1 { text-align: center; color: #2c3e50; font-size: 2.2em; margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #7f8c8d; margin-bottom: 30px; font-size: 1.1em; }
+        
+        .stats-panel { 
+            max-width: 800px; margin: 0 auto 40px auto; background: white; padding: 25px; 
+            border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+            display: flex; justify-content: space-around; border-top: 5px solid #3498db;
+        }
+        .stat-box { text-align: center; }
+        .stat-num { display: block; font-size: 2em; font-weight: bold; color: #2c3e50; }
+        .stat-label { color: #7f8c8d; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .timeline-container { 
+            max-width: 800px; margin: 0 auto; padding-left: 30px; 
+            border-left: 4px solid #e0e6ed; position: relative;
+        }
+        
+        .step-card { 
+            background: white; border-radius: 10px; padding: 20px; margin-bottom: 25px; 
+            position: relative; box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+            border-left: 6px solid #e0e6ed; transition: transform 0.2s ease;
+        }
+        .step-card:hover { transform: translateX(5px); }
+        
+        .step-card::before {
+            content: ''; position: absolute; left: -41px; top: 20px; 
+            width: 18px; height: 18px; border-radius: 50%; background: #e0e6ed;
+            border: 4px solid #fdfdfd;
+        }
+        
+        /* 成功节点：正确推进 */
+        .success { border-left-color: #2ecc71; }
+        .success::before { background: #2ecc71; box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2); }
+        
+        /* 失败节点：错误推进 */
+        .fail { border-left-color: #e74c3c; }
+        .fail::before { background: #e74c3c; box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2); }
+        
+        .step-num { font-weight: 800; color: #95a5a6; font-size: 1em; letter-spacing: 1px; margin-bottom: 8px; display: block; }
+        .action-title { font-size: 1.4em; font-weight: bold; color: #2c3e50; margin-bottom: 10px; }
+        
+        .feedback { font-size: 1em; color: #444; background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid #eee; }
+        
+        .warnings { margin-top: 15px; display: flex; flex-direction: column; gap: 8px; }
+        .warning-tag { 
+            background: #fff8e1; color: #f39c12; font-size: 0.95em; padding: 8px 12px; 
+            border-radius: 6px; border: 1px solid #ffeaa7; font-weight: 600;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .warning-tag::before { content: '⚠️'; font-size: 1.1em; }
+        
+    </style>
+</head>
+<body>
+    <h1>LLM Agent 轨迹可视化</h1>
+    <div class="subtitle">experiment_20260319_195042.log</div>
+    
+    <div class="stats-panel">
+        <div class="stat-box">
+            <span class="stat-num">60</span>
+            <span class="stat-label">总步数</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-num" style="color: #2ecc71;">46</span>
+            <span class="stat-label">有效/正确推进</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-num" style="color: #e74c3c;">14</span>
+            <span class="stat-label">无效/失败推进</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-num" style="color: #f39c12;">19</span>
+            <span class="stat-label">Lost in Mid 警告</span>
+        </div>
+    </div>
+    
+    <div class="timeline-container">
+
+        <div class="step-card success">
+            <span class="step-num">STEP 1</span>
+            <div class="action-title">砍树</div>
+            <div class="feedback">[✓] 动作成功：获得 1个原木</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 2</span>
+            <div class="action-title">合成 木板</div>
+            <div class="feedback">[✓] 动作成功：消耗材料，合成了 4个木板</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 3</span>
+            <div class="action-title">合成 木棍</div>
+            <div class="feedback">[✓] 动作成功：消耗材料，合成了 4个木棍</div>
+            
+        </div>
+        
+        <div class="step-card fail">
+            <span class="step-num">STEP 4</span>
+            <div class="action-title">合成 火把</div>
+            <div class="feedback">[✗] 动作失败：材料不足，无法合成 火把。(缺 1个煤炭)</div>
+            
+        </div>
+        
+        <div class="step-card fail">
+            <span class="step-num">STEP 5</span>
+            <div class="action-title">合成 工作台</div>
+            <div class="feedback">[✗] 动作失败：材料不足，无法合成 工作台。(缺 2个木板)</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 6</span>
+            <div class="action-title">砍树</div>
+            <div class="feedback">[✓] 动作成功：获得 1个原木</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 7</span>
+            <div class="action-title">砍树</div>
+            <div class="feedback">[✓] 动作成功：获得 1个原木</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 8</span>
+            <div class="action-title">合成 木板</div>
+            <div class="feedback">[✓] 动作成功：消耗材料，合成了 4个木板</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 9</span>
+            <div class="action-title">合成 工作台</div>
+            <div class="feedback">[✓] 动作成功：消耗材料，合成了 1个工作台</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'合成 工作台'出现3次</div></div>
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 10</span>
+            <div class="action-title">合成 木板</div>
+            <div class="feedback">[✓] 动作成功：消耗材料，合成了 4个木板</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'合成 木板'出现3次</div></div>
+        </div>
+        
+        <div class="step-card fail">
+            <span class="step-num">STEP 11</span>
+            <div class="action-title">挖矿 煤炭</div>
+            <div class="feedback">[✗] 动作失败：挖掘 煤炭 需要以下工具之一 ['木镐', '石镐', '铁镐', '钻石镐']，你的背包里没有。</div>
+            <div class='warnings'><div class='warning-tag'>prerequisite_skip: 尝试挖矿 煤炭但跳过了前置条件: 动作失败：挖掘 煤炭 需要以下工具之一 ['木镐', '石镐', '铁镐', '钻石镐']，你的背包里没有。</div></div>
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 12</span>
+            <div class="action-title">合成 木镐</div>
+            <div class="feedback">[✓] 动作成功：消耗材料，合成了 1个木镐</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 13</span>
+            <div class="action-title">挖矿 煤炭</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个煤炭</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 14</span>
+            <div class="action-title">合成 木棍</div>
+            <div class="feedback">[✓] 动作成功：消耗材料，合成了 4个木棍</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 15</span>
+            <div class="action-title">合成 火把</div>
+            <div class="feedback">[✓] 动作成功：消耗材料，合成了 4个火把</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 16</span>
+            <div class="action-title">挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 17</span>
+            <div class="action-title">挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 18</span>
+            <div class="action-title">挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            <div class='warnings'><div class='warning-tag'>inventory_hallucination: 声称有圆石x8，实际有x2</div></div>
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 19</span>
+            <div class="action-title">挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 20</span>
+            <div class="action-title">挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 21</span>
+            <div class="action-title">挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            
+        </div>
+        
+        <div class="step-card fail">
+            <span class="step-num">STEP 22</span>
+            <div class="action-title">合成 熔炉</div>
+            <div class="feedback">[✗] 动作失败：材料不足，无法合成 熔炉。(缺 2个圆石)</div>
+            <div class='warnings'><div class='warning-tag'>inventory_hallucination: 声称有圆石x8，实际有x6</div></div>
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 23</span>
+            <div class="action-title">挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 24</span>
+            <div class="action-title">挖矿 煤炭</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个煤炭</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 25</span>
+            <div class="action-title">挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 26</span>
+            <div class="action-title">挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 27</span>
+            <div class="action-title">合成 熔炉</div>
+            <div class="feedback">[✓] 动作成功：消耗材料，合成了 1个熔炉</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 28</span>
+            <div class="action-title">挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 29</span>
+            <div class="action-title">挖矿 煤炭</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个煤炭</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 30</span>
+            <div class="action-title">挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 31</span>
+            <div class="action-title">挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 32</span>
+            <div class="action-title">挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 33</span>
+            <div class="action-title">挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 34</span>
+            <div class="action-title">合成 石镐</div>
+            <div class="feedback">[✓] 动作成功：消耗材料，合成了 1个石镐</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 35</span>
+            <div class="action-title">挖矿 铁矿石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个铁矿石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 36</span>
+            <div class="action-title">挖矿 铁矿石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个铁矿石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 37</span>
+            <div class="action-title">熔炼 铁矿石</div>
+            <div class="feedback">[✓] 动作成功：消耗 1个铁矿石，熔炼出 1个铁锭</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 38</span>
+            <div class="action-title">熔炼 铁矿石</div>
+            <div class="feedback">[✓] 动作成功：消耗 1个铁矿石，熔炼出 1个铁锭</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'熔炼 铁矿石'出现3次</div></div>
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 39</span>
+            <div class="action-title">挖矿 铁矿石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个铁矿石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 40</span>
+            <div class="action-title">挖矿 铁矿石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个铁矿石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 41</span>
+            <div class="action-title">挖矿 铁矿石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个铁矿石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 42</span>
+            <div class="action-title">挖矿 铁矿石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个铁矿石</div>
+            
+        </div>
+        
+        <div class="step-card fail">
+            <span class="step-num">STEP 43</span>
+            <div class="action-title">合成 铁镐</div>
+            <div class="feedback">[✗] 动作失败：材料不足，无法合成 铁镐。(缺 1个铁锭)</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 44</span>
+            <div class="action-title">熔炼 铁矿石</div>
+            <div class="feedback">[✓] 动作成功：消耗 1个铁矿石，熔炼出 1个铁锭</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 45</span>
+            <div class="action-title">熔炼 铁矿石</div>
+            <div class="feedback">[✓] 动作成功：消耗 1个铁矿石，熔炼出 1个铁锭</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'熔炼 铁矿石'出现3次</div></div>
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 46</span>
+            <div class="action-title">挖矿 铁矿石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个铁矿石</div>
+            
+        </div>
+        
+        <div class="step-card fail">
+            <span class="step-num">STEP 47</span>
+            <div class="action-title">合成 木棍</div>
+            <div class="feedback">[✗] 动作失败：材料不足，无法合成 木棍。(缺 1个木板)</div>
+            
+        </div>
+        
+        <div class="step-card fail">
+            <span class="step-num">STEP 48</span>
+            <div class="action-title">合成 木棍</div>
+            <div class="feedback">[✗] 动作失败：材料不足，无法合成 木棍。(缺 1个木板)</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'合成 木棍'出现3次</div></div>
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 49</span>
+            <div class="action-title">熔炼 铁矿石</div>
+            <div class="feedback">[✓] 动作成功：消耗 1个铁矿石，熔炼出 1个铁锭</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'熔炼 铁矿石'出现3次</div></div>
+        </div>
+        
+        <div class="step-card fail">
+            <span class="step-num">STEP 50</span>
+            <div class="action-title">合成 木棍</div>
+            <div class="feedback">[✗] 动作失败：材料不足，无法合成 木棍。(缺 1个木板)</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'合成 木棍'出现4次</div></div>
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 51</span>
+            <div class="action-title">挖矿 铁矿石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个铁矿石</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'合成 木棍'出现3次</div></div>
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 52</span>
+            <div class="action-title">挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            
+        </div>
+        
+        <div class="step-card fail">
+            <span class="step-num">STEP 53</span>
+            <div class="action-title">合成 木棍</div>
+            <div class="feedback">[✗] 动作失败：材料不足，无法合成 木棍。(缺 1个木板)</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'合成 木棍'出现3次</div></div>
+        </div>
+        
+        <div class="step-card fail">
+            <span class="step-num">STEP 54</span>
+            <div class="action-title">合成 木棍</div>
+            <div class="feedback">[✗] 动作失败：材料不足，无法合成 木棍。(缺 1个木板)</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'合成 木棍'出现4次</div></div>
+        </div>
+        
+        <div class="step-card fail">
+            <span class="step-num">STEP 55</span>
+            <div class="action-title">合成 木棍</div>
+            <div class="feedback">[✗] 动作失败：材料不足，无法合成 木棍。(缺 1个木板)</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'合成 木棍'出现4次</div></div>
+        </div>
+        
+        <div class="step-card fail">
+            <span class="step-num">STEP 56</span>
+            <div class="action-title">合成 木棍</div>
+            <div class="feedback">[✗] 动作失败：材料不足，无法合成 木棍。(缺 1个木板)</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'合成 木棍'出现5次</div></div>
+        </div>
+        
+        <div class="step-card fail">
+            <span class="step-num">STEP 57</span>
+            <div class="action-title">合成 木棍</div>
+            <div class="feedback">[✗] 动作失败：材料不足，无法合成 木棍。(缺 1个木板)</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'合成 木棍'出现6次</div></div>
+        </div>
+        
+        <div class="step-card fail">
+            <span class="step-num">STEP 58</span>
+            <div class="action-title">合成 木棍</div>
+            <div class="feedback">[✗] 动作失败：材料不足，无法合成 木棍。(缺 1个木板)</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'合成 木棍'出现6次</div></div>
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 59</span>
+            <div class="action-title">砍树</div>
+            <div class="feedback">[✓] 动作成功：获得 1个原木</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'合成 木棍'出现4次</div></div>
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 60</span>
+            <div class="action-title">合成 木板</div>
+            <div class="feedback">[✓] 动作成功：消耗材料，合成了 4个木板</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'合成 木棍'出现3次</div></div>
+        </div>
+        
+    </div>
+</body>
+</html>

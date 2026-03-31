@@ -1,0 +1,28 @@
+# NS-FSM Baseline Hyperparameters
+
+# LLM Configuration
+llm:
+  model_name: "qwen2.5:7b"
+  backend: "ollama" # ollama / vllm / api
+  api_base: null # Override for vllm/api
+  api_key: null # For api backend
+  temperature: 0.3
+  max_retries: 2
+
+# Environment
+env:
+  max_steps_per_episode: 100
+  num_runs: 15
+
+# ReAct specific
+react:
+  max_steps_per_episode: 100
+
+# Reflexion specific
+reflexion:
+  max_attempts: 3 # Initial attempt + 2 retries
+
+# Logging
+logging:
+  save_trajectories: true
+  verbose: true

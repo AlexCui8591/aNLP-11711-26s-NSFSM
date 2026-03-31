@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>NS-FSM 动态轨迹重放</title>
+    <style>
+        body { font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; background: #f4f6f9; color: #333; padding: 30px; line-height: 1.6; margin: 0; }
+        h1 { text-align: center; color: #2c3e50; font-size: 2.2em; margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #7f8c8d; margin-bottom: 30px; font-size: 1.1em; }
+        
+        .controls { text-align: center; position: sticky; top: 15px; z-index: 1000; margin-bottom: 30px; }
+        .btn {
+            padding: 12px 25px; font-size: 1.1em; background: #3498db; color: white; border: none; 
+            border-radius: 8px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.2s;
+            margin: 0 10px; font-weight: bold;
+        }
+        .btn:hover { background: #2980b9; transform: translateY(-2px); }
+        .btn-outline { background: white; color: #3498db; border: 2px solid #3498db; }
+        .btn-outline:hover { background: #f0f8ff; }
+        
+        .stats-panel { 
+            max-width: 800px; margin: 0 auto 40px auto; background: white; padding: 25px; 
+            border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+            display: flex; justify-content: space-around; border-top: 5px solid #3498db;
+        }
+        .stat-box { text-align: center; }
+        .stat-num { display: block; font-size: 2em; font-weight: bold; color: #2c3e50; }
+        .stat-label { color: #7f8c8d; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .timeline-container { 
+            max-width: 800px; margin: 0 auto; padding-left: 30px; 
+            border-left: 4px solid #e0e6ed; position: relative;
+        }
+        
+        /* 动画初始状态：隐藏并在偏下方 */
+        .step-card { 
+            background: white; border-radius: 10px; padding: 20px; margin-bottom: 25px; 
+            position: relative; box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+            border-left: 6px solid #e0e6ed; 
+            opacity: 0; transform: translateY(40px); display: none;
+            transition: opacity 0.6s ease-out, transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        /* 动画触发状态：浮现显示 */
+        .step-card.visible {
+            display: block; opacity: 1; transform: translateY(0);
+        }
+        /* 提供一个瞬间展示的类 */
+        .step-card.show-all {
+            display: block; opacity: 1; transform: translateY(0); transition: none;
+        }
+        
+        .step-card::before {
+            content: ''; position: absolute; left: -41px; top: 20px; 
+            width: 18px; height: 18px; border-radius: 50%; background: #e0e6ed;
+            border: 4px solid #f4f6f9;
+        }
+        
+        .success { border-left-color: #2ecc71; }
+        .success::before { background: #2ecc71; box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2); }
+        .fail { border-left-color: #e74c3c; }
+        .fail::before { background: #e74c3c; box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2); }
+        
+        .step-num { font-weight: 800; color: #95a5a6; font-size: 1em; letter-spacing: 1px; margin-bottom: 12px; display: block; }
+        
+        /* Thought 气泡样式 */
+        .thought-box {
+            background: #fdfdfd; padding: 12px 15px; border-radius: 8px; font-style: italic; color: #626567;
+            margin-bottom: 15px; border-left: 3px solid #f39c12; font-size: 0.95em; position: relative;
+        }
+        .thought-box strong { font-style: normal; color: #d35400; }
+        
+        .action-title { font-size: 1.4em; font-weight: bold; color: #2c3e50; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .action-tag { font-size: 0.6em; background: #34495e; color: white; padding: 3px 8px; border-radius: 4px; vertical-align: top; font-weight: normal; letter-spacing: 1px; }
+        
+        .feedback { font-size: 1em; color: #444; background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid #eee; }
+        
+        .warnings { margin-top: 15px; display: flex; flex-direction: column; gap: 8px; }
+        .warning-tag { 
+            background: #fff8e1; color: #e67e22; font-size: 0.95em; padding: 8px 12px; 
+            border-radius: 6px; border: 1px solid #ffeaa7; font-weight: 600;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .warning-tag::before { content: '⚠️'; font-size: 1.1em; }
+        
+    </style>
+</head>
+<body>
+    <h1>🎬 NS-FSM: 实验轨迹动态重放</h1>
+    <div class="subtitle">experiment_20260319_195042.log</div>
+    
+    <div class="controls">
+        <button class="btn" id="playBtn" onclick="togglePlay()">▶ 播放实验回放</button>
+        <button class="btn btn-outline" onclick="showAll()">👁 展开全部步骤</button>
+    </div>
+    
+    <div class="stats-panel">
+        <div class="stat-box">
+            <span class="stat-num">60</span>
+            <span class="stat-label">总步骤数</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-num" style="color: #2ecc71;">46</span>
+            <span class="stat-label">有效推进</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-num" style="color: #e74c3c;">14</span>
+            <span class="stat-label">撞墙/错误</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-num" style="color: #f39c12;">19</span>
+            <span class="stat-label">Lost In Mid 异常</span>
+        </div>
+    </div>
+    
+    <div class="timeline-container" id="timeline">
+
+        <div class="step-card success">
+            <span class="step-num">STEP 1</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前背包内容为空，意味着我处于游戏的初始阶段。首先需要获得原木来制作木板和木棍，进而合成工作台。根据配方指南，1个原木可以得到4块木板，而2块木板可以制成4根木棍。为了确保有足够的材料开始后续步骤，至...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 砍树</div>
+            <div class="feedback">[✓] 动作成功：获得 1个原木</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 2</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前处于徒手阶段，需要制作木板和木棍来合成工作台。首先我有1个原木，可以先合成为4块木板。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 合成 木板</div>
+            <div class="feedback">[✓] 动作成功：消耗材料，合成了 4个木板</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 3</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我处于徒手阶段，已经获得了4个木板。接下来需要制作工作台来合成更多的工具和材料。但是根据任务要求，在完成最终目标之前必须先拥有火把。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 合成 木棍</div>
+            <div class="feedback">[✓] 动作成功：消耗材料，合成了 4个木棍</div>
+            
+        </div>
+        
+        <div class="step-card fail">
+            <span class="step-num">STEP 4</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我处于徒手阶段，已经获得了2个木板和4个木棍。根据配方指南，下一步需要制作工作台来进入下一阶段。但是，在合成工作台之前，我应该先确保有足够的材料（即火把），以应对夜晚可能出现的危险生物。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 合成 火把</div>
+            <div class="feedback">[✗] 动作失败：材料不足，无法合成 火把。(缺 1个煤炭)</div>
+            
+        </div>
+        
+        <div class="step-card fail">
+            <span class="step-num">STEP 5</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前背包中有木板 x2，木棍 x4。根据历史记录和当前状态，我需要合成火把来完成支线任务，但缺少煤炭。为了获得煤炭，我需要先制作石镐进行挖矿。而制作石镐之前，我需要先用现有的材料制作一个工作台，并且利...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 合成 工作台</div>
+            <div class="feedback">[✗] 动作失败：材料不足，无法合成 工作台。(缺 2个木板)</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 6</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我处于徒手阶段，需要先制作工作台。根据背包中的材料，我现在有2个木板和4个木棍，但制作工作台需要4个木板。因此，我首先需要通过砍树获得更多的原木来合成额外的木板。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 砍树</div>
+            <div class="feedback">[✓] 动作成功：获得 1个原木</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 7</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我处于徒手阶段，需要先制作工作台。根据背包内容，缺少2个木板来合成工作台。为了获得更多的木板，我需要更多原木。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 砍树</div>
+            <div class="feedback">[✓] 动作成功：获得 1个原木</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 8</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我处于徒手阶段，需要先制作工作台。根据背包内容和已有的材料配方，我目前有2个原木、2个木板、4个木棍。首先应该将剩余的原木转化为更多的木板，然后合成工作台。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 合成 木板</div>
+            <div class="feedback">[✓] 动作成功：消耗材料，合成了 4个木板</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 9</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我处于徒手阶段，需要制作工作台和火把。根据背包中的材料，我已经有了6个木板和4个木棍。首先应该合成一个工作台来获得更多的合成选项。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 合成 工作台</div>
+            <div class="feedback">[✓] 动作成功：消耗材料，合成了 1个工作台</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'合成 工作台'出现3次</div></div>
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 10</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前处于徒手阶段，需要先制作工作台。根据背包中的材料，目前有1个原木、2个木板和4个木棍。下一步应该合成更多的木板以完成工作台的制作。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 合成 木板</div>
+            <div class="feedback">[✓] 动作成功：消耗材料，合成了 4个木板</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'合成 木板'出现3次</div></div>
+        </div>
+        
+        <div class="step-card fail">
+            <span class="step-num">STEP 11</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我处于徒手阶段，已经拥有了6个木板和4个木棍。根据配方指南，下一步需要制作工作台来合成更多必要的物品。但是由于之前尝试时缺少了2个木板而失败，现在我已经通过砍树并合成了更多的木板，目前背包中有6个...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 挖矿 煤炭</div>
+            <div class="feedback">[✗] 动作失败：挖掘 煤炭 需要以下工具之一 ['木镐', '石镐', '铁镐', '钻石镐']，你的背包里没有。</div>
+            <div class='warnings'><div class='warning-tag'>prerequisite_skip: 尝试挖矿 煤炭但跳过了前置条件: 动作失败：挖掘 煤炭 需要以下工具之一 ['木镐', '石镐', '铁镐', '钻石镐']，你的背包里没有。</div></div>
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 12</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我处于徒手阶段，需要先制作木镐来挖矿获取煤炭以合成火把。我已经有了6个木板和4个木棍，可以合成一个木镐，并且已经有了一个工作台。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 合成 木镐</div>
+            <div class="feedback">[✓] 动作成功：消耗材料，合成了 1个木镐</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 13</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前处于木器阶段，需要合成火把以完成支线任务。根据配方指南，制作火把需要1个煤炭和1个木棍。当前背包中缺少煤炭，而获取煤炭需要使用镐子进行挖掘，我已经有了一把木镐。因此，下一步应该去挖矿找寻煤炭。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 挖矿 煤炭</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个煤炭</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 14</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我处于木器阶段，需要合成火把来完成支线任务。根据配方指南，制作火把需要1个煤炭和1个木棍。现在我已经有了1个煤炭，但是只有2个木棍，所以先要再制作一个木棍。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 合成 木棍</div>
+            <div class="feedback">[✓] 动作成功：消耗材料，合成了 4个木棍</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 15</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前处于木器阶段，需要合成火把以完成支线任务。根据配方指南，制作火把需要煤炭和木棍各一个。背包中已经有1个煤炭和6个木棍，因此可以开始合成火把。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 合成 火把</div>
+            <div class="feedback">[✓] 动作成功：消耗材料，合成了 4个火把</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 16</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我处于木器阶段，需要制作石镐来挖掘圆石并进一步合成熔炉。但是在此之前，我应该先确保有足够的材料以避免浪费时间回到之前的步骤。现在我已经有了火把，接下来可以使用木镐挖矿获取煤炭和圆石。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 17</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我已经完成了木器阶段，拥有了木镐和火把。接下来需要进入石器阶段，所以我应该使用木镐来挖掘圆石以制作石镐和熔炉。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 18</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我已经有了木镐，火把，并且开始挖掘圆石来制作石镐和熔炉。根据我的背包内容，我有足够的材料继续挖矿获取更多的圆石以合成石镐（需要8个圆石）。同时，我也已经获得了1个煤炭，可以用来制作更多的火把。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            <div class='warnings'><div class='warning-tag'>inventory_hallucination: 声称有圆石x8，实际有x2</div></div>
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 19</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我已经有了木镐、火把和一些圆石，接下来需要更多的圆石来制作熔炉。因为已经拥有了木镐，所以可以继续挖矿获取圆石。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 20</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我处于木器阶段，已经拥有了工作台、木镐和火把。接下来需要进入石器阶段，首先需要合成熔炉来熔炼铁矿石以获得铁锭。根据配方指南，制作熔炉需要8个圆石，目前背包中有4个圆石，还需要再挖掘4个圆石。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 21</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前处于木器阶段，已经拥有火把和工作台。需要继续挖掘圆石以制作熔炉（至少8个圆石），然后使用熔炉来熔炼铁矿石获得铁锭，最后合成铁镐。目前有5个圆石，还需要3个圆石才能制作熔炉。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            
+        </div>
+        
+        <div class="step-card fail">
+            <span class="step-num">STEP 22</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前背包内容包括木板 x1，木棍 x5，工作台 x1，木镐 x1，火把 x4，圆石 x6。根据当前状态和任务目标，我已成功制作了火把，并且已经拥有了足够的圆石来合成熔炉（需要8个圆石）。下一步是先合成...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 合成 熔炉</div>
+            <div class="feedback">[✗] 动作失败：材料不足，无法合成 熔炉。(缺 2个圆石)</div>
+            <div class='warnings'><div class='warning-tag'>inventory_hallucination: 声称有圆石x8，实际有x6</div></div>
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 23</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我处于木器阶段，已经拥有了木镐、工作台和火把。接下来需要进入石器阶段，制作熔炉来熔炼铁矿石以获取铁锭。然而，根据配方指南，合成熔炉需要8个圆石，而我现在只有6个圆石。因此，我应该继续挖取2个额外的...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 24</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我处于木器阶段，需要制作石镐来挖取圆石以合成熔炉。目前缺少2个圆石才能完成熔炉的制作。我已经有了1个火把，并且有木镐可以用来挖掘煤炭。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 挖矿 煤炭</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个煤炭</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 25</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我处于木器阶段，已经拥有了工作台、木镐和火把。接下来需要进入石器阶段，制作石镐并合成熔炉。根据当前背包内容，缺少2个圆石来合成熔炉。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 26</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我已经有了木镐，可以继续挖掘圆石来制作熔炉。我已经有8个圆石了，还需要2个才能合成熔炉。同时我也需要找到煤炭来制作火把。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 27</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我处于石器阶段，已经拥有了木镐、火把和一些圆石。下一步需要合成熔炉来进一步处理铁矿石等材料。根据配方指南，制作熔炉需要8个圆石，而我现在有9个圆石，所以可以开始合成熔炉了。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 合成 熔炉</div>
+            <div class="feedback">[✓] 动作成功：消耗材料，合成了 1个熔炉</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 28</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我处于石器阶段，已经成功合成木镐、火把和熔炉。接下来需要获取足够的圆石来制作石镐（至少8个），并且我已经有了1个圆石。同时，我也需要挖取铁矿石以获得铁锭用于最终目标——合成铁镐。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 29</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我已经有了木镐，可以继续挖掘圆石来制作熔炉。我已经有2个圆石了，还需要6个才能合成熔炉。同时，我现在需要煤炭来制造火把，并且已经有一个煤炭和一个火把了。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 挖矿 煤炭</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个煤炭</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 30</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我已经有了木镐、火把和熔炉，接下来需要制作石镐来进一步挖掘铁矿。根据配方指南，我需要3个圆石和2根木棍来合成石镐。现在我的背包里已经有2个圆石了，所以我还需要再挖1个圆石，并且检查一下是否已经足够...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 31</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我已经有了火把，接下来需要制作石镐来进一步挖掘铁矿石。根据当前背包内容，我已经有足够的圆石（3个）和木棍（5个），但还需要更多的圆石才能合成熔炉。为了确保有足够的材料继续前进到铁器阶段，我现在应该...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 32</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前处于石器阶段，已拥有木镐、火把和熔炉。接下来需要合成石镐以继续挖矿获取铁矿石。根据配方指南，合成石镐需要3个圆石和2个木棍。现在背包中有4个圆石，所以还需要1个圆石来完成石镐的制作。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 33</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我已经完成了木器阶段，拥有木镐和火把。接下来需要进入石器阶段，制作石镐并继续挖掘圆石来合成熔炉。目前我已经有5个圆石，还需要3个才能合成熔炉。同时，我的目标是最终获得铁镐，因此在完成当前任务后我会...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 34</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我已经有了木镐、工作台和熔炉，接下来需要合成石镐来挖掘铁矿石。根据配方指南，我需要3个圆石和2根木棍来制作石镐。现在我的背包里已经有6个圆石了，足够用来制作石镐。另外，我有足够的木棍可以使用。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 合成 石镐</div>
+            <div class="feedback">[✓] 动作成功：消耗材料，合成了 1个石镐</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 35</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我已经有了木镐、熔炉和石镐，接下来需要通过挖矿获得铁矿石并将其熔炼成铁锭。在最终目标合成铁镐之前，我还需要确保拥有火把（已经完成）。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 挖矿 铁矿石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个铁矿石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 36</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我已经有了木镐、石镐，接下来需要使用石镐来挖掘铁矿石并熔炼成铁锭。根据配方指南，合成一个铁镐需要3个铁锭和2根木棍。我目前有一个铁矿石，还需要两个铁矿石才能得到三个铁锭。同时，我已经有足够的木棍（...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 挖矿 铁矿石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个铁矿石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 37</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我已经拥有了木镐、火把和石镐，还需要铁镐来进一步挖掘铁矿。我目前有2个煤炭，可以先合成更多的材料或直接开始熔炼铁矿石以获得铁锭。根据当前背包中的物品数量，我可以先尝试制作一个铁桶以便后续可能需要的...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 熔炼 铁矿石</div>
+            <div class="feedback">[✓] 动作成功：消耗 1个铁矿石，熔炼出 1个铁锭</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 38</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我已经有了铁锭，接下来需要合成铁镐来继续我的目标。根据配方指南，我需要3个铁锭和2根木棍来制作铁镐。现在我已经有1个铁锭了，所以我还需要再挖至少一个铁矿石并熔炼成铁锭。同时，我也已经有了足够的木棍...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 熔炼 铁矿石</div>
+            <div class="feedback">[✓] 动作成功：消耗 1个铁矿石，熔炼出 1个铁锭</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'熔炼 铁矿石'出现3次</div></div>
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 39</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我已经有了木镐、石镐，熔炉也已经制作完成。我需要继续挖掘铁矿石来获得更多的铁锭，以便最终合成铁镐。同时，我已经完成了火把的支线任务。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 挖矿 铁矿石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个铁矿石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 40</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我已经有了木镐、熔炉和石镐，还有两个铁锭。根据生存与合成流程指引，我需要使用石镐来挖掘更多的铁矿石，并在熔炉中将其转化为铁锭，最终制作出铁镐。现在我的背包里缺少一个铁矿石才能达到3个铁锭，从而可以...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 挖矿 铁矿石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个铁矿石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 41</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前背包内有2个铁矿石和2个铁锭，我需要再获得1个铁矿石来合成第3个铁锭。之后就可以用3个铁锭和木棍制作出铁镐。现在我已经有了火把，接下来只需要继续挖矿获取更多的铁矿石。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 挖矿 铁矿石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个铁矿石</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 42</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我已经有了铁锭，接下来需要合成铁镐。根据配方指南，我需要3个铁锭和2根木棍来制作铁镐。现在我的背包里已经有2个铁锭了，所以我只需要再挖一个铁矿石并熔炼成铁锭即可获得第三个铁锭。同时，我有足够的木棍...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 挖矿 铁矿石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个铁矿石</div>
+            
+        </div>
+        
+        <div class="step-card fail">
+            <span class="step-num">STEP 43</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我已经有了木镐、熔炉和石镐，同时拥有两个铁锭。根据流程指引，我现在应该合成铁镐来完成最终目标。在继续之前，我需要确保任务中的火把已经获得，从当前背包内容来看，已经有4个火把了。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 合成 铁镐</div>
+            <div class="feedback">[✗] 动作失败：材料不足，无法合成 铁镐。(缺 1个铁锭)</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 44</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我已经有了木镐、石镐，熔炉也已经制作完成。我需要至少3个铁锭来合成铁镐，目前背包中有2个铁锭和4个铁矿石，可以再熔炼出1个铁锭。在获得足够的铁锭之前，我不需要额外的工具或材料。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 熔炼 铁矿石</div>
+            <div class="feedback">[✓] 动作成功：消耗 1个铁矿石，熔炼出 1个铁锭</div>
+            
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 45</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我已经有了铁镐所需的全部材料，除了最后缺少一个铁锭。我已经有3个铁矿石熔炼出了2个铁锭，还剩下1个未使用。现在需要将最后一个铁矿石放入熔炉中进行熔炼以获得第三个也是最后一个铁锭。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 熔炼 铁矿石</div>
+            <div class="feedback">[✓] 动作成功：消耗 1个铁矿石，熔炼出 1个铁锭</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'熔炼 铁矿石'出现3次</div></div>
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 46</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我已经有了铁镐所需的大部分材料，但还需要一个额外的铁锭来完成合成。我已经有4个铁锭了，所以现在需要再挖一些铁矿石并熔炼成铁锭。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 挖矿 铁矿石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个铁矿石</div>
+            
+        </div>
+        
+        <div class="step-card fail">
+            <span class="step-num">STEP 47</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我已经有了铁锭 x4，木板 x1，木棍 x3，工作台 x1，木镐 x1，煤炭 x2，火把 x4，圆石 x3，熔炉 x1，石镐 x1，铁矿石 x3。根据配方指南，我需要合成铁镐，但还需要一个额外的木...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 合成 木棍</div>
+            <div class="feedback">[✗] 动作失败：材料不足，无法合成 木棍。(缺 1个木板)</div>
+            
+        </div>
+        
+        <div class="step-card fail">
+            <span class="step-num">STEP 48</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我处于铁器阶段，需要合成铁镐来完成最终目标。根据配方指南，制作铁镐需要3个铁锭和2个木棍。我已经有了4个铁锭，但只有3个木棍，其中1个已经被使用了。从之前的步骤来看，我还需要先合成一个木棍。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 合成 木棍</div>
+            <div class="feedback">[✗] 动作失败：材料不足，无法合成 木棍。(缺 1个木板)</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'合成 木棍'出现3次</div></div>
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 49</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前背包中有4个铁锭，但需要3个铁锭来合成一个铁镐。因此，我还需要再熔炼1个铁矿石以获得额外的铁锭。在执行这个操作之前，我首先检查是否还有未使用的煤炭和铁矿石。当前有2个煤炭和3个铁矿石，这足以完成接...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 熔炼 铁矿石</div>
+            <div class="feedback">[✓] 动作成功：消耗 1个铁矿石，熔炼出 1个铁锭</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'熔炼 铁矿石'出现3次</div></div>
+        </div>
+        
+        <div class="step-card fail">
+            <span class="step-num">STEP 50</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我已经拥有木板、工作台、木镐、火把、熔炉和石镐，接下来需要铁锭来合成铁镐。我已经有5个铁锭了，但是根据配方指南，合成铁镐需要3个铁锭和2根木棍。虽然我现在有超过所需的铁锭数量，但还需要确保有足够的...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 合成 木棍</div>
+            <div class="feedback">[✗] 动作失败：材料不足，无法合成 木棍。(缺 1个木板)</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'合成 木棍'出现4次</div></div>
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 51</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我已经有了工作台、木镐、火把、熔炉和石镐，接下来需要获取足够的铁矿石来合成更多的铁锭。根据配方指南，我还需要一个额外的铁锭才能制作出铁镐。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 挖矿 铁矿石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个铁矿石</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'合成 木棍'出现3次</div></div>
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 52</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我已经拥有了木板、煤炭和火把，工作台也已经制作完成。接下来我需要使用木镐挖掘圆石来获得足够的材料合成熔炉，并且还需要更多的铁矿石来炼制出3个铁锭用于合成铁镐。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 挖矿 圆石</div>
+            <div class="feedback">[✓] 动作成功：挖出 1个圆石</div>
+            
+        </div>
+        
+        <div class="step-card fail">
+            <span class="step-num">STEP 53</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我处于铁器阶段，需要合成铁镐来完成最终目标。根据配方指南，合成铁镐需要3个铁锭和2个木棍。我已经有了5个铁锭，所以只需要再制作1个木棍（因为我已经有3个木棍了）。为了制作木棍，我还需要1块木板。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 合成 木棍</div>
+            <div class="feedback">[✗] 动作失败：材料不足，无法合成 木棍。(缺 1个木板)</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'合成 木棍'出现3次</div></div>
+        </div>
+        
+        <div class="step-card fail">
+            <span class="step-num">STEP 54</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我已经有了木板、木棍、工作台、木镐、煤炭、火把、圆石、熔炉、石镐、铁矿石和铁锭。我的最终目标是合成铁镐，根据配方需要3个铁锭和2个木棍来制作一个铁镐。我目前有5个铁锭和3个木棍，因此还需要1个木棍...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 合成 木棍</div>
+            <div class="feedback">[✗] 动作失败：材料不足，无法合成 木棍。(缺 1个木板)</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'合成 木棍'出现4次</div></div>
+        </div>
+        
+        <div class="step-card fail">
+            <span class="step-num">STEP 55</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我处于铁器阶段，需要合成铁镐来完成最终目标。根据配方指南，制作一个铁镐需要3个铁锭和2根木棍。我已经有了5个铁锭，但是只缺少1根木棍。为了合成木棍，我还需要至少1块木板。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 合成 木棍</div>
+            <div class="feedback">[✗] 动作失败：材料不足，无法合成 木棍。(缺 1个木板)</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'合成 木棍'出现4次</div></div>
+        </div>
+        
+        <div class="step-card fail">
+            <span class="step-num">STEP 56</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我已经有了木板、木棍、工作台、木镐、煤炭、火把、圆石、熔炉、石镐、铁矿石和铁锭。为了合成铁镐，我需要3个铁锭和2个木棍。现在背包里已经有5个铁锭了，所以铁锭是足够的。但是只有3个木棍，所以我需要先...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 合成 木棍</div>
+            <div class="feedback">[✗] 动作失败：材料不足，无法合成 木棍。(缺 1个木板)</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'合成 木棍'出现5次</div></div>
+        </div>
+        
+        <div class="step-card fail">
+            <span class="step-num">STEP 57</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前背包中有木板 x1，木棍 x3，工作台 x1，木镐 x1，煤炭 x2，火把 x4，圆石 x4，熔炉 x1，石镐 x1，铁矿石 x3，铁锭 x5。根据当前状态和目标，我需要合成一个铁镐来完成最终目标...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 合成 木棍</div>
+            <div class="feedback">[✗] 动作失败：材料不足，无法合成 木棍。(缺 1个木板)</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'合成 木棍'出现6次</div></div>
+        </div>
+        
+        <div class="step-card fail">
+            <span class="step-num">STEP 58</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我处于铁器阶段，需要合成铁镐来完成最终目标。根据配方指南，合成铁镐需要3个铁锭和2个木棍。我已经有了5个铁锭，但似乎缺少了制作木棍所需的木板。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 合成 木棍</div>
+            <div class="feedback">[✗] 动作失败：材料不足，无法合成 木棍。(缺 1个木板)</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'合成 木棍'出现6次</div></div>
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 59</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我处于铁器阶段，需要合成铁镐来完成最终目标。根据配方指南，合成铁镐需要3个铁锭和2个木棍。我已经有了5个铁锭，所以不需要额外的铁锭。但是，我发现缺少了1个木板用于制作木棍。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 砍树</div>
+            <div class="feedback">[✓] 动作成功：获得 1个原木</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'合成 木棍'出现4次</div></div>
+        </div>
+        
+        <div class="step-card success">
+            <span class="step-num">STEP 60</span>
+            <div class='thought-box'><strong>🤔 内部思绪 (Thought):</strong><br>当前我处于铁器阶段，需要合成铁镐来完成最终目标。根据配方指南，合成铁镐需要3个铁锭和2个木棍。我已经有了5个铁锭，但缺少2个木棍。为了制作木棍，我还需要1块木板。...</div>
+            <div class="action-title"><span class="action-tag">ACTION</span> 合成 木板</div>
+            <div class="feedback">[✓] 动作成功：消耗材料，合成了 4个木板</div>
+            <div class='warnings'><div class='warning-tag'>action_loop: 最近6步中'合成 木棍'出现3次</div></div>
+        </div>
+        
+    </div>
+    <div style="height: 300px;"></div>
+    
+    <script>
+        const cards = document.querySelectorAll('.step-card');
+        const playBtn = document.getElementById('playBtn');
+        let currentIndex = 0;
+        let playInterval = null;
+        let isPlaying = false;
+
+        function showAll() {
+            clearInterval(playInterval);
+            isPlaying = false;
+            playBtn.innerText = '↺ 重新回放';
+            cards.forEach(card => card.classList.add('show-all'));
+        }
+
+        function togglePlay() {
+            if (isPlaying) {
+                // 暂停
+                clearInterval(playInterval);
+                playBtn.innerText = '▶ 继续回放';
+                isPlaying = false;
+            } else {
+                // 确保移除全展示效果
+                if (currentIndex >= cards.length || document.querySelector('.show-all')) {
+                    cards.forEach(card => {
+                        card.classList.remove('visible', 'show-all');
+                        card.style.display = 'none';
+                    });
+                    currentIndex = 0;
+                }
+                
+                playBtn.innerText = '⏸ 暂停回放';
+                isPlaying = true;
+                
+                playInterval = setInterval(() => {
+                    if (currentIndex < cards.length) {
+                        const card = cards[currentIndex];
+                        card.style.display = 'block'; // 先给 display: block
+                        
+                        // 强制触发重排，让 transition 生效
+                        void card.offsetWidth; 
+                        
+                        card.classList.add('visible'); // 再加透明度变换和弹跳动画
+                        
+                        // 平滑滚动，留一点余量在顶部
+                        const y = card.getBoundingClientRect().top + window.scrollY - 100;
+                        window.scrollTo({ top: y, behavior: 'smooth' });
+                        
+                        currentIndex++;
+                    } else {
+                        clearInterval(playInterval);
+                        playBtn.innerText = '↺ 重新回放';
+                        isPlaying = false;
+                    }
+                }, 1200); // ✅ 每步停留 1.2 秒，您可以调整这个速度
+            }
+        }
+    </script>
+</body>
+</html>

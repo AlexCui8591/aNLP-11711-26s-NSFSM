@@ -1,0 +1,104 @@
+{
+  "Wooden": {
+    "max_steps": 3600,
+    "goals": [
+      {"id": 0, "goal": "wooden_shovel", "type": "craft", "instruction": "Craft a wooden shovel"},
+      {"id": 1, "goal": "wooden_pickaxe", "type": "craft", "instruction": "Craft a wooden pickaxe"},
+      {"id": 2, "goal": "wooden_axe", "type": "craft", "instruction": "Craft a wooden axe"},
+      {"id": 3, "goal": "wooden_hoe", "type": "craft", "instruction": "Craft a wooden hoe"},
+      {"id": 4, "goal": "stick", "type": "craft", "instruction": "Craft a stick"},
+      {"id": 5, "goal": "crafting_table", "type": "craft", "instruction": "Craft a crafting table"},
+      {"id": 6, "goal": "wooden_sword", "type": "craft", "instruction": "Craft a wooden sword"},
+      {"id": 7, "goal": "chest", "type": "craft", "instruction": "Craft a chest"},
+      {"id": 8, "goal": "bowl", "type": "craft", "instruction": "Craft a bowl"},
+      {"id": 9, "goal": "ladder", "type": "craft", "instruction": "Craft a ladder"}
+    ]
+  },
+  "Stone": {
+    "max_steps": 7200,
+    "goals": [
+      {"id": 0, "goal": "stone_shovel", "type": "craft", "instruction": "Craft a stone shovel"},
+      {"id": 1, "goal": "stone_pickaxe", "type": "craft", "instruction": "Craft a stone pickaxe"},
+      {"id": 2, "goal": "stone_axe", "type": "craft", "instruction": "Craft a stone axe"},
+      {"id": 3, "goal": "stone_hoe", "type": "craft", "instruction": "Craft a stone hoe"},
+      {"id": 4, "goal": "charcoal", "type": "smelt", "instruction": "Smelt a charcoal"},
+      {"id": 5, "goal": "smoker", "type": "craft", "instruction": "Craft a smoker"},
+      {"id": 6, "goal": "stone_sword", "type": "craft", "instruction": "Craft a stone sword"},
+      {"id": 7, "goal": "furnace", "type": "craft", "instruction": "Craft a furnace"},
+      {"id": 8, "goal": "torch", "type": "craft", "instruction": "Craft a torch"}
+    ]
+  },
+  "Iron": {
+    "max_steps": 12000,
+    "goals": [
+      {"id": 0, "goal": "iron_shovel", "type": "craft", "instruction": "Craft an iron shovel"},
+      {"id": 1, "goal": "iron_pickaxe", "type": "craft", "instruction": "Craft an iron pickaxe"},
+      {"id": 2, "goal": "iron_axe", "type": "craft", "instruction": "Craft an iron axe"},
+      {"id": 3, "goal": "iron_hoe", "type": "craft", "instruction": "Craft an iron hoe"},
+      {"id": 4, "goal": "bucket", "type": "craft", "instruction": "Craft a bucket"},
+      {"id": 5, "goal": "hopper", "type": "craft", "instruction": "Craft a hopper"},
+      {"id": 6, "goal": "rail", "type": "craft", "instruction": "Craft a rail"},
+      {"id": 7, "goal": "iron_sword", "type": "craft", "instruction": "Craft an iron sword"},
+      {"id": 8, "goal": "shears", "type": "craft", "instruction": "Craft shears"},
+      {"id": 9, "goal": "smithing_table", "type": "craft", "instruction": "Craft a smithing table"},
+      {"id": 10, "goal": "tripwire_hook", "type": "craft", "instruction": "Craft a tripwire hook"},
+      {"id": 11, "goal": "chain", "type": "craft", "instruction": "Craft a chain"},
+      {"id": 12, "goal": "iron_bars", "type": "craft", "instruction": "Craft iron bars"},
+      {"id": 13, "goal": "iron_nugget", "type": "craft", "instruction": "Craft an iron nugget"},
+      {"id": 14, "goal": "blast_furnace", "type": "craft", "instruction": "Craft a blast furnace"},
+      {"id": 15, "goal": "stonecutter", "type": "craft", "instruction": "Craft a stonecutter"}
+    ]
+  },
+  "Golden": {
+    "max_steps": 36000,
+    "goals": [
+      {"id": 0, "goal": "golden_shovel", "type": "craft", "instruction": "Craft a golden shovel"},
+      {"id": 1, "goal": "golden_pickaxe", "type": "craft", "instruction": "Craft a golden pickaxe"},
+      {"id": 2, "goal": "golden_axe", "type": "craft", "instruction": "Craft a golden axe"},
+      {"id": 3, "goal": "golden_hoe", "type": "craft", "instruction": "Craft a golden hoe"},
+      {"id": 4, "goal": "golden_sword", "type": "craft", "instruction": "Craft a golden sword"},
+      {"id": 5, "goal": "gold_ingot", "type": "smelt", "instruction": "Smelt and craft a gold ingot"}
+    ]
+  },
+  "Diamond": {
+    "max_steps": 36000,
+    "goals": [
+      {"id": 0, "goal": "diamond_shovel", "type": "craft", "instruction": "Craft a diamond shovel"},
+      {"id": 1, "goal": "diamond_pickaxe", "type": "craft", "instruction": "Craft a diamond pickaxe"},
+      {"id": 2, "goal": "diamond_axe", "type": "craft", "instruction": "Craft a diamond axe"},
+      {"id": 3, "goal": "diamond_hoe", "type": "craft", "instruction": "Craft a diamond hoe"},
+      {"id": 4, "goal": "diamond_sword", "type": "craft", "instruction": "Craft a diamond sword"},
+      {"id": 5, "goal": "diamond", "type": "mine", "instruction": "Dig down and mine a diamond"},
+      {"id": 6, "goal": "jukebox", "type": "craft", "instruction": "Craft a jukebox"}
+    ]
+  },
+  "Redstone": {
+    "max_steps": 36000,
+    "goals": [
+      {"id": 0, "goal": "piston", "type": "craft", "instruction": "Craft a piston"},
+      {"id": 1, "goal": "redstone_torch", "type": "craft", "instruction": "Craft a redstone torch"},
+      {"id": 2, "goal": "activator_rail", "type": "craft", "instruction": "Craft an activator rail"},
+      {"id": 3, "goal": "compass", "type": "craft", "instruction": "Craft a compass"},
+      {"id": 4, "goal": "dropper", "type": "craft", "instruction": "Craft a dropper"},
+      {"id": 5, "goal": "note_block", "type": "craft", "instruction": "Craft a note block"}
+    ]
+  },
+  "Armor": {
+    "max_steps": 36000,
+    "goals": [
+      {"id": 0, "goal": "shield", "type": "craft", "instruction": "Craft a shield"},
+      {"id": 1, "goal": "iron_chestplate", "type": "craft", "instruction": "Craft an iron chestplate"},
+      {"id": 2, "goal": "iron_boots", "type": "craft", "instruction": "Craft iron boots"},
+      {"id": 3, "goal": "iron_leggings", "type": "craft", "instruction": "Craft iron leggings"},
+      {"id": 4, "goal": "iron_helmet", "type": "craft", "instruction": "Craft an iron helmet"},
+      {"id": 5, "goal": "diamond_helmet", "type": "craft", "instruction": "Craft a diamond helmet"},
+      {"id": 6, "goal": "diamond_chestplate", "type": "craft", "instruction": "Craft a diamond chestplate"},
+      {"id": 7, "goal": "diamond_leggings", "type": "craft", "instruction": "Craft diamond leggings"},
+      {"id": 8, "goal": "diamond_boots", "type": "craft", "instruction": "Craft diamond boots"},
+      {"id": 9, "goal": "golden_helmet", "type": "craft", "instruction": "Craft a golden helmet"},
+      {"id": 10, "goal": "golden_leggings", "type": "craft", "instruction": "Craft golden leggings"},
+      {"id": 11, "goal": "golden_boots", "type": "craft", "instruction": "Craft golden boots"},
+      {"id": 12, "goal": "golden_chestplate", "type": "craft", "instruction": "Craft a golden chestplate"}
+    ]
+  }
+}
