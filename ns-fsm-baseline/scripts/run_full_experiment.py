@@ -53,7 +53,7 @@ sys.path.insert(0, os.path.join(ROOT, "..", "MC-TextWorld"))
 from react_agent import ReactAgent
 from reflexion_agent import ReflexionAgent
 
-CONFIG_PATH = os.path.join(ROOT, "config", "hyperparams.yaml")
+DEFAULT_CONFIG_PATH = os.path.join(ROOT, "config", "hyperparams.yaml")
 GOALS_PATH  = os.path.join(ROOT, "config", "goals_67.json")
 RESULTS_BASE = os.path.join(ROOT, "results", "full")
 
@@ -197,7 +197,8 @@ def save_result(out_dir: str, agent_name: str, goal: str, run_id: int, data: dic
 # ═════════════════════════════════════════════════════════════════════════════
 
 def run_agent(agent_name: str, goals: list, num_runs: int,
-              out_dir: str, resume: bool, verbose: bool):
+              out_dir: str, resume: bool, verbose: bool,
+              config_path: str = None):
     """
     Run either 'react' or 'reflexion' on all (goal, run) pairs.
     Saves results incrementally; supports resume.
@@ -230,10 +231,11 @@ def run_agent(agent_name: str, goals: list, num_runs: int,
     print(f"{'='*70}\n")
 
     # Create agent (single instance, reused across episodes)
+    _cfg = config_path or DEFAULT_CONFIG_PATH
     if agent_name == "react":
-        agent = ReactAgent(config_path=CONFIG_PATH, verbose=verbose)
+        agent = ReactAgent(config_path=_cfg, verbose=verbose)
     else:
-        agent = ReflexionAgent(config_path=CONFIG_PATH, verbose=verbose)
+        agent = ReflexionAgent(config_path=_cfg, verbose=verbose)
 
     # Run
     times = []
@@ -540,6 +542,10 @@ def main():
         "--summary-only", action="store_true",
         help="Don't run experiments, just regenerate summary from existing results"
     )
+    parser.add_argument(
+        "--config", default=None,
+        help="Path to hyperparams YAML (default: config/hyperparams.yaml)"
+    )
     args = parser.parse_args()
 
     # ── Load goals ───────────────────────────────────────────────────────
@@ -547,6 +553,9 @@ def main():
     if not goals:
         print("No goals matched the filters. Check --groups or --goals.")
         return
+
+    # ── Resolve config path ──────────────────────────────────────────────
+    CONFIG_PATH = args.config or DEFAULT_CONFIG_PATH
 
     # ── Determine num_runs ───────────────────────────────────────────────
     import yaml
@@ -602,11 +611,13 @@ def main():
     if not args.summary_only:
         if args.agent in ("react", "both"):
             run_agent("react", goals, num_runs, out_dir,
-                      resume=args.resume, verbose=verbose)
+                      resume=args.resume, verbose=verbose,
+                      config_path=CONFIG_PATH)
 
         if args.agent in ("reflexion", "both"):
             run_agent("reflexion", goals, num_runs, out_dir,
-                      resume=args.resume, verbose=verbose)
+                      resume=args.resume, verbose=verbose,
+                      config_path=CONFIG_PATH)
 
     # ── Aggregate and print summary ──────────────────────────────────────
     print(f"\n\n{'#'*70}")
