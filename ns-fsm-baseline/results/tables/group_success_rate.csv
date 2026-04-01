@@ -1,0 +1,4 @@
+group,avg_dependency_depth,react_success_rate,react_average_steps_success,react_invalid_action_rate,react_dead_loop_rate,react_plan_knowledge_error_rate,react_sequencing_error_rate,reflexion_success_rate,reflexion_average_steps_success,reflexion_invalid_action_rate,reflexion_dead_loop_rate,reflexion_plan_knowledge_error_rate,reflexion_sequencing_error_rate
+Iron,5.375,0.5,96,0.14285714285714285,0.5,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0
+Stone,5.222222222222222,0.5,47,0.25263157894736843,0.5,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0
+Wooden,2.8,0.9166666666666666,16.272727272727273,0.043478260869565216,0.25,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0

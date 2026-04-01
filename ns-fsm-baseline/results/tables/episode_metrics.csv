@@ -1,0 +1,17 @@
+agent,goal,group,success,total_steps,termination,attempt_index,optimal_depth,invalid_action_steps,invalid_action_rate,repeated_action_transitions,repeated_action_rate,failed_steps,successful_steps,dead_loop,cascade_failure,plan_knowledge_error_steps,sequencing_error_steps,dominant_error_type,first_failure_step,source
+react,wooden_shovel,Wooden,True,15,success,,3,0,0.0,2,0.14285714285714285,3,12,False,False,0,3,sequencing_error,5,ns-fsm-baseline/results/trajectories/pilot/20260331_150238_pilot_summary.json
+react,wooden_pickaxe,Wooden,True,26,success,,3,0,0.0,7,0.28,7,19,True,False,0,7,dead_loop,5,ns-fsm-baseline/results/trajectories/pilot/20260331_150238_pilot_summary.json
+react,wooden_axe,Wooden,True,15,success,,3,0,0.0,1,0.07142857142857142,3,12,False,False,0,3,sequencing_error,5,ns-fsm-baseline/results/trajectories/pilot/20260331_150238_pilot_summary.json
+react,wooden_hoe,Wooden,True,13,success,,3,0,0.0,1,0.08333333333333333,3,10,False,False,0,3,sequencing_error,5,ns-fsm-baseline/results/trajectories/pilot/20260331_150238_pilot_summary.json
+react,stick,Wooden,True,4,success,,2,0,0.0,0,0.0,1,3,False,False,0,1,sequencing_error,2,ns-fsm-baseline/results/trajectories/pilot/20260331_150238_pilot_summary.json
+react,crafting_table,Wooden,True,3,success,,2,0,0.0,0,0.0,0,3,False,False,0,0,none,,ns-fsm-baseline/results/trajectories/pilot/20260331_150238_pilot_summary.json
+react,wooden_sword,Wooden,True,10,success,,3,0,0.0,1,0.1111111111111111,3,7,False,False,0,3,sequencing_error,4,ns-fsm-baseline/results/trajectories/pilot/20260331_150238_pilot_summary.json
+react,chest,Wooden,True,30,success,,3,0,0.0,7,0.2413793103448276,7,23,True,False,3,4,dead_loop,4,ns-fsm-baseline/results/trajectories/pilot/20260331_150238_pilot_summary.json
+react,bowl,Wooden,False,5,dead_loop,,3,5,1.0,4,1.0,5,0,True,True,5,0,dead_loop,1,ns-fsm-baseline/results/trajectories/pilot/20260331_150238_pilot_summary.json
+react,ladder,Wooden,True,22,success,,3,0,0.0,3,0.14285714285714285,6,16,False,False,0,6,sequencing_error,4,ns-fsm-baseline/results/trajectories/pilot/20260331_150238_pilot_summary.json
+react,blast_furnace,Iron,False,100,max_steps,,8,27,0.27,27,0.2727272727272727,63,37,False,False,32,31,plan_knowledge_error,1,ns-fsm-baseline/results/trajectories/pilot_stress/20260331_153744_blast_furnace.json
+react,bowl,Wooden,True,24,success,,3,3,0.125,7,0.30434782608695654,13,11,False,False,9,4,plan_knowledge_error,1,ns-fsm-baseline/results/trajectories/pilot_stress/20260331_153744_bowl.json
+react,furnace,Stone,True,47,success,,5,0,0.0,12,0.2608695652173913,22,25,True,False,5,17,dead_loop,1,ns-fsm-baseline/results/trajectories/pilot_stress/20260331_153744_furnace.json
+react,iron_pickaxe,Iron,True,96,success,,5,1,0.010416666666666666,19,0.2,41,55,True,False,29,12,dead_loop,3,ns-fsm-baseline/results/trajectories/pilot_stress/20260331_153744_iron_pickaxe.json
+react,wooden_pickaxe,Wooden,True,17,success,,3,0,0.0,2,0.125,5,12,False,False,0,5,sequencing_error,4,ns-fsm-baseline/results/trajectories/pilot_stress/20260331_153744_stress_summary.json
+react,torch,Stone,False,48,dead_loop,,5,24,0.5,11,0.23404255319148937,37,11,False,False,30,7,plan_knowledge_error,4,ns-fsm-baseline/results/trajectories/pilot_stress/20260331_153744_stress_summary.json
