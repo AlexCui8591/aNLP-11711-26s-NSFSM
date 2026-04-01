@@ -566,10 +566,12 @@ def main():
     # ── Output directory ─────────────────────────────────────────────────
     if args.resume:
         out_dir = find_latest_run(RESULTS_BASE)
-        if not out_dir:
-            print("No previous experiment found to resume.")
-            return
-        print(f"Resuming from: {out_dir}")
+        if out_dir:
+            print(f"Resuming from: {out_dir}")
+        else:
+            print("No previous experiment found to resume. Starting fresh.")
+            tag = args.tag or datetime.now().strftime("%Y%m%d_%H%M%S")
+            out_dir = os.path.join(RESULTS_BASE, tag)
     else:
         tag = args.tag or datetime.now().strftime("%Y%m%d_%H%M%S")
         out_dir = os.path.join(RESULTS_BASE, tag)
