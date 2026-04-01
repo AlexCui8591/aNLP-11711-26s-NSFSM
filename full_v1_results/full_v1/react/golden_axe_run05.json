@@ -1,0 +1,403 @@
+{
+  "goal": "golden_axe",
+  "success": false,
+  "total_steps": 24,
+  "termination": "dead_loop",
+  "trajectory": [
+    {
+      "step": 1,
+      "action": "mine_gold_ore",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed mine_gold_ore: missing tool: iron_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 2,
+      "action": "craft_iron_pickaxe",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed craft_iron_pickaxe: missing tool: crafting_table (need 1, have 0); missing materials: stick (need 2, have 0), iron_ingot (need 3, have 0)",
+      "done": false
+    },
+    {
+      "step": 3,
+      "action": "mine_oak_log",
+      "success": true,
+      "inventory_before": {},
+      "inventory_after": {
+        "oak_log": 1
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 4,
+      "action": "craft_crafting_table",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 1
+      },
+      "inventory_after": {
+        "oak_log": 1
+      },
+      "message": "Failed craft_crafting_table: missing materials: oak_planks (need 4, have 0)",
+      "done": false
+    },
+    {
+      "step": 5,
+      "action": "craft_oak_planks",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 1
+      },
+      "inventory_after": {
+        "oak_log": 0,
+        "oak_planks": 4
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 6,
+      "action": "craft_crafting_table",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 0,
+        "oak_planks": 4
+      },
+      "inventory_after": {
+        "oak_log": 0,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 7,
+      "action": "smelt_iron_ore",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 0,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 0,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "message": "action smelt_iron_ore NOT exist!'",
+      "done": false
+    },
+    {
+      "step": 8,
+      "action": "mine_iron_ore",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 0,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 0,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "message": "Failed mine_iron_ore: missing tool: stone_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 9,
+      "action": "mine_oak_log",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 0,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 1,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 10,
+      "action": "mine_gold_ore",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 1,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 1,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "message": "Failed mine_gold_ore: missing tool: iron_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 11,
+      "action": "mine_gold_ore",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 1,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 1,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "message": "Failed mine_gold_ore: missing tool: iron_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 12,
+      "action": "craft_iron_pickaxe",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 1,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 1,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "message": "Failed craft_iron_pickaxe: missing materials: stick (need 2, have 0), iron_ingot (need 3, have 0)",
+      "done": false
+    },
+    {
+      "step": 13,
+      "action": "craft_stick",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 1,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 1,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "message": "Failed craft_stick: missing materials: oak_planks (need 2, have 0)",
+      "done": false
+    },
+    {
+      "step": 14,
+      "action": "mine_oak_log",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 1,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 2,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 15,
+      "action": "smelt_iron_ore",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 2,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 2,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "message": "action smelt_iron_ore NOT exist!'",
+      "done": false
+    },
+    {
+      "step": 16,
+      "action": "mine_gold_ore",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 2,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 2,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "message": "Failed mine_gold_ore: missing tool: iron_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 17,
+      "action": "mine_iron_ore",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 2,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 2,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "message": "Failed mine_iron_ore: missing tool: stone_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 18,
+      "action": "mine_cobblestone",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 2,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 2,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 19,
+      "action": "mine_cobblestone",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 2,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 2,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 20,
+      "action": "craft_oak_planks",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 2,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 1,
+        "oak_planks": 4,
+        "crafting_table": 1
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 21,
+      "action": "mine_gold_ore",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 1,
+        "oak_planks": 4,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 1,
+        "oak_planks": 4,
+        "crafting_table": 1
+      },
+      "message": "Failed mine_gold_ore: missing tool: iron_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 22,
+      "action": "craft_wooden_pickaxe",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 1,
+        "oak_planks": 4,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 1,
+        "oak_planks": 4,
+        "crafting_table": 1
+      },
+      "message": "Failed craft_wooden_pickaxe: missing materials: stick (need 2, have 0)",
+      "done": false
+    },
+    {
+      "step": 23,
+      "action": "craft_stick",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 1,
+        "oak_planks": 4,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 1,
+        "oak_planks": 2,
+        "crafting_table": 1,
+        "stick": 4
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 24,
+      "action": "mine_gold_ore",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 1,
+        "oak_planks": 2,
+        "crafting_table": 1,
+        "stick": 4
+      },
+      "inventory_after": {
+        "oak_log": 1,
+        "oak_planks": 2,
+        "crafting_table": 1,
+        "stick": 4
+      },
+      "message": "Failed mine_gold_ore: missing tool: iron_pickaxe (need 1, have 0)",
+      "done": false
+    }
+  ],
+  "dead_loop_reason": "'mine_gold_ore' failed 5+ times in last 20 steps (recurring)",
+  "run_id": 5,
+  "group": "Golden",
+  "elapsed_sec": 56.61,
+  "errors": {
+    "unknown_action": 2,
+    "missing_tool": 11,
+    "missing_material": 4,
+    "repeated_same_fail": 2,
+    "total_failed_steps": 17,
+    "total_successful_steps": 7,
+    "efficiency": 0.292,
+    "dominant_error_type": "plan_knowledge_error"
+  }
+}

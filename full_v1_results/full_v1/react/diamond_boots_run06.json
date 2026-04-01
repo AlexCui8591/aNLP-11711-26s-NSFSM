@@ -1,0 +1,134 @@
+{
+  "goal": "diamond_boots",
+  "success": false,
+  "total_steps": 10,
+  "termination": "dead_loop",
+  "trajectory": [
+    {
+      "step": 1,
+      "action": "mine_cobblestone",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 2,
+      "action": "mine_cobblestone",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 3,
+      "action": "mine_cobblestone",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 4,
+      "action": "mine_cobblestone",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 5,
+      "action": "mine_oak_log",
+      "success": true,
+      "inventory_before": {},
+      "inventory_after": {
+        "oak_log": 1
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 6,
+      "action": "craft_crafting_table",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 1
+      },
+      "inventory_after": {
+        "oak_log": 1
+      },
+      "message": "Failed craft_crafting_table: missing materials: oak_planks (need 4, have 0)",
+      "done": false
+    },
+    {
+      "step": 7,
+      "action": "craft_crafting_table",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 1
+      },
+      "inventory_after": {
+        "oak_log": 1
+      },
+      "message": "Failed craft_crafting_table: missing materials: oak_planks (need 4, have 0)",
+      "done": false
+    },
+    {
+      "step": 8,
+      "action": "craft_crafting_table",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 1
+      },
+      "inventory_after": {
+        "oak_log": 1
+      },
+      "message": "Failed craft_crafting_table: missing materials: oak_planks (need 4, have 0)",
+      "done": false
+    },
+    {
+      "step": 9,
+      "action": "mine_oak_log",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 1
+      },
+      "inventory_after": {
+        "oak_log": 2
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 10,
+      "action": "mine_cobblestone",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 2
+      },
+      "inventory_after": {
+        "oak_log": 2
+      },
+      "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+      "done": false
+    }
+  ],
+  "dead_loop_reason": "'mine_cobblestone' failed 5+ times in last 20 steps (recurring)",
+  "run_id": 6,
+  "group": "Armor",
+  "elapsed_sec": 23.92,
+  "errors": {
+    "unknown_action": 0,
+    "missing_tool": 5,
+    "missing_material": 3,
+    "repeated_same_fail": 5,
+    "total_failed_steps": 8,
+    "total_successful_steps": 2,
+    "efficiency": 0.2,
+    "dominant_error_type": "tool_dependency_error"
+  }
+}

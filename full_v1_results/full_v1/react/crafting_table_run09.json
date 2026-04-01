@@ -1,0 +1,88 @@
+{
+  "goal": "crafting_table",
+  "success": true,
+  "total_steps": 5,
+  "termination": "success",
+  "trajectory": [
+    {
+      "step": 1,
+      "action": "mine_oak_log",
+      "success": true,
+      "inventory_before": {},
+      "inventory_after": {
+        "oak_log": 1
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 2,
+      "action": "mine_oak_log",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 1
+      },
+      "inventory_after": {
+        "oak_log": 2
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 3,
+      "action": "mine_oak_log",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 2
+      },
+      "inventory_after": {
+        "oak_log": 3
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 4,
+      "action": "craft_oak_planks",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 3
+      },
+      "inventory_after": {
+        "oak_log": 2,
+        "oak_planks": 4
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 5,
+      "action": "craft_crafting_table",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 2,
+        "oak_planks": 4
+      },
+      "inventory_after": {
+        "oak_log": 2,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "message": "Action executed successfully",
+      "done": true
+    }
+  ],
+  "run_id": 9,
+  "group": "Wooden",
+  "elapsed_sec": 5.95,
+  "errors": {
+    "unknown_action": 0,
+    "missing_tool": 0,
+    "missing_material": 0,
+    "repeated_same_fail": 0,
+    "total_failed_steps": 0,
+    "total_successful_steps": 5,
+    "efficiency": 1.0,
+    "dominant_error_type": "none"
+  }
+}

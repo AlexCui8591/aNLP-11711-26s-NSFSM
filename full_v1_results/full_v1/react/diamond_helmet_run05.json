@@ -1,0 +1,76 @@
+{
+  "goal": "diamond_helmet",
+  "success": false,
+  "total_steps": 6,
+  "termination": "dead_loop",
+  "trajectory": [
+    {
+      "step": 1,
+      "action": "mine_diamond_ore",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "action mine_diamond_ore NOT exist!'",
+      "done": false
+    },
+    {
+      "step": 2,
+      "action": "mine_cobblestone",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 3,
+      "action": "mine_cobblestone",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 4,
+      "action": "mine_cobblestone",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 5,
+      "action": "mine_cobblestone",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 6,
+      "action": "mine_cobblestone",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+      "done": false
+    }
+  ],
+  "dead_loop_reason": "same action repeated 5× and all failed: 'mine_cobblestone'",
+  "run_id": 5,
+  "group": "Armor",
+  "elapsed_sec": 8.55,
+  "errors": {
+    "unknown_action": 1,
+    "missing_tool": 5,
+    "missing_material": 0,
+    "repeated_same_fail": 4,
+    "total_failed_steps": 6,
+    "total_successful_steps": 0,
+    "efficiency": 0.0,
+    "dominant_error_type": "plan_knowledge_error"
+  }
+}

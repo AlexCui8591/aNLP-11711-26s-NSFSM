@@ -1,0 +1,267 @@
+{
+  "goal": "chest",
+  "success": true,
+  "total_steps": 15,
+  "termination": "success",
+  "trajectory": [
+    {
+      "step": 1,
+      "action": "mine_oak_log",
+      "success": true,
+      "inventory_before": {},
+      "inventory_after": {
+        "oak_log": 1
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 2,
+      "action": "craft_oak_planks",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 1
+      },
+      "inventory_after": {
+        "oak_log": 0,
+        "oak_planks": 4
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 3,
+      "action": "craft_crafting_table",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 0,
+        "oak_planks": 4
+      },
+      "inventory_after": {
+        "oak_log": 0,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 4,
+      "action": "craft_oak_planks",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 0,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 0,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "message": "Failed craft_oak_planks: missing materials: oak_log (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 5,
+      "action": "mine_oak_log",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 0,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 1,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 6,
+      "action": "craft_oak_planks",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 1,
+        "oak_planks": 0,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 0,
+        "oak_planks": 4,
+        "crafting_table": 1
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 7,
+      "action": "craft_chest",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 0,
+        "oak_planks": 4,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 0,
+        "oak_planks": 4,
+        "crafting_table": 1
+      },
+      "message": "Failed craft_chest: missing materials: oak_planks (need 8, have 4)",
+      "done": false
+    },
+    {
+      "step": 8,
+      "action": "mine_oak_log",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 0,
+        "oak_planks": 4,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 1,
+        "oak_planks": 4,
+        "crafting_table": 1
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 9,
+      "action": "mine_oak_log",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 1,
+        "oak_planks": 4,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 2,
+        "oak_planks": 4,
+        "crafting_table": 1
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 10,
+      "action": "mine_oak_log",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 2,
+        "oak_planks": 4,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 3,
+        "oak_planks": 4,
+        "crafting_table": 1
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 11,
+      "action": "mine_oak_log",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 3,
+        "oak_planks": 4,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 4,
+        "oak_planks": 4,
+        "crafting_table": 1
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 12,
+      "action": "mine_oak_log",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 4,
+        "oak_planks": 4,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 5,
+        "oak_planks": 4,
+        "crafting_table": 1
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 13,
+      "action": "mine_oak_log",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 5,
+        "oak_planks": 4,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 6,
+        "oak_planks": 4,
+        "crafting_table": 1
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 14,
+      "action": "craft_oak_planks",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 6,
+        "oak_planks": 4,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 5,
+        "oak_planks": 8,
+        "crafting_table": 1
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 15,
+      "action": "craft_chest",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 5,
+        "oak_planks": 8,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 5,
+        "oak_planks": 0,
+        "crafting_table": 1,
+        "chest": 1
+      },
+      "message": "Action executed successfully",
+      "done": true
+    }
+  ],
+  "run_id": 4,
+  "group": "Wooden",
+  "elapsed_sec": 19.3,
+  "errors": {
+    "unknown_action": 0,
+    "missing_tool": 0,
+    "missing_material": 2,
+    "repeated_same_fail": 0,
+    "total_failed_steps": 2,
+    "total_successful_steps": 13,
+    "efficiency": 0.867,
+    "dominant_error_type": "resource_shortage"
+  }
+}

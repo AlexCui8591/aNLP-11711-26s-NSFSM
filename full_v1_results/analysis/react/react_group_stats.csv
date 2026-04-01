@@ -1,0 +1,8 @@
+group,depth,n_goals,n_runs,n_success,success_rate,avg_steps
+Wooden,3,10,150,120,0.800,12.6
+Stone,7,9,135,21,0.156,17.8
+Iron,12,16,240,2,0.008,22.4
+Golden,15,6,90,0,0.000,20.1
+Diamond,18,7,105,0,0.000,21.2
+Redstone,14,6,90,1,0.011,31.3
+Armor,15,13,195,0,0.000,16.5
