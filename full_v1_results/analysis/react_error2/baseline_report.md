@@ -1,24 +1,24 @@
 # Baseline Reproduction
 
-- Generated at: `2026-04-01 23:01:27`
+- Generated at: `2026-04-02 01:06:53`
 - Inputs: `full_v1_results/full_v1/react`
-- ReAct episodes analyzed: `896`
+- ReAct episodes analyzed: `1005`
 - Reflexion runs analyzed: `0`
 
 # Error Analysis
 
 ## React
 
-- Success rate: `114/896` (12.7%)
-- Average steps on success: `20.5`
-- Invalid action rate: `5.7%`
-- Repeated action rate: `17.6%`
-- Dead loop rate: `13.2%`
-- Cascade failure rate: `17.4%`
-- Plan knowledge error rate: `90.2%`
-- Sequencing error rate: `71.7%`
+- Success rate: `144/1005` (14.3%)
+- Average steps on success: `17.4`
+- Invalid action rate: `6.4%`
+- Repeated action rate: `19.0%`
+- Dead loop rate: `19.1%`
+- Cascade failure rate: `24.5%`
+- Plan knowledge error rate: `89.8%`
+- Sequencing error rate: `66.2%`
 
-- Performance decay slope: `-0.3044` success-rate points per dependency-depth unit
+- Performance decay slope: `-0.3163` success-rate points per dependency-depth unit
 
 # Reflection
 

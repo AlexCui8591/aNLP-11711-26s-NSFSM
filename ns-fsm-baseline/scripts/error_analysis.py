@@ -363,6 +363,19 @@ def dedupe_reflexion_runs(runs: list[ReflexionRunRecord]) -> list[ReflexionRunRe
 
 
 def episode_fingerprint(episode: EpisodeRecord) -> str:
+    run_id = episode.metadata.get("run_id")
+    if run_id is not None:
+        payload = {
+            "agent": episode.agent,
+            "goal": episode.goal,
+            "group": episode.group,
+            "run_id": run_id,
+            "attempt_index": episode.attempt_index,
+        }
+        return hashlib.sha1(
+            json.dumps(payload, sort_keys=True, ensure_ascii=False).encode("utf-8")
+        ).hexdigest()
+
     payload = {
         "agent": episode.agent,
         "goal": episode.goal,
@@ -379,6 +392,17 @@ def episode_fingerprint(episode: EpisodeRecord) -> str:
 
 
 def reflexion_fingerprint(run: ReflexionRunRecord) -> str:
+    run_id = run.metadata.get("run_id")
+    if run_id is not None:
+        payload = {
+            "goal": run.goal,
+            "group": run.group,
+            "run_id": run_id,
+        }
+        return hashlib.sha1(
+            json.dumps(payload, sort_keys=True, ensure_ascii=False).encode("utf-8")
+        ).hexdigest()
+
     payload = {
         "goal": run.goal,
         "group": run.group,

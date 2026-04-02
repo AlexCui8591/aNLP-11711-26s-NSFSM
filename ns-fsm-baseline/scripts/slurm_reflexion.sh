@@ -69,7 +69,7 @@ python -m vllm.entrypoints.openai.api_server \
     --port 8000 \
     --trust-remote-code \
     --gpu-memory-utilization 0.90 
-    #&> logs/vllm_reflexion_${SLURM_JOB_ID}.log &
+    &> logs/vllm_reflexion_${SLURM_JOB_ID}.log &
 
 VLLM_PID=$!
 echo "  vLLM PID: $VLLM_PID"
