@@ -41,17 +41,14 @@ export PYTHONPATH=/ocean/projects/cis250260p/cuiz/aNLP-11711-26s-NSFSM/MC-TextWo
 mkdir -p "$HF_HOME" "$VLLM_CACHE_ROOT" "$TRITON_CACHE_DIR" "$TORCH_EXTENSIONS_DIR"
 COMMENT_OUT
 
-export PSC_USER=<ezhang13>
-export PROJECT_ROOT=/ocean/projects/cis250260p/$PSC_USER/aNLP-11711-26s-NSFSM
-
-export HF_HOME=/ocean/projects/cis250260p/$PSC_USER/.cache/huggingface
-export VLLM_CACHE_ROOT=/ocean/projects/cis250260p/$PSC_USER/.cache/vllm
-export TRITON_CACHE_DIR=/ocean/projects/cis250260p/$PSC_USER/.cache/triton
-export TORCH_EXTENSIONS_DIR=/ocean/projects/cis250260p/$PSC_USER/.cache/torch_extensions
-export XDG_CACHE_HOME=/ocean/projects/cis250260p/$PSC_USER/.cache
-export PYTHONPATH=$PROJECT_ROOT/MC-TextWorld:$PYTHONPATH
-
+export HF_HOME=/ocean/projects/cis250260p/ezhang13/.cache/huggingface
+export VLLM_CACHE_ROOT=/ocean/projects/cis250260p/ezhang13/.cache/vllm
+export TRITON_CACHE_DIR=/ocean/projects/cis250260p/ezhang13/.cache/triton
+export TORCH_EXTENSIONS_DIR=/ocean/projects/cis250260p/ezhang13/.cache/torch_extensions
+export XDG_CACHE_HOME=/ocean/projects/cis250260p/ezhang13/.cache
+export PYTHONPATH=/ocean/projects/cis250260p/ezhang13/aNLP-11711-26s-NSFSM/MC-TextWorld:$PYTHONPATH
 mkdir -p "$HF_HOME" "$VLLM_CACHE_ROOT" "$TRITON_CACHE_DIR" "$TORCH_EXTENSIONS_DIR"
+
 
 
 # ── Conda (safe for non-interactive shell) ───────────────────
