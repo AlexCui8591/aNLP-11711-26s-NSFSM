@@ -41,7 +41,7 @@ export PYTHONPATH=/ocean/projects/cis250260p/cuiz/aNLP-11711-26s-NSFSM/MC-TextWo
 mkdir -p "$HF_HOME" "$VLLM_CACHE_ROOT" "$TRITON_CACHE_DIR" "$TORCH_EXTENSIONS_DIR"
 COMMENT_OUT
 
-export PSC_USER=ezhang13
+export PSC_USER=<ezhang13>
 export PROJECT_ROOT=/ocean/projects/cis250260p/$PSC_USER/aNLP-11711-26s-NSFSM
 
 export HF_HOME=/ocean/projects/cis250260p/$PSC_USER/.cache/huggingface
