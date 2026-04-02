@@ -42,6 +42,8 @@ GOALS_PATH = ROOT / "config" / "goals_67.json"
 TRAJECTORIES_DIR = ROOT / "results" / "trajectories"
 TABLES_DIR = ROOT / "results" / "tables"
 FIGURES_DIR = ROOT / "results" / "figures"
+FULL_V1_REACT_INPUT = ROOT.parent / "full_v1_results" / "full_v1" / "react"
+FULL_V1_REACT_OUTPUT = ROOT.parent / "full_v1_results" / "analysis" / "react_error2"
 
 
 def parse_args() -> argparse.Namespace:
@@ -54,12 +56,12 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--tables-dir",
-        default=str(TABLES_DIR),
+        default=None,
         help="Directory for CSV/JSON/Markdown outputs",
     )
     parser.add_argument(
         "--figures-dir",
-        default=str(FIGURES_DIR),
+        default=None,
         help="Directory for plot outputs",
     )
     parser.add_argument(
@@ -69,6 +71,20 @@ def parse_args() -> argparse.Namespace:
         help="Maximum number of representative failure case studies",
     )
     return parser.parse_args()
+
+
+def resolve_output_dirs(args: argparse.Namespace) -> tuple[Path, Path]:
+    input_paths = [Path(p).resolve() for p in args.input]
+    full_v1_react = FULL_V1_REACT_INPUT.resolve()
+
+    if args.tables_dir is None and args.figures_dir is None:
+        if len(input_paths) == 1 and input_paths[0] == full_v1_react:
+            return FULL_V1_REACT_OUTPUT, FULL_V1_REACT_OUTPUT
+        return TABLES_DIR, FIGURES_DIR
+
+    tables_dir = Path(args.tables_dir) if args.tables_dir else TABLES_DIR
+    figures_dir = Path(args.figures_dir) if args.figures_dir else FIGURES_DIR
+    return tables_dir, figures_dir
 
 
 def load_goals_config() -> dict:
@@ -675,8 +691,7 @@ def write_json(path: Path, payload: dict) -> None:
 def main() -> int:
     args = parse_args()
 
-    tables_dir = Path(args.tables_dir)
-    figures_dir = Path(args.figures_dir)
+    tables_dir, figures_dir = resolve_output_dirs(args)
     tables_dir.mkdir(parents=True, exist_ok=True)
     figures_dir.mkdir(parents=True, exist_ok=True)
 

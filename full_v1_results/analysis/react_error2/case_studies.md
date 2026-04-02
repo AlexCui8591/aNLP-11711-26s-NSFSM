@@ -1,0 +1,53 @@
+## Case 1: React on `blast_furnace`
+- Group: `Iron`
+- Termination: `max_steps`
+- Steps: `100`
+- Dominant error: `dead_loop`
+- First failure step: `1`
+- First failure: `Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)`
+- Failure trace:
+  - Step 1: `mine_cobblestone` -> Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)
+  - Step 4: `craft_crafting_table` -> Failed craft_crafting_table: missing materials: oak_planks (need 4, have 0)
+  - Step 9: `craft_stone_pickaxe` -> Failed craft_stone_pickaxe: missing materials: stick (need 2, have 0), cobblestone (need 3, have 0)
+
+## Case 2: React on `blast_furnace`
+- Group: `Iron`
+- Termination: `dead_loop`
+- Steps: `39`
+- Dominant error: `sequencing_error`
+- First failure step: `1`
+- First failure: `Failed mine_iron_ore: missing tool: stone_pickaxe (need 1, have 0)`
+- Failure trace:
+  - Step 1: `mine_iron_ore` -> Failed mine_iron_ore: missing tool: stone_pickaxe (need 1, have 0)
+  - Step 2: `mine_cobblestone` -> Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)
+  - Step 4: `mine_cobblestone` -> Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)
+
+## Case 3: React on `stonecutter`
+- Group: `Iron`
+- Termination: `dead_loop`
+- Steps: `62`
+- Dominant error: `plan_knowledge_error`
+- First failure step: `1`
+- First failure: `Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)`
+- Failure trace:
+  - Step 1: `mine_cobblestone` -> Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)
+  - Step 6: `craft_stone_pickaxe` -> Failed craft_stone_pickaxe: missing materials: stick (need 2, have 0), cobblestone (need 3, have 0)
+  - Step 7: `craft_stick` -> Failed craft_stick: missing materials: oak_planks (need 2, have 0)
+
+## Case 4: React on `wooden_shovel`
+- Group: `Wooden`
+- Termination: `llm_error`
+- Steps: `0`
+- Dominant error: `none`
+
+## Case 5: React on `blast_furnace`
+- Group: `Iron`
+- Termination: `dead_loop`
+- Steps: `36`
+- Dominant error: `sequencing_error`
+- First failure step: `1`
+- First failure: `Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)`
+- Failure trace:
+  - Step 1: `mine_cobblestone` -> Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)
+  - Step 5: `craft_stick` -> Failed craft_stick: missing materials: oak_planks (need 2, have 0)
+  - Step 6: `craft_stick` -> Failed craft_stick: missing materials: oak_planks (need 2, have 0)

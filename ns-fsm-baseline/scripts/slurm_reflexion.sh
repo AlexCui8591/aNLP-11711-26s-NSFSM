@@ -68,8 +68,8 @@ python -m vllm.entrypoints.openai.api_server \
     --model Qwen/Qwen2.5-7B-Instruct \
     --port 8000 \
     --trust-remote-code \
-    --gpu-memory-utilization 0.90 \
-    &> logs/vllm_reflexion_${SLURM_JOB_ID}.log &
+    --gpu-memory-utilization 0.90 
+    #&> logs/vllm_reflexion_${SLURM_JOB_ID}.log &
 
 VLLM_PID=$!
 echo "  vLLM PID: $VLLM_PID"
