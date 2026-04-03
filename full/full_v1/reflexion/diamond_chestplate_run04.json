@@ -1,0 +1,1027 @@
+{
+  "goal": "diamond_chestplate",
+  "success": false,
+  "winning_attempt": null,
+  "total_attempts": 3,
+  "attempts": [
+    {
+      "attempt": 1,
+      "reflection": "",
+      "result": {
+        "goal": "diamond_chestplate",
+        "success": false,
+        "total_steps": 24,
+        "termination": "dead_loop",
+        "trajectory": [
+          {
+            "step": 1,
+            "action": "craft_crafting_table",
+            "success": false,
+            "inventory_before": {},
+            "inventory_after": {},
+            "message": "Failed craft_crafting_table: missing materials: oak_planks (need 4, have 0)",
+            "done": false
+          },
+          {
+            "step": 2,
+            "action": "mine_oak_log",
+            "success": true,
+            "inventory_before": {},
+            "inventory_after": {
+              "oak_log": 1
+            },
+            "message": "Action executed successfully",
+            "done": false
+          },
+          {
+            "step": 3,
+            "action": "craft_crafting_table",
+            "success": false,
+            "inventory_before": {
+              "oak_log": 1
+            },
+            "inventory_after": {
+              "oak_log": 1
+            },
+            "message": "Failed craft_crafting_table: missing materials: oak_planks (need 4, have 0)",
+            "done": false
+          },
+          {
+            "step": 4,
+            "action": "mine_oak_log",
+            "success": true,
+            "inventory_before": {
+              "oak_log": 1
+            },
+            "inventory_after": {
+              "oak_log": 2
+            },
+            "message": "Action executed successfully",
+            "done": false
+          },
+          {
+            "step": 5,
+            "action": "craft_oak_planks",
+            "success": true,
+            "inventory_before": {
+              "oak_log": 2
+            },
+            "inventory_after": {
+              "oak_log": 1,
+              "oak_planks": 4
+            },
+            "message": "Action executed successfully",
+            "done": false
+          },
+          {
+            "step": 6,
+            "action": "craft_crafting_table",
+            "success": true,
+            "inventory_before": {
+              "oak_log": 1,
+              "oak_planks": 4
+            },
+            "inventory_after": {
+              "oak_log": 1,
+              "oak_planks": 0,
+              "crafting_table": 1
+            },
+            "message": "Action executed successfully",
+            "done": false
+          },
+          {
+            "step": 7,
+            "action": "mine_cobblestone",
+            "success": false,
+            "inventory_before": {
+              "oak_log": 1,
+              "oak_planks": 0,
+              "crafting_table": 1
+            },
+            "inventory_after": {
+              "oak_log": 1,
+              "oak_planks": 0,
+              "crafting_table": 1
+            },
+            "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+            "done": false
+          },
+          {
+            "step": 8,
+            "action": "craft_stick",
+            "success": false,
+            "inventory_before": {
+              "oak_log": 1,
+              "oak_planks": 0,
+              "crafting_table": 1
+            },
+            "inventory_after": {
+              "oak_log": 1,
+              "oak_planks": 0,
+              "crafting_table": 1
+            },
+            "message": "Failed craft_stick: missing materials: oak_planks (need 2, have 0)",
+            "done": false
+          },
+          {
+            "step": 9,
+            "action": "craft_oak_planks",
+            "success": true,
+            "inventory_before": {
+              "oak_log": 1,
+              "oak_planks": 0,
+              "crafting_table": 1
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 4,
+              "crafting_table": 1
+            },
+            "message": "Action executed successfully",
+            "done": false
+          },
+          {
+            "step": 10,
+            "action": "craft_wooden_pickaxe",
+            "success": false,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 4,
+              "crafting_table": 1
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 4,
+              "crafting_table": 1
+            },
+            "message": "Failed craft_wooden_pickaxe: missing materials: stick (need 2, have 0)",
+            "done": false
+          },
+          {
+            "step": 11,
+            "action": "craft_stick",
+            "success": true,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 4,
+              "crafting_table": 1
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 2,
+              "crafting_table": 1,
+              "stick": 4
+            },
+            "message": "Action executed successfully",
+            "done": false
+          },
+          {
+            "step": 12,
+            "action": "craft_wooden_pickaxe",
+            "success": false,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 2,
+              "crafting_table": 1,
+              "stick": 4
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 2,
+              "crafting_table": 1,
+              "stick": 4
+            },
+            "message": "Failed craft_wooden_pickaxe: missing materials: oak_planks (need 3, have 2)",
+            "done": false
+          },
+          {
+            "step": 13,
+            "action": "mine_oak_log",
+            "success": true,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 2,
+              "crafting_table": 1,
+              "stick": 4
+            },
+            "inventory_after": {
+              "oak_log": 1,
+              "oak_planks": 2,
+              "crafting_table": 1,
+              "stick": 4
+            },
+            "message": "Action executed successfully",
+            "done": false
+          },
+          {
+            "step": 14,
+            "action": "craft_stick",
+            "success": true,
+            "inventory_before": {
+              "oak_log": 1,
+              "oak_planks": 2,
+              "crafting_table": 1,
+              "stick": 4
+            },
+            "inventory_after": {
+              "oak_log": 1,
+              "oak_planks": 0,
+              "crafting_table": 1,
+              "stick": 8
+            },
+            "message": "Action executed successfully",
+            "done": false
+          },
+          {
+            "step": 15,
+            "action": "craft_wooden_pickaxe",
+            "success": false,
+            "inventory_before": {
+              "oak_log": 1,
+              "oak_planks": 0,
+              "crafting_table": 1,
+              "stick": 8
+            },
+            "inventory_after": {
+              "oak_log": 1,
+              "oak_planks": 0,
+              "crafting_table": 1,
+              "stick": 8
+            },
+            "message": "Failed craft_wooden_pickaxe: missing materials: oak_planks (need 3, have 0)",
+            "done": false
+          },
+          {
+            "step": 16,
+            "action": "mine_oak_log",
+            "success": true,
+            "inventory_before": {
+              "oak_log": 1,
+              "oak_planks": 0,
+              "crafting_table": 1,
+              "stick": 8
+            },
+            "inventory_after": {
+              "oak_log": 2,
+              "oak_planks": 0,
+              "crafting_table": 1,
+              "stick": 8
+            },
+            "message": "Action executed successfully",
+            "done": false
+          },
+          {
+            "step": 17,
+            "action": "craft_oak_planks",
+            "success": true,
+            "inventory_before": {
+              "oak_log": 2,
+              "oak_planks": 0,
+              "crafting_table": 1,
+              "stick": 8
+            },
+            "inventory_after": {
+              "oak_log": 1,
+              "oak_planks": 4,
+              "crafting_table": 1,
+              "stick": 8
+            },
+            "message": "Action executed successfully",
+            "done": false
+          },
+          {
+            "step": 18,
+            "action": "craft_stick",
+            "success": true,
+            "inventory_before": {
+              "oak_log": 1,
+              "oak_planks": 4,
+              "crafting_table": 1,
+              "stick": 8
+            },
+            "inventory_after": {
+              "oak_log": 1,
+              "oak_planks": 2,
+              "crafting_table": 1,
+              "stick": 12
+            },
+            "message": "Action executed successfully",
+            "done": false
+          },
+          {
+            "step": 19,
+            "action": "mine_iron_ore",
+            "success": false,
+            "inventory_before": {
+              "oak_log": 1,
+              "oak_planks": 2,
+              "crafting_table": 1,
+              "stick": 12
+            },
+            "inventory_after": {
+              "oak_log": 1,
+              "oak_planks": 2,
+              "crafting_table": 1,
+              "stick": 12
+            },
+            "message": "Failed mine_iron_ore: missing tool: stone_pickaxe (need 1, have 0)",
+            "done": false
+          },
+          {
+            "step": 20,
+            "action": "mine_cobblestone",
+            "success": false,
+            "inventory_before": {
+              "oak_log": 1,
+              "oak_planks": 2,
+              "crafting_table": 1,
+              "stick": 12
+            },
+            "inventory_after": {
+              "oak_log": 1,
+              "oak_planks": 2,
+              "crafting_table": 1,
+              "stick": 12
+            },
+            "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+            "done": false
+          },
+          {
+            "step": 21,
+            "action": "craft_wooden_pickaxe",
+            "success": false,
+            "inventory_before": {
+              "oak_log": 1,
+              "oak_planks": 2,
+              "crafting_table": 1,
+              "stick": 12
+            },
+            "inventory_after": {
+              "oak_log": 1,
+              "oak_planks": 2,
+              "crafting_table": 1,
+              "stick": 12
+            },
+            "message": "Failed craft_wooden_pickaxe: missing materials: oak_planks (need 3, have 2)",
+            "done": false
+          },
+          {
+            "step": 22,
+            "action": "mine_oak_log",
+            "success": true,
+            "inventory_before": {
+              "oak_log": 1,
+              "oak_planks": 2,
+              "crafting_table": 1,
+              "stick": 12
+            },
+            "inventory_after": {
+              "oak_log": 2,
+              "oak_planks": 2,
+              "crafting_table": 1,
+              "stick": 12
+            },
+            "message": "Action executed successfully",
+            "done": false
+          },
+          {
+            "step": 23,
+            "action": "craft_stone_pickaxe",
+            "success": false,
+            "inventory_before": {
+              "oak_log": 2,
+              "oak_planks": 2,
+              "crafting_table": 1,
+              "stick": 12
+            },
+            "inventory_after": {
+              "oak_log": 2,
+              "oak_planks": 2,
+              "crafting_table": 1,
+              "stick": 12
+            },
+            "message": "Failed craft_stone_pickaxe: missing materials: cobblestone (need 3, have 0)",
+            "done": false
+          },
+          {
+            "step": 24,
+            "action": "craft_wooden_pickaxe",
+            "success": false,
+            "inventory_before": {
+              "oak_log": 2,
+              "oak_planks": 2,
+              "crafting_table": 1,
+              "stick": 12
+            },
+            "inventory_after": {
+              "oak_log": 2,
+              "oak_planks": 2,
+              "crafting_table": 1,
+              "stick": 12
+            },
+            "message": "Failed craft_wooden_pickaxe: missing materials: oak_planks (need 3, have 2)",
+            "done": false
+          }
+        ],
+        "dead_loop_reason": "'craft_wooden_pickaxe' failed 5+ times in last 20 steps (recurring)",
+        "errors": {
+          "unknown_action": 0,
+          "missing_tool": 3,
+          "missing_material": 9,
+          "repeated_same_fail": 0,
+          "total_failed_steps": 12,
+          "total_successful_steps": 12,
+          "efficiency": 0.5,
+          "dominant_error_type": "resource_shortage"
+        }
+      }
+    },
+    {
+      "attempt": 2,
+      "reflection": "You need to ensure you have the necessary tools before attempting to mine resources and craft more advanced items. Specifically, you should have crafted a wooden pickaxe before mining cobblestone and iron ore. Additionally, you should have crafted a stone pickaxe before attempting to mine iron ore. The correct sequence should be:\n\n1. Craft oak planks.\n2. Craft a crafting table.\n3. Craft sticks.\n4. Craft a wooden pickaxe.\n5. Mine cobblestone.\n6. Mine iron ore.\n7. Craft a stone pickaxe.\n8. Mine iron ore again if needed.\n9. Craft a wooden chestplate using iron ingots and oak planks.",
+      "result": {
+        "goal": "diamond_chestplate",
+        "success": false,
+        "total_steps": 10,
+        "termination": "dead_loop",
+        "trajectory": [
+          {
+            "step": 1,
+            "action": "craft_oak_planks",
+            "success": false,
+            "inventory_before": {},
+            "inventory_after": {},
+            "message": "Failed craft_oak_planks: missing materials: oak_log (need 1, have 0)",
+            "done": false
+          },
+          {
+            "step": 2,
+            "action": "mine_oak_log",
+            "success": true,
+            "inventory_before": {},
+            "inventory_after": {
+              "oak_log": 1
+            },
+            "message": "Action executed successfully",
+            "done": false
+          },
+          {
+            "step": 3,
+            "action": "craft_oak_planks",
+            "success": true,
+            "inventory_before": {
+              "oak_log": 1
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 4
+            },
+            "message": "Action executed successfully",
+            "done": false
+          },
+          {
+            "step": 4,
+            "action": "craft_crafting_table",
+            "success": true,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 4
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 0,
+              "crafting_table": 1
+            },
+            "message": "Action executed successfully",
+            "done": false
+          },
+          {
+            "step": 5,
+            "action": "craft_stick",
+            "success": false,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 0,
+              "crafting_table": 1
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 0,
+              "crafting_table": 1
+            },
+            "message": "Failed craft_stick: missing materials: oak_planks (need 2, have 0)",
+            "done": false
+          },
+          {
+            "step": 6,
+            "action": "craft_stick",
+            "success": false,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 0,
+              "crafting_table": 1
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 0,
+              "crafting_table": 1
+            },
+            "message": "Failed craft_stick: missing materials: oak_planks (need 2, have 0)",
+            "done": false
+          },
+          {
+            "step": 7,
+            "action": "craft_stick",
+            "success": false,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 0,
+              "crafting_table": 1
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 0,
+              "crafting_table": 1
+            },
+            "message": "Failed craft_stick: missing materials: oak_planks (need 2, have 0)",
+            "done": false
+          },
+          {
+            "step": 8,
+            "action": "craft_oak_planks",
+            "success": false,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 0,
+              "crafting_table": 1
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 0,
+              "crafting_table": 1
+            },
+            "message": "Failed craft_oak_planks: missing materials: oak_log (need 1, have 0)",
+            "done": false
+          },
+          {
+            "step": 9,
+            "action": "craft_stick",
+            "success": false,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 0,
+              "crafting_table": 1
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 0,
+              "crafting_table": 1
+            },
+            "message": "Failed craft_stick: missing materials: oak_planks (need 2, have 0)",
+            "done": false
+          },
+          {
+            "step": 10,
+            "action": "craft_stick",
+            "success": false,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 0,
+              "crafting_table": 1
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 0,
+              "crafting_table": 1
+            },
+            "message": "Failed craft_stick: missing materials: oak_planks (need 2, have 0)",
+            "done": false
+          }
+        ],
+        "dead_loop_reason": "'craft_stick' failed 5+ times in last 20 steps (recurring)",
+        "errors": {
+          "unknown_action": 0,
+          "missing_tool": 0,
+          "missing_material": 7,
+          "repeated_same_fail": 3,
+          "total_failed_steps": 7,
+          "total_successful_steps": 3,
+          "efficiency": 0.3,
+          "dominant_error_type": "resource_shortage"
+        }
+      }
+    },
+    {
+      "attempt": 3,
+      "reflection": "You need to ensure you have the necessary materials before attempting to craft more complex items. Specifically, after crafting the `crafting_table`, you should use it to craft `stick` before trying to craft `oak_planks`. Additionally, avoid repetitive actions like trying to craft `oak_planks` multiple times when you don't have the required `oak_log`. The correct sequence should be:\n\n1. Mine `oak_log`.\n2. Craft `oak_planks` using `oak_log`.\n3. Craft `stick` using `oak_planks`.\n4. Craft `crafting_table` using `oak_planks`.\n5. Use the `crafting_table` to craft `diamond_chestplate` using `diamonds` and `leather`.",
+      "result": {
+        "goal": "diamond_chestplate",
+        "success": false,
+        "total_steps": 21,
+        "termination": "dead_loop",
+        "trajectory": [
+          {
+            "step": 1,
+            "action": "mine_oak_log",
+            "success": true,
+            "inventory_before": {},
+            "inventory_after": {
+              "oak_log": 1
+            },
+            "message": "Action executed successfully",
+            "done": false
+          },
+          {
+            "step": 2,
+            "action": "craft_oak_planks",
+            "success": true,
+            "inventory_before": {
+              "oak_log": 1
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 4
+            },
+            "message": "Action executed successfully",
+            "done": false
+          },
+          {
+            "step": 3,
+            "action": "craft_stick",
+            "success": true,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 4
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 2,
+              "stick": 4
+            },
+            "message": "Action executed successfully",
+            "done": false
+          },
+          {
+            "step": 4,
+            "action": "craft_crafting_table",
+            "success": false,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 2,
+              "stick": 4
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 2,
+              "stick": 4
+            },
+            "message": "Failed craft_crafting_table: missing materials: oak_planks (need 4, have 2)",
+            "done": false
+          },
+          {
+            "step": 5,
+            "action": "mine_oak_log",
+            "success": true,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 2,
+              "stick": 4
+            },
+            "inventory_after": {
+              "oak_log": 1,
+              "oak_planks": 2,
+              "stick": 4
+            },
+            "message": "Action executed successfully",
+            "done": false
+          },
+          {
+            "step": 6,
+            "action": "craft_oak_planks",
+            "success": true,
+            "inventory_before": {
+              "oak_log": 1,
+              "oak_planks": 2,
+              "stick": 4
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 6,
+              "stick": 4
+            },
+            "message": "Action executed successfully",
+            "done": false
+          },
+          {
+            "step": 7,
+            "action": "craft_crafting_table",
+            "success": true,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 6,
+              "stick": 4
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 2,
+              "stick": 4,
+              "crafting_table": 1
+            },
+            "message": "Action executed successfully",
+            "done": false
+          },
+          {
+            "step": 8,
+            "action": "mine_iron_ore",
+            "success": false,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 2,
+              "stick": 4,
+              "crafting_table": 1
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 2,
+              "stick": 4,
+              "crafting_table": 1
+            },
+            "message": "Failed mine_iron_ore: missing tool: stone_pickaxe (need 1, have 0)",
+            "done": false
+          },
+          {
+            "step": 9,
+            "action": "mine_iron_ore",
+            "success": false,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 2,
+              "stick": 4,
+              "crafting_table": 1
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 2,
+              "stick": 4,
+              "crafting_table": 1
+            },
+            "message": "Failed mine_iron_ore: missing tool: stone_pickaxe (need 1, have 0)",
+            "done": false
+          },
+          {
+            "step": 10,
+            "action": "craft_stone_pickaxe",
+            "success": false,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 2,
+              "stick": 4,
+              "crafting_table": 1
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 2,
+              "stick": 4,
+              "crafting_table": 1
+            },
+            "message": "Failed craft_stone_pickaxe: missing materials: cobblestone (need 3, have 0)",
+            "done": false
+          },
+          {
+            "step": 11,
+            "action": "mine_cobblestone",
+            "success": false,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 2,
+              "stick": 4,
+              "crafting_table": 1
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 2,
+              "stick": 4,
+              "crafting_table": 1
+            },
+            "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+            "done": false
+          },
+          {
+            "step": 12,
+            "action": "craft_oak_planks",
+            "success": false,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 2,
+              "stick": 4,
+              "crafting_table": 1
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 2,
+              "stick": 4,
+              "crafting_table": 1
+            },
+            "message": "Failed craft_oak_planks: missing materials: oak_log (need 1, have 0)",
+            "done": false
+          },
+          {
+            "step": 13,
+            "action": "mine_oak_log",
+            "success": true,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 2,
+              "stick": 4,
+              "crafting_table": 1
+            },
+            "inventory_after": {
+              "oak_log": 1,
+              "oak_planks": 2,
+              "stick": 4,
+              "crafting_table": 1
+            },
+            "message": "Action executed successfully",
+            "done": false
+          },
+          {
+            "step": 14,
+            "action": "craft_oak_planks",
+            "success": true,
+            "inventory_before": {
+              "oak_log": 1,
+              "oak_planks": 2,
+              "stick": 4,
+              "crafting_table": 1
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 6,
+              "stick": 4,
+              "crafting_table": 1
+            },
+            "message": "Action executed successfully",
+            "done": false
+          },
+          {
+            "step": 15,
+            "action": "craft_stick",
+            "success": true,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 6,
+              "stick": 4,
+              "crafting_table": 1
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 4,
+              "stick": 8,
+              "crafting_table": 1
+            },
+            "message": "Action executed successfully",
+            "done": false
+          },
+          {
+            "step": 16,
+            "action": "mine_diamond_ore",
+            "success": false,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 4,
+              "stick": 8,
+              "crafting_table": 1
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 4,
+              "stick": 8,
+              "crafting_table": 1
+            },
+            "message": "action mine_diamond_ore NOT exist!'",
+            "done": false
+          },
+          {
+            "step": 17,
+            "action": "mine_diamond_ore",
+            "success": false,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 4,
+              "stick": 8,
+              "crafting_table": 1
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 4,
+              "stick": 8,
+              "crafting_table": 1
+            },
+            "message": "action mine_diamond_ore NOT exist!'",
+            "done": false
+          },
+          {
+            "step": 18,
+            "action": "mine_diamond_ore",
+            "success": false,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 4,
+              "stick": 8,
+              "crafting_table": 1
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 4,
+              "stick": 8,
+              "crafting_table": 1
+            },
+            "message": "action mine_diamond_ore NOT exist!'",
+            "done": false
+          },
+          {
+            "step": 19,
+            "action": "craft_crafting_table",
+            "success": true,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 4,
+              "stick": 8,
+              "crafting_table": 1
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 0,
+              "stick": 8,
+              "crafting_table": 2
+            },
+            "message": "Action executed successfully",
+            "done": false
+          },
+          {
+            "step": 20,
+            "action": "mine_diamond_ore",
+            "success": false,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 0,
+              "stick": 8,
+              "crafting_table": 2
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 0,
+              "stick": 8,
+              "crafting_table": 2
+            },
+            "message": "action mine_diamond_ore NOT exist!'",
+            "done": false
+          },
+          {
+            "step": 21,
+            "action": "mine_diamond_ore",
+            "success": false,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 0,
+              "stick": 8,
+              "crafting_table": 2
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 0,
+              "stick": 8,
+              "crafting_table": 2
+            },
+            "message": "action mine_diamond_ore NOT exist!'",
+            "done": false
+          }
+        ],
+        "dead_loop_reason": "'mine_diamond_ore' failed 5+ times in last 20 steps (recurring)",
+        "errors": {
+          "unknown_action": 5,
+          "missing_tool": 3,
+          "missing_material": 3,
+          "repeated_same_fail": 4,
+          "total_failed_steps": 11,
+          "total_successful_steps": 10,
+          "efficiency": 0.476,
+          "dominant_error_type": "plan_knowledge_error"
+        }
+      }
+    }
+  ],
+  "run_id": 4,
+  "group": "Armor",
+  "elapsed_sec": 108.11,
+  "final_errors": {
+    "unknown_action": 5,
+    "missing_tool": 3,
+    "missing_material": 3,
+    "repeated_same_fail": 4,
+    "total_failed_steps": 11,
+    "total_successful_steps": 10,
+    "efficiency": 0.476,
+    "dominant_error_type": "plan_knowledge_error"
+  }
+}

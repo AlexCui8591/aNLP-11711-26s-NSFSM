@@ -1,0 +1,319 @@
+{
+  "goal": "jukebox",
+  "success": false,
+  "total_steps": 19,
+  "termination": "dead_loop",
+  "trajectory": [
+    {
+      "step": 1,
+      "action": "mine_oak_log",
+      "success": true,
+      "inventory_before": {},
+      "inventory_after": {
+        "oak_log": 1
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 2,
+      "action": "mine_oak_log",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 1
+      },
+      "inventory_after": {
+        "oak_log": 2
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 3,
+      "action": "mine_oak_log",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 2
+      },
+      "inventory_after": {
+        "oak_log": 3
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 4,
+      "action": "craft_oak_planks",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 3
+      },
+      "inventory_after": {
+        "oak_log": 2,
+        "oak_planks": 4
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 5,
+      "action": "craft_oak_planks",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 2,
+        "oak_planks": 4
+      },
+      "inventory_after": {
+        "oak_log": 1,
+        "oak_planks": 8
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 6,
+      "action": "craft_oak_planks",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 1,
+        "oak_planks": 8
+      },
+      "inventory_after": {
+        "oak_log": 0,
+        "oak_planks": 12
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 7,
+      "action": "craft_jukebox",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 0,
+        "oak_planks": 12
+      },
+      "inventory_after": {
+        "oak_log": 0,
+        "oak_planks": 12
+      },
+      "message": "Failed craft_jukebox: missing tool: crafting_table (need 1, have 0); missing materials: diamond (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 8,
+      "action": "mine_oak_log",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 0,
+        "oak_planks": 12
+      },
+      "inventory_after": {
+        "oak_log": 1,
+        "oak_planks": 12
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 9,
+      "action": "craft_crafting_table",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 1,
+        "oak_planks": 12
+      },
+      "inventory_after": {
+        "oak_log": 1,
+        "oak_planks": 8,
+        "crafting_table": 1
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 10,
+      "action": "mine_record",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 1,
+        "oak_planks": 8,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 1,
+        "oak_planks": 8,
+        "crafting_table": 1
+      },
+      "message": "action mine_record NOT exist!'",
+      "done": false
+    },
+    {
+      "step": 11,
+      "action": "mine_diamond_ore",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 1,
+        "oak_planks": 8,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 1,
+        "oak_planks": 8,
+        "crafting_table": 1
+      },
+      "message": "action mine_diamond_ore NOT exist!'",
+      "done": false
+    },
+    {
+      "step": 12,
+      "action": "mine_diamond_ore",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 1,
+        "oak_planks": 8,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 1,
+        "oak_planks": 8,
+        "crafting_table": 1
+      },
+      "message": "action mine_diamond_ore NOT exist!'",
+      "done": false
+    },
+    {
+      "step": 13,
+      "action": "mine_diamond_ore",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 1,
+        "oak_planks": 8,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 1,
+        "oak_planks": 8,
+        "crafting_table": 1
+      },
+      "message": "action mine_diamond_ore NOT exist!'",
+      "done": false
+    },
+    {
+      "step": 14,
+      "action": "mine_record",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 1,
+        "oak_planks": 8,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 1,
+        "oak_planks": 8,
+        "crafting_table": 1
+      },
+      "message": "action mine_record NOT exist!'",
+      "done": false
+    },
+    {
+      "step": 15,
+      "action": "mine_record",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 1,
+        "oak_planks": 8,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 1,
+        "oak_planks": 8,
+        "crafting_table": 1
+      },
+      "message": "action mine_record NOT exist!'",
+      "done": false
+    },
+    {
+      "step": 16,
+      "action": "mine_record",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 1,
+        "oak_planks": 8,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 1,
+        "oak_planks": 8,
+        "crafting_table": 1
+      },
+      "message": "action mine_record NOT exist!'",
+      "done": false
+    },
+    {
+      "step": 17,
+      "action": "mine_diamond_ore",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 1,
+        "oak_planks": 8,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 1,
+        "oak_planks": 8,
+        "crafting_table": 1
+      },
+      "message": "action mine_diamond_ore NOT exist!'",
+      "done": false
+    },
+    {
+      "step": 18,
+      "action": "craft_jukebox",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 1,
+        "oak_planks": 8,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 1,
+        "oak_planks": 8,
+        "crafting_table": 1
+      },
+      "message": "Failed craft_jukebox: missing materials: diamond (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 19,
+      "action": "mine_iron_ore",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 1,
+        "oak_planks": 8,
+        "crafting_table": 1
+      },
+      "inventory_after": {
+        "oak_log": 1,
+        "oak_planks": 8,
+        "crafting_table": 1
+      },
+      "message": "Failed mine_iron_ore: missing tool: stone_pickaxe (need 1, have 0)",
+      "done": false
+    }
+  ],
+  "dead_loop_reason": "last 10 actions all failed (thrashing)",
+  "run_id": 3,
+  "group": "Diamond",
+  "elapsed_sec": 35.02,
+  "errors": {
+    "unknown_action": 8,
+    "missing_tool": 2,
+    "missing_material": 1,
+    "repeated_same_fail": 4,
+    "total_failed_steps": 11,
+    "total_successful_steps": 8,
+    "efficiency": 0.421,
+    "dominant_error_type": "plan_knowledge_error"
+  }
+}

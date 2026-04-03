@@ -1,0 +1,81 @@
+{
+  "goal": "stick",
+  "success": true,
+  "total_steps": 4,
+  "termination": "success",
+  "trajectory": [
+    {
+      "step": 1,
+      "action": "mine_oak_log",
+      "success": true,
+      "inventory_before": {},
+      "inventory_after": {
+        "oak_log": 1
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 2,
+      "action": "craft_stick",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 1
+      },
+      "inventory_after": {
+        "oak_log": 1
+      },
+      "message": "Failed craft_stick: missing materials: oak_planks (need 2, have 0)",
+      "done": false
+    },
+    {
+      "step": 3,
+      "action": "craft_oak_planks",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 1
+      },
+      "inventory_after": {
+        "oak_log": 0,
+        "oak_planks": 4
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 4,
+      "action": "craft_stick",
+      "success": true,
+      "inventory_before": {
+        "oak_log": 0,
+        "oak_planks": 4
+      },
+      "inventory_after": {
+        "oak_log": 0,
+        "oak_planks": 2,
+        "stick": 4
+      },
+      "message": "Action executed successfully",
+      "done": true
+    }
+  ],
+  "parse_log": [
+    {
+      "step": 1,
+      "type": "exact"
+    },
+    {
+      "step": 2,
+      "type": "exact"
+    },
+    {
+      "step": 3,
+      "type": "exact"
+    },
+    {
+      "step": 4,
+      "type": "exact"
+    }
+  ],
+  "elapsed_sec": 9.96
+}

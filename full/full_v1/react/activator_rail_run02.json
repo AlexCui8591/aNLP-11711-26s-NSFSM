@@ -1,0 +1,112 @@
+{
+  "goal": "activator_rail",
+  "success": false,
+  "total_steps": 10,
+  "termination": "dead_loop",
+  "trajectory": [
+    {
+      "step": 1,
+      "action": "mine_redstone_dust",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "action mine_redstone_dust NOT exist!'",
+      "done": false
+    },
+    {
+      "step": 2,
+      "action": "mine_redstone_dust",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "action mine_redstone_dust NOT exist!'",
+      "done": false
+    },
+    {
+      "step": 3,
+      "action": "mine_redstone_ore",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed mine_redstone_ore: missing tool: iron_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 4,
+      "action": "mine_redstone_ore",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed mine_redstone_ore: missing tool: iron_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 5,
+      "action": "mine_iron_ore",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed mine_iron_ore: missing tool: stone_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 6,
+      "action": "mine_cobblestone",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 7,
+      "action": "mine_cobblestone",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 8,
+      "action": "mine_cobblestone",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 9,
+      "action": "craft_crafting_table",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed craft_crafting_table: missing materials: oak_planks (need 4, have 0)",
+      "done": false
+    },
+    {
+      "step": 10,
+      "action": "mine_cobblestone",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+      "done": false
+    }
+  ],
+  "dead_loop_reason": "last 10 actions all failed (thrashing)",
+  "run_id": 2,
+  "group": "Redstone",
+  "elapsed_sec": 20.56,
+  "errors": {
+    "unknown_action": 2,
+    "missing_tool": 7,
+    "missing_material": 1,
+    "repeated_same_fail": 4,
+    "total_failed_steps": 10,
+    "total_successful_steps": 0,
+    "efficiency": 0.0,
+    "dominant_error_type": "plan_knowledge_error"
+  }
+}

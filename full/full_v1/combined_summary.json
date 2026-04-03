@@ -1,0 +1,53 @@
+{
+  "timestamp": "2026-04-02T20:29:30.847553",
+  "output_dir": "/ocean/projects/cis250260p/cuiz/aNLP-11711-26s-NSFSM/ns-fsm-baseline/results/full/full_v1",
+  "num_goals": 67,
+  "num_runs": 15,
+  "reflexion": {
+    "overall_success_rate": 0.265,
+    "group_stats": {
+      "Wooden": {
+        "goals": 10,
+        "total_runs": 150,
+        "total_success": 137,
+        "success_rate": 0.913
+      },
+      "Stone": {
+        "goals": 9,
+        "total_runs": 135,
+        "total_success": 87,
+        "success_rate": 0.644
+      },
+      "Iron": {
+        "goals": 16,
+        "total_runs": 240,
+        "total_success": 17,
+        "success_rate": 0.071
+      },
+      "Golden": {
+        "goals": 6,
+        "total_runs": 90,
+        "total_success": 14,
+        "success_rate": 0.156
+      },
+      "Diamond": {
+        "goals": 7,
+        "total_runs": 105,
+        "total_success": 0,
+        "success_rate": 0.0
+      },
+      "Redstone": {
+        "goals": 6,
+        "total_runs": 90,
+        "total_success": 0,
+        "success_rate": 0.0
+      },
+      "Armor": {
+        "goals": 13,
+        "total_runs": 195,
+        "total_success": 11,
+        "success_rate": 0.056
+      }
+    }
+  }
+}

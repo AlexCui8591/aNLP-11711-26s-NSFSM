@@ -1,0 +1,177 @@
+{
+  "goal": "bowl",
+  "success": false,
+  "total_steps": 13,
+  "termination": "dead_loop",
+  "trajectory": [
+    {
+      "step": 1,
+      "action": "mine_clay_balls",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "action mine_clay_balls NOT exist!'",
+      "done": false
+    },
+    {
+      "step": 2,
+      "action": "mine_clay_balls",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "action mine_clay_balls NOT exist!'",
+      "done": false
+    },
+    {
+      "step": 3,
+      "action": "mine_clay_balls",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "action mine_clay_balls NOT exist!'",
+      "done": false
+    },
+    {
+      "step": 4,
+      "action": "mine_dirt",
+      "success": true,
+      "inventory_before": {},
+      "inventory_after": {
+        "dirt": 1
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 5,
+      "action": "mine_dirt",
+      "success": true,
+      "inventory_before": {
+        "dirt": 1
+      },
+      "inventory_after": {
+        "dirt": 2
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 6,
+      "action": "mine_clay_balls",
+      "success": false,
+      "inventory_before": {
+        "dirt": 2
+      },
+      "inventory_after": {
+        "dirt": 2
+      },
+      "message": "action mine_clay_balls NOT exist!'",
+      "done": false
+    },
+    {
+      "step": 7,
+      "action": "mine_dirt",
+      "success": true,
+      "inventory_before": {
+        "dirt": 2
+      },
+      "inventory_after": {
+        "dirt": 3
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 8,
+      "action": "mine_dirt",
+      "success": true,
+      "inventory_before": {
+        "dirt": 3
+      },
+      "inventory_after": {
+        "dirt": 4
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 9,
+      "action": "mine_dirt",
+      "success": true,
+      "inventory_before": {
+        "dirt": 4
+      },
+      "inventory_after": {
+        "dirt": 5
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 10,
+      "action": "mine_dirt",
+      "success": true,
+      "inventory_before": {
+        "dirt": 5
+      },
+      "inventory_after": {
+        "dirt": 6
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 11,
+      "action": "mine_dirt",
+      "success": true,
+      "inventory_before": {
+        "dirt": 6
+      },
+      "inventory_after": {
+        "dirt": 7
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 12,
+      "action": "mine_dirt",
+      "success": true,
+      "inventory_before": {
+        "dirt": 7
+      },
+      "inventory_after": {
+        "dirt": 8
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 13,
+      "action": "mine_clay_balls",
+      "success": false,
+      "inventory_before": {
+        "dirt": 8
+      },
+      "inventory_after": {
+        "dirt": 8
+      },
+      "message": "action mine_clay_balls NOT exist!'",
+      "done": false
+    }
+  ],
+  "dead_loop_reason": "'mine_clay_balls' failed 5+ times in last 20 steps (recurring)",
+  "run_id": 14,
+  "group": "Wooden",
+  "elapsed_sec": 20.4,
+  "errors": {
+    "unknown_action": 5,
+    "missing_tool": 0,
+    "missing_material": 0,
+    "repeated_same_fail": 2,
+    "total_failed_steps": 5,
+    "total_successful_steps": 8,
+    "efficiency": 0.615,
+    "dominant_error_type": "plan_knowledge_error"
+  }
+}

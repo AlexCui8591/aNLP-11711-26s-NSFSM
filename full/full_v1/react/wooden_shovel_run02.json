@@ -1,0 +1,20 @@
+{
+  "goal": "wooden_shovel",
+  "success": false,
+  "total_steps": 0,
+  "termination": "llm_error",
+  "trajectory": [],
+  "run_id": 2,
+  "group": "Wooden",
+  "elapsed_sec": 7.0,
+  "errors": {
+    "unknown_action": 0,
+    "missing_tool": 0,
+    "missing_material": 0,
+    "repeated_same_fail": 0,
+    "total_failed_steps": 0,
+    "total_successful_steps": 0,
+    "efficiency": 0.0,
+    "dominant_error_type": "none"
+  }
+}

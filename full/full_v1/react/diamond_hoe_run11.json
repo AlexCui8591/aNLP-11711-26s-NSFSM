@@ -1,0 +1,118 @@
+{
+  "goal": "diamond_hoe",
+  "success": false,
+  "total_steps": 10,
+  "termination": "dead_loop",
+  "trajectory": [
+    {
+      "step": 1,
+      "action": "mine_diamond_ore",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "action mine_diamond_ore NOT exist!'",
+      "done": false
+    },
+    {
+      "step": 2,
+      "action": "mine_diamond_ore",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "action mine_diamond_ore NOT exist!'",
+      "done": false
+    },
+    {
+      "step": 3,
+      "action": "mine_diamond_ore",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "action mine_diamond_ore NOT exist!'",
+      "done": false
+    },
+    {
+      "step": 4,
+      "action": "mine_coal",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed mine_coal: missing tool: wooden_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 5,
+      "action": "mine_cobblestone",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 6,
+      "action": "mine_cobblestone",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 7,
+      "action": "mine_cobblestone",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 8,
+      "action": "mine_cobblestone",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 9,
+      "action": "mine_oak_log",
+      "success": true,
+      "inventory_before": {},
+      "inventory_after": {
+        "oak_log": 1
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 10,
+      "action": "mine_cobblestone",
+      "success": false,
+      "inventory_before": {
+        "oak_log": 1
+      },
+      "inventory_after": {
+        "oak_log": 1
+      },
+      "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+      "done": false
+    }
+  ],
+  "dead_loop_reason": "'mine_cobblestone' failed 5+ times in last 20 steps (recurring)",
+  "run_id": 11,
+  "group": "Diamond",
+  "elapsed_sec": 17.83,
+  "errors": {
+    "unknown_action": 3,
+    "missing_tool": 6,
+    "missing_material": 0,
+    "repeated_same_fail": 5,
+    "total_failed_steps": 9,
+    "total_successful_steps": 1,
+    "efficiency": 0.1,
+    "dominant_error_type": "plan_knowledge_error"
+  }
+}

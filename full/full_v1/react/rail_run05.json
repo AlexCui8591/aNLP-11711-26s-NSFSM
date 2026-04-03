@@ -1,0 +1,85 @@
+{
+  "goal": "rail",
+  "success": false,
+  "total_steps": 7,
+  "termination": "dead_loop",
+  "trajectory": [
+    {
+      "step": 1,
+      "action": "mine_cobblestone",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 2,
+      "action": "mine_cobblestone",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 3,
+      "action": "craft_crafting_table",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed craft_crafting_table: missing materials: oak_planks (need 4, have 0)",
+      "done": false
+    },
+    {
+      "step": 4,
+      "action": "mine_cobblestone",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 5,
+      "action": "craft_crafting_table",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed craft_crafting_table: missing materials: oak_planks (need 4, have 0)",
+      "done": false
+    },
+    {
+      "step": 6,
+      "action": "mine_cobblestone",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+      "done": false
+    },
+    {
+      "step": 7,
+      "action": "mine_cobblestone",
+      "success": false,
+      "inventory_before": {},
+      "inventory_after": {},
+      "message": "Failed mine_cobblestone: missing tool: wooden_pickaxe (need 1, have 0)",
+      "done": false
+    }
+  ],
+  "dead_loop_reason": "'mine_cobblestone' failed 5+ times in last 20 steps (recurring)",
+  "run_id": 5,
+  "group": "Iron",
+  "elapsed_sec": 13.65,
+  "errors": {
+    "unknown_action": 0,
+    "missing_tool": 5,
+    "missing_material": 2,
+    "repeated_same_fail": 2,
+    "total_failed_steps": 7,
+    "total_successful_steps": 0,
+    "efficiency": 0.0,
+    "dominant_error_type": "tool_dependency_error"
+  }
+}

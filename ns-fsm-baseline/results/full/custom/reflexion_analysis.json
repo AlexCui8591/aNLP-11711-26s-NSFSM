@@ -1,0 +1,1320 @@
+{
+  "overall": {
+    "total_runs": 1005,
+    "n_success": 266,
+    "n_fail": 739,
+    "success_rate": 0.2646766169154229,
+    "avg_attempts_success": 1.1804511278195489,
+    "avg_attempts_fail": 3.0,
+    "avg_attempts_all": 2.518407960199005,
+    "avg_winning_attempt": 1.1804511278195489,
+    "avg_steps_success": 36.109022556390975,
+    "avg_steps_fail": 98.32746955345061,
+    "avg_steps_all": 81.85970149253731
+  },
+  "group_stats": [
+    {
+      "group": "Wooden",
+      "n_goals": 10,
+      "n_runs": 150,
+      "n_success": 137,
+      "success_rate": 0.9133333333333333,
+      "avg_attempts": 1.2933333333333332,
+      "avg_steps": 25.32,
+      "depth": 3
+    },
+    {
+      "group": "Stone",
+      "n_goals": 9,
+      "n_runs": 135,
+      "n_success": 87,
+      "success_rate": 0.6444444444444445,
+      "avg_attempts": 1.9111111111111112,
+      "avg_steps": 53.43703703703704,
+      "depth": 7
+    },
+    {
+      "group": "Iron",
+      "n_goals": 16,
+      "n_runs": 240,
+      "n_success": 17,
+      "success_rate": 0.07083333333333333,
+      "avg_attempts": 2.8625,
+      "avg_steps": 96.62916666666666,
+      "depth": 12
+    },
+    {
+      "group": "Golden",
+      "n_goals": 6,
+      "n_runs": 90,
+      "n_success": 14,
+      "success_rate": 0.15555555555555556,
+      "avg_attempts": 2.7,
+      "avg_steps": 96.12222222222222,
+      "depth": 15
+    },
+    {
+      "group": "Diamond",
+      "n_goals": 7,
+      "n_runs": 105,
+      "n_success": 0,
+      "success_rate": 0.0,
+      "avg_attempts": 3.0,
+      "avg_steps": 104.13333333333334,
+      "depth": 18
+    },
+    {
+      "group": "Redstone",
+      "n_goals": 6,
+      "n_runs": 90,
+      "n_success": 0,
+      "success_rate": 0.0,
+      "avg_attempts": 3.0,
+      "avg_steps": 106.15555555555555,
+      "depth": 14
+    },
+    {
+      "group": "Armor",
+      "n_goals": 13,
+      "n_runs": 195,
+      "n_success": 11,
+      "success_rate": 0.05641025641025641,
+      "avg_attempts": 2.8923076923076922,
+      "avg_steps": 97.06153846153846,
+      "depth": 15
+    }
+  ],
+  "goal_stats": [
+    {
+      "goal": "crafting_table",
+      "group": "Wooden",
+      "n_runs": 15,
+      "n_success": 15,
+      "success_rate": 1.0,
+      "avg_attempts": 1.0,
+      "avg_steps": 5.9,
+      "avg_steps_success": 5.9,
+      "error_distribution": {},
+      "termination_distribution": {
+        "success": 15
+      }
+    },
+    {
+      "goal": "ladder",
+      "group": "Wooden",
+      "n_runs": 15,
+      "n_success": 15,
+      "success_rate": 1.0,
+      "avg_attempts": 1.0,
+      "avg_steps": 18.4,
+      "avg_steps_success": 18.4,
+      "error_distribution": {},
+      "termination_distribution": {
+        "success": 15
+      }
+    },
+    {
+      "goal": "stick",
+      "group": "Wooden",
+      "n_runs": 15,
+      "n_success": 15,
+      "success_rate": 1.0,
+      "avg_attempts": 1.0,
+      "avg_steps": 4.1,
+      "avg_steps_success": 4.1,
+      "error_distribution": {},
+      "termination_distribution": {
+        "success": 15
+      }
+    },
+    {
+      "goal": "wooden_axe",
+      "group": "Wooden",
+      "n_runs": 15,
+      "n_success": 15,
+      "success_rate": 1.0,
+      "avg_attempts": 1.07,
+      "avg_steps": 19.1,
+      "avg_steps_success": 19.1,
+      "error_distribution": {},
+      "termination_distribution": {
+        "success": 15
+      }
+    },
+    {
+      "goal": "wooden_hoe",
+      "group": "Wooden",
+      "n_runs": 15,
+      "n_success": 15,
+      "success_rate": 1.0,
+      "avg_attempts": 1.0,
+      "avg_steps": 15.1,
+      "avg_steps_success": 15.1,
+      "error_distribution": {},
+      "termination_distribution": {
+        "success": 15
+      }
+    },
+    {
+      "goal": "wooden_pickaxe",
+      "group": "Wooden",
+      "n_runs": 15,
+      "n_success": 15,
+      "success_rate": 1.0,
+      "avg_attempts": 1.07,
+      "avg_steps": 20.0,
+      "avg_steps_success": 20.0,
+      "error_distribution": {},
+      "termination_distribution": {
+        "success": 15
+      }
+    },
+    {
+      "goal": "wooden_shovel",
+      "group": "Wooden",
+      "n_runs": 15,
+      "n_success": 15,
+      "success_rate": 1.0,
+      "avg_attempts": 1.0,
+      "avg_steps": 15.3,
+      "avg_steps_success": 15.3,
+      "error_distribution": {},
+      "termination_distribution": {
+        "success": 15
+      }
+    },
+    {
+      "goal": "wooden_sword",
+      "group": "Wooden",
+      "n_runs": 15,
+      "n_success": 15,
+      "success_rate": 1.0,
+      "avg_attempts": 1.0,
+      "avg_steps": 15.7,
+      "avg_steps_success": 15.7,
+      "error_distribution": {},
+      "termination_distribution": {
+        "success": 15
+      }
+    },
+    {
+      "goal": "bowl",
+      "group": "Wooden",
+      "n_runs": 15,
+      "n_success": 12,
+      "success_rate": 0.8,
+      "avg_attempts": 2.07,
+      "avg_steps": 37.7,
+      "avg_steps_success": 36.8,
+      "error_distribution": {
+        "resource_shortage": 1,
+        "plan_knowledge_error": 2
+      },
+      "termination_distribution": {
+        "success": 12,
+        "dead_loop": 3
+      }
+    },
+    {
+      "goal": "chest",
+      "group": "Wooden",
+      "n_runs": 15,
+      "n_success": 5,
+      "success_rate": 0.3333333333333333,
+      "avg_attempts": 2.73,
+      "avg_steps": 102.0,
+      "avg_steps_success": 95.8,
+      "error_distribution": {
+        "resource_shortage": 8,
+        "plan_knowledge_error": 2
+      },
+      "termination_distribution": {
+        "dead_loop": 10,
+        "success": 5
+      }
+    },
+    {
+      "goal": "stone_axe",
+      "group": "Stone",
+      "n_runs": 15,
+      "n_success": 15,
+      "success_rate": 1.0,
+      "avg_attempts": 1.2,
+      "avg_steps": 36.6,
+      "avg_steps_success": 36.6,
+      "error_distribution": {},
+      "termination_distribution": {
+        "success": 15
+      }
+    },
+    {
+      "goal": "stone_shovel",
+      "group": "Stone",
+      "n_runs": 15,
+      "n_success": 14,
+      "success_rate": 0.9333333333333333,
+      "avg_attempts": 1.27,
+      "avg_steps": 36.3,
+      "avg_steps_success": 33.4,
+      "error_distribution": {
+        "tool_dependency_error": 1
+      },
+      "termination_distribution": {
+        "success": 14,
+        "dead_loop": 1
+      }
+    },
+    {
+      "goal": "stone_sword",
+      "group": "Stone",
+      "n_runs": 15,
+      "n_success": 14,
+      "success_rate": 0.9333333333333333,
+      "avg_attempts": 1.2,
+      "avg_steps": 38.3,
+      "avg_steps_success": 35.7,
+      "error_distribution": {
+        "resource_shortage": 1
+      },
+      "termination_distribution": {
+        "success": 14,
+        "dead_loop": 1
+      }
+    },
+    {
+      "goal": "stone_pickaxe",
+      "group": "Stone",
+      "n_runs": 15,
+      "n_success": 13,
+      "success_rate": 0.8666666666666667,
+      "avg_attempts": 1.53,
+      "avg_steps": 39.8,
+      "avg_steps_success": 36.5,
+      "error_distribution": {
+        "resource_shortage": 2
+      },
+      "termination_distribution": {
+        "success": 13,
+        "dead_loop": 2
+      }
+    },
+    {
+      "goal": "stone_hoe",
+      "group": "Stone",
+      "n_runs": 15,
+      "n_success": 12,
+      "success_rate": 0.8,
+      "avg_attempts": 1.6,
+      "avg_steps": 37.2,
+      "avg_steps_success": 34.5,
+      "error_distribution": {
+        "resource_shortage": 3
+      },
+      "termination_distribution": {
+        "success": 12,
+        "dead_loop": 3
+      }
+    },
+    {
+      "goal": "furnace",
+      "group": "Stone",
+      "n_runs": 15,
+      "n_success": 11,
+      "success_rate": 0.7333333333333333,
+      "avg_attempts": 1.73,
+      "avg_steps": 66.2,
+      "avg_steps_success": 59.7,
+      "error_distribution": {
+        "resource_shortage": 4
+      },
+      "termination_distribution": {
+        "dead_loop": 4,
+        "success": 11
+      }
+    },
+    {
+      "goal": "smoker",
+      "group": "Stone",
+      "n_runs": 15,
+      "n_success": 5,
+      "success_rate": 0.3333333333333333,
+      "avg_attempts": 2.73,
+      "avg_steps": 89.4,
+      "avg_steps_success": 97.8,
+      "error_distribution": {
+        "resource_shortage": 7,
+        "tool_dependency_error": 2,
+        "plan_knowledge_error": 1
+      },
+      "termination_distribution": {
+        "dead_loop": 9,
+        "success": 5,
+        "max_steps": 1
+      }
+    },
+    {
+      "goal": "torch",
+      "group": "Stone",
+      "n_runs": 15,
+      "n_success": 2,
+      "success_rate": 0.13333333333333333,
+      "avg_attempts": 3.0,
+      "avg_steps": 62.9,
+      "avg_steps_success": 73.0,
+      "error_distribution": {
+        "plan_knowledge_error": 10,
+        "resource_shortage": 3
+      },
+      "termination_distribution": {
+        "success": 2,
+        "dead_loop": 13
+      }
+    },
+    {
+      "goal": "charcoal",
+      "group": "Stone",
+      "n_runs": 15,
+      "n_success": 1,
+      "success_rate": 0.06666666666666667,
+      "avg_attempts": 2.93,
+      "avg_steps": 74.2,
+      "avg_steps_success": 108.0,
+      "error_distribution": {
+        "resource_shortage": 8,
+        "plan_knowledge_error": 5,
+        "tool_dependency_error": 1
+      },
+      "termination_distribution": {
+        "dead_loop": 14,
+        "success": 1
+      }
+    },
+    {
+      "goal": "iron_axe",
+      "group": "Iron",
+      "n_runs": 15,
+      "n_success": 4,
+      "success_rate": 0.26666666666666666,
+      "avg_attempts": 2.47,
+      "avg_steps": 91.2,
+      "avg_steps_success": 67.2,
+      "error_distribution": {
+        "resource_shortage": 8,
+        "tool_dependency_error": 1,
+        "plan_knowledge_error": 2
+      },
+      "termination_distribution": {
+        "dead_loop": 11,
+        "success": 4
+      }
+    },
+    {
+      "goal": "iron_sword",
+      "group": "Iron",
+      "n_runs": 15,
+      "n_success": 3,
+      "success_rate": 0.2,
+      "avg_attempts": 2.6,
+      "avg_steps": 96.5,
+      "avg_steps_success": 54.0,
+      "error_distribution": {
+        "resource_shortage": 8,
+        "plan_knowledge_error": 2,
+        "tool_dependency_error": 2
+      },
+      "termination_distribution": {
+        "dead_loop": 11,
+        "max_steps": 1,
+        "success": 3
+      }
+    },
+    {
+      "goal": "tripwire_hook",
+      "group": "Iron",
+      "n_runs": 15,
+      "n_success": 3,
+      "success_rate": 0.2,
+      "avg_attempts": 2.6,
+      "avg_steps": 78.3,
+      "avg_steps_success": 64.0,
+      "error_distribution": {
+        "resource_shortage": 4,
+        "tool_dependency_error": 4,
+        "plan_knowledge_error": 4
+      },
+      "termination_distribution": {
+        "dead_loop": 12,
+        "success": 3
+      }
+    },
+    {
+      "goal": "shears",
+      "group": "Iron",
+      "n_runs": 15,
+      "n_success": 2,
+      "success_rate": 0.13333333333333333,
+      "avg_attempts": 2.73,
+      "avg_steps": 90.5,
+      "avg_steps_success": 87.0,
+      "error_distribution": {
+        "plan_knowledge_error": 2,
+        "resource_shortage": 6,
+        "tool_dependency_error": 5
+      },
+      "termination_distribution": {
+        "success": 2,
+        "dead_loop": 13
+      }
+    },
+    {
+      "goal": "bucket",
+      "group": "Iron",
+      "n_runs": 15,
+      "n_success": 1,
+      "success_rate": 0.06666666666666667,
+      "avg_attempts": 2.87,
+      "avg_steps": 102.1,
+      "avg_steps_success": 68.0,
+      "error_distribution": {
+        "plan_knowledge_error": 6,
+        "resource_shortage": 7,
+        "tool_dependency_error": 1
+      },
+      "termination_distribution": {
+        "dead_loop": 12,
+        "success": 1,
+        "max_steps": 2
+      }
+    },
+    {
+      "goal": "iron_hoe",
+      "group": "Iron",
+      "n_runs": 15,
+      "n_success": 1,
+      "success_rate": 0.06666666666666667,
+      "avg_attempts": 2.93,
+      "avg_steps": 93.3,
+      "avg_steps_success": 82.0,
+      "error_distribution": {
+        "tool_dependency_error": 2,
+        "resource_shortage": 10,
+        "plan_knowledge_error": 2
+      },
+      "termination_distribution": {
+        "dead_loop": 13,
+        "success": 1,
+        "max_steps": 1
+      }
+    },
+    {
+      "goal": "iron_pickaxe",
+      "group": "Iron",
+      "n_runs": 15,
+      "n_success": 1,
+      "success_rate": 0.06666666666666667,
+      "avg_attempts": 2.87,
+      "avg_steps": 87.7,
+      "avg_steps_success": 72.0,
+      "error_distribution": {
+        "tool_dependency_error": 5,
+        "plan_knowledge_error": 2,
+        "resource_shortage": 7
+      },
+      "termination_distribution": {
+        "dead_loop": 13,
+        "max_steps": 1,
+        "success": 1
+      }
+    },
+    {
+      "goal": "iron_shovel",
+      "group": "Iron",
+      "n_runs": 15,
+      "n_success": 1,
+      "success_rate": 0.06666666666666667,
+      "avg_attempts": 2.87,
+      "avg_steps": 102.9,
+      "avg_steps_success": 52.0,
+      "error_distribution": {
+        "resource_shortage": 9,
+        "plan_knowledge_error": 3,
+        "tool_dependency_error": 2
+      },
+      "termination_distribution": {
+        "dead_loop": 13,
+        "success": 1,
+        "max_steps": 1
+      }
+    },
+    {
+      "goal": "rail",
+      "group": "Iron",
+      "n_runs": 15,
+      "n_success": 1,
+      "success_rate": 0.06666666666666667,
+      "avg_attempts": 2.87,
+      "avg_steps": 114.7,
+      "avg_steps_success": 89.0,
+      "error_distribution": {
+        "resource_shortage": 7,
+        "plan_knowledge_error": 4,
+        "tool_dependency_error": 3
+      },
+      "termination_distribution": {
+        "max_steps": 2,
+        "dead_loop": 12,
+        "success": 1
+      }
+    },
+    {
+      "goal": "blast_furnace",
+      "group": "Iron",
+      "n_runs": 15,
+      "n_success": 0,
+      "success_rate": 0.0,
+      "avg_attempts": 3.0,
+      "avg_steps": 119.1,
+      "avg_steps_success": 0,
+      "error_distribution": {
+        "resource_shortage": 11,
+        "tool_dependency_error": 2,
+        "plan_knowledge_error": 2
+      },
+      "termination_distribution": {
+        "dead_loop": 15
+      }
+    },
+    {
+      "goal": "chain",
+      "group": "Iron",
+      "n_runs": 15,
+      "n_success": 0,
+      "success_rate": 0.0,
+      "avg_attempts": 3.0,
+      "avg_steps": 105.4,
+      "avg_steps_success": 0,
+      "error_distribution": {
+        "resource_shortage": 11,
+        "plan_knowledge_error": 3,
+        "tool_dependency_error": 1
+      },
+      "termination_distribution": {
+        "dead_loop": 11,
+        "max_steps": 4
+      }
+    },
+    {
+      "goal": "hopper",
+      "group": "Iron",
+      "n_runs": 15,
+      "n_success": 0,
+      "success_rate": 0.0,
+      "avg_attempts": 3.0,
+      "avg_steps": 107.4,
+      "avg_steps_success": 0,
+      "error_distribution": {
+        "resource_shortage": 12,
+        "plan_knowledge_error": 2,
+        "tool_dependency_error": 1
+      },
+      "termination_distribution": {
+        "dead_loop": 15
+      }
+    },
+    {
+      "goal": "iron_bars",
+      "group": "Iron",
+      "n_runs": 15,
+      "n_success": 0,
+      "success_rate": 0.0,
+      "avg_attempts": 3.0,
+      "avg_steps": 83.7,
+      "avg_steps_success": 0,
+      "error_distribution": {
+        "resource_shortage": 11,
+        "tool_dependency_error": 2,
+        "plan_knowledge_error": 2
+      },
+      "termination_distribution": {
+        "dead_loop": 15
+      }
+    },
+    {
+      "goal": "iron_nugget",
+      "group": "Iron",
+      "n_runs": 15,
+      "n_success": 0,
+      "success_rate": 0.0,
+      "avg_attempts": 3.0,
+      "avg_steps": 94.1,
+      "avg_steps_success": 0,
+      "error_distribution": {
+        "resource_shortage": 10,
+        "tool_dependency_error": 3,
+        "plan_knowledge_error": 2
+      },
+      "termination_distribution": {
+        "dead_loop": 15
+      }
+    },
+    {
+      "goal": "smithing_table",
+      "group": "Iron",
+      "n_runs": 15,
+      "n_success": 0,
+      "success_rate": 0.0,
+      "avg_attempts": 3.0,
+      "avg_steps": 94.8,
+      "avg_steps_success": 0,
+      "error_distribution": {
+        "resource_shortage": 10,
+        "tool_dependency_error": 4,
+        "plan_knowledge_error": 1
+      },
+      "termination_distribution": {
+        "dead_loop": 14,
+        "max_steps": 1
+      }
+    },
+    {
+      "goal": "stonecutter",
+      "group": "Iron",
+      "n_runs": 15,
+      "n_success": 0,
+      "success_rate": 0.0,
+      "avg_attempts": 3.0,
+      "avg_steps": 84.5,
+      "avg_steps_success": 0,
+      "error_distribution": {
+        "resource_shortage": 13,
+        "plan_knowledge_error": 1,
+        "tool_dependency_error": 1
+      },
+      "termination_distribution": {
+        "dead_loop": 14,
+        "max_steps": 1
+      }
+    },
+    {
+      "goal": "golden_sword",
+      "group": "Golden",
+      "n_runs": 15,
+      "n_success": 6,
+      "success_rate": 0.4,
+      "avg_attempts": 2.2,
+      "avg_steps": 96.5,
+      "avg_steps_success": 83.2,
+      "error_distribution": {
+        "tool_dependency_error": 3,
+        "resource_shortage": 5,
+        "plan_knowledge_error": 1
+      },
+      "termination_distribution": {
+        "dead_loop": 9,
+        "success": 6
+      }
+    },
+    {
+      "goal": "golden_shovel",
+      "group": "Golden",
+      "n_runs": 15,
+      "n_success": 3,
+      "success_rate": 0.2,
+      "avg_attempts": 2.6,
+      "avg_steps": 101.2,
+      "avg_steps_success": 79.3,
+      "error_distribution": {
+        "resource_shortage": 10,
+        "plan_knowledge_error": 1,
+        "tool_dependency_error": 1
+      },
+      "termination_distribution": {
+        "dead_loop": 11,
+        "max_steps": 1,
+        "success": 3
+      }
+    },
+    {
+      "goal": "gold_ingot",
+      "group": "Golden",
+      "n_runs": 15,
+      "n_success": 2,
+      "success_rate": 0.13333333333333333,
+      "avg_attempts": 2.73,
+      "avg_steps": 98.1,
+      "avg_steps_success": 68.5,
+      "error_distribution": {
+        "resource_shortage": 7,
+        "tool_dependency_error": 4,
+        "plan_knowledge_error": 2
+      },
+      "termination_distribution": {
+        "dead_loop": 11,
+        "max_steps": 2,
+        "success": 2
+      }
+    },
+    {
+      "goal": "golden_pickaxe",
+      "group": "Golden",
+      "n_runs": 15,
+      "n_success": 2,
+      "success_rate": 0.13333333333333333,
+      "avg_attempts": 2.8,
+      "avg_steps": 83.5,
+      "avg_steps_success": 82.0,
+      "error_distribution": {
+        "resource_shortage": 10,
+        "tool_dependency_error": 3
+      },
+      "termination_distribution": {
+        "dead_loop": 13,
+        "success": 2
+      }
+    },
+    {
+      "goal": "golden_hoe",
+      "group": "Golden",
+      "n_runs": 15,
+      "n_success": 1,
+      "success_rate": 0.06666666666666667,
+      "avg_attempts": 2.87,
+      "avg_steps": 85.7,
+      "avg_steps_success": 77.0,
+      "error_distribution": {
+        "resource_shortage": 9,
+        "tool_dependency_error": 4,
+        "plan_knowledge_error": 1
+      },
+      "termination_distribution": {
+        "dead_loop": 14,
+        "success": 1
+      }
+    },
+    {
+      "goal": "golden_axe",
+      "group": "Golden",
+      "n_runs": 15,
+      "n_success": 0,
+      "success_rate": 0.0,
+      "avg_attempts": 3.0,
+      "avg_steps": 111.7,
+      "avg_steps_success": 0,
+      "error_distribution": {
+        "resource_shortage": 8,
+        "tool_dependency_error": 4,
+        "plan_knowledge_error": 3
+      },
+      "termination_distribution": {
+        "dead_loop": 15
+      }
+    },
+    {
+      "goal": "diamond_axe",
+      "group": "Diamond",
+      "n_runs": 15,
+      "n_success": 0,
+      "success_rate": 0.0,
+      "avg_attempts": 3.0,
+      "avg_steps": 102.0,
+      "avg_steps_success": 0,
+      "error_distribution": {
+        "resource_shortage": 8,
+        "plan_knowledge_error": 6,
+        "tool_dependency_error": 1
+      },
+      "termination_distribution": {
+        "dead_loop": 14,
+        "max_steps": 1
+      }
+    },
+    {
+      "goal": "diamond_hoe",
+      "group": "Diamond",
+      "n_runs": 15,
+      "n_success": 0,
+      "success_rate": 0.0,
+      "avg_attempts": 3.0,
+      "avg_steps": 85.4,
+      "avg_steps_success": 0,
+      "error_distribution": {
+        "plan_knowledge_error": 6,
+        "resource_shortage": 8,
+        "tool_dependency_error": 1
+      },
+      "termination_distribution": {
+        "dead_loop": 14,
+        "max_steps": 1
+      }
+    },
+    {
+      "goal": "diamond_pickaxe",
+      "group": "Diamond",
+      "n_runs": 15,
+      "n_success": 0,
+      "success_rate": 0.0,
+      "avg_attempts": 3.0,
+      "avg_steps": 112.6,
+      "avg_steps_success": 0,
+      "error_distribution": {
+        "resource_shortage": 9,
+        "plan_knowledge_error": 6
+      },
+      "termination_distribution": {
+        "dead_loop": 13,
+        "max_steps": 2
+      }
+    },
+    {
+      "goal": "diamond",
+      "group": "Diamond",
+      "n_runs": 15,
+      "n_success": 0,
+      "success_rate": 0.0,
+      "avg_attempts": 3.0,
+      "avg_steps": 119.1,
+      "avg_steps_success": 0,
+      "error_distribution": {
+        "plan_knowledge_error": 6,
+        "resource_shortage": 9
+      },
+      "termination_distribution": {
+        "dead_loop": 11,
+        "max_steps": 4
+      }
+    },
+    {
+      "goal": "diamond_shovel",
+      "group": "Diamond",
+      "n_runs": 15,
+      "n_success": 0,
+      "success_rate": 0.0,
+      "avg_attempts": 3.0,
+      "avg_steps": 96.5,
+      "avg_steps_success": 0,
+      "error_distribution": {
+        "resource_shortage": 6,
+        "plan_knowledge_error": 7,
+        "tool_dependency_error": 2
+      },
+      "termination_distribution": {
+        "dead_loop": 14,
+        "max_steps": 1
+      }
+    },
+    {
+      "goal": "diamond_sword",
+      "group": "Diamond",
+      "n_runs": 15,
+      "n_success": 0,
+      "success_rate": 0.0,
+      "avg_attempts": 3.0,
+      "avg_steps": 108.7,
+      "avg_steps_success": 0,
+      "error_distribution": {
+        "plan_knowledge_error": 4,
+        "resource_shortage": 7,
+        "tool_dependency_error": 4
+      },
+      "termination_distribution": {
+        "dead_loop": 13,
+        "max_steps": 2
+      }
+    },
+    {
+      "goal": "jukebox",
+      "group": "Diamond",
+      "n_runs": 15,
+      "n_success": 0,
+      "success_rate": 0.0,
+      "avg_attempts": 3.0,
+      "avg_steps": 104.5,
+      "avg_steps_success": 0,
+      "error_distribution": {
+        "plan_knowledge_error": 6,
+        "resource_shortage": 9
+      },
+      "termination_distribution": {
+        "dead_loop": 14,
+        "max_steps": 1
+      }
+    },
+    {
+      "goal": "activator_rail",
+      "group": "Redstone",
+      "n_runs": 15,
+      "n_success": 0,
+      "success_rate": 0.0,
+      "avg_attempts": 3.0,
+      "avg_steps": 99.9,
+      "avg_steps_success": 0,
+      "error_distribution": {
+        "resource_shortage": 10,
+        "plan_knowledge_error": 3,
+        "tool_dependency_error": 2
+      },
+      "termination_distribution": {
+        "dead_loop": 14,
+        "max_steps": 1
+      }
+    },
+    {
+      "goal": "compass",
+      "group": "Redstone",
+      "n_runs": 15,
+      "n_success": 0,
+      "success_rate": 0.0,
+      "avg_attempts": 3.0,
+      "avg_steps": 103.4,
+      "avg_steps_success": 0,
+      "error_distribution": {
+        "tool_dependency_error": 1,
+        "resource_shortage": 13,
+        "plan_knowledge_error": 1
+      },
+      "termination_distribution": {
+        "dead_loop": 15
+      }
+    },
+    {
+      "goal": "dropper",
+      "group": "Redstone",
+      "n_runs": 15,
+      "n_success": 0,
+      "success_rate": 0.0,
+      "avg_attempts": 3.0,
+      "avg_steps": 111.7,
+      "avg_steps_success": 0,
+      "error_distribution": {
+        "resource_shortage": 12,
+        "plan_knowledge_error": 3
+      },
+      "termination_distribution": {
+        "dead_loop": 13,
+        "max_steps": 2
+      }
+    },
+    {
+      "goal": "note_block",
+      "group": "Redstone",
+      "n_runs": 15,
+      "n_success": 0,
+      "success_rate": 0.0,
+      "avg_attempts": 3.0,
+      "avg_steps": 115.9,
+      "avg_steps_success": 0,
+      "error_distribution": {
+        "resource_shortage": 5,
+        "tool_dependency_error": 3,
+        "plan_knowledge_error": 7
+      },
+      "termination_distribution": {
+        "dead_loop": 14,
+        "max_steps": 1
+      }
+    },
+    {
+      "goal": "piston",
+      "group": "Redstone",
+      "n_runs": 15,
+      "n_success": 0,
+      "success_rate": 0.0,
+      "avg_attempts": 3.0,
+      "avg_steps": 117.7,
+      "avg_steps_success": 0,
+      "error_distribution": {
+        "plan_knowledge_error": 3,
+        "resource_shortage": 11,
+        "tool_dependency_error": 1
+      },
+      "termination_distribution": {
+        "max_steps": 3,
+        "dead_loop": 12
+      }
+    },
+    {
+      "goal": "redstone_torch",
+      "group": "Redstone",
+      "n_runs": 15,
+      "n_success": 0,
+      "success_rate": 0.0,
+      "avg_attempts": 3.0,
+      "avg_steps": 88.3,
+      "avg_steps_success": 0,
+      "error_distribution": {
+        "tool_dependency_error": 3,
+        "resource_shortage": 9,
+        "plan_knowledge_error": 3
+      },
+      "termination_distribution": {
+        "dead_loop": 15
+      }
+    },
+    {
+      "goal": "iron_boots",
+      "group": "Armor",
+      "n_runs": 15,
+      "n_success": 2,
+      "success_rate": 0.13333333333333333,
+      "avg_attempts": 2.73,
+      "avg_steps": 87.5,
+      "avg_steps_success": 70.5,
+      "error_distribution": {
+        "resource_shortage": 11,
+        "plan_knowledge_error": 1,
+        "tool_dependency_error": 1
+      },
+      "termination_distribution": {
+        "dead_loop": 13,
+        "success": 2
+      }
+    },
+    {
+      "goal": "iron_helmet",
+      "group": "Armor",
+      "n_runs": 15,
+      "n_success": 2,
+      "success_rate": 0.13333333333333333,
+      "avg_attempts": 2.73,
+      "avg_steps": 76.3,
+      "avg_steps_success": 79.0,
+      "error_distribution": {
+        "resource_shortage": 12,
+        "plan_knowledge_error": 1
+      },
+      "termination_distribution": {
+        "dead_loop": 13,
+        "success": 2
+      }
+    },
+    {
+      "goal": "shield",
+      "group": "Armor",
+      "n_runs": 15,
+      "n_success": 2,
+      "success_rate": 0.13333333333333333,
+      "avg_attempts": 2.73,
+      "avg_steps": 111.2,
+      "avg_steps_success": 70.0,
+      "error_distribution": {
+        "resource_shortage": 8,
+        "plan_knowledge_error": 4,
+        "tool_dependency_error": 1
+      },
+      "termination_distribution": {
+        "dead_loop": 11,
+        "success": 2,
+        "max_steps": 2
+      }
+    },
+    {
+      "goal": "golden_boots",
+      "group": "Armor",
+      "n_runs": 15,
+      "n_success": 1,
+      "success_rate": 0.06666666666666667,
+      "avg_attempts": 2.87,
+      "avg_steps": 103.7,
+      "avg_steps_success": 89.0,
+      "error_distribution": {
+        "resource_shortage": 10,
+        "tool_dependency_error": 2,
+        "plan_knowledge_error": 2
+      },
+      "termination_distribution": {
+        "dead_loop": 13,
+        "success": 1,
+        "max_steps": 1
+      }
+    },
+    {
+      "goal": "golden_helmet",
+      "group": "Armor",
+      "n_runs": 15,
+      "n_success": 1,
+      "success_rate": 0.06666666666666667,
+      "avg_attempts": 2.87,
+      "avg_steps": 91.9,
+      "avg_steps_success": 85.0,
+      "error_distribution": {
+        "plan_knowledge_error": 3,
+        "resource_shortage": 6,
+        "tool_dependency_error": 5
+      },
+      "termination_distribution": {
+        "dead_loop": 13,
+        "max_steps": 1,
+        "success": 1
+      }
+    },
+    {
+      "goal": "golden_leggings",
+      "group": "Armor",
+      "n_runs": 15,
+      "n_success": 1,
+      "success_rate": 0.06666666666666667,
+      "avg_attempts": 2.87,
+      "avg_steps": 85.3,
+      "avg_steps_success": 91.0,
+      "error_distribution": {
+        "tool_dependency_error": 2,
+        "plan_knowledge_error": 4,
+        "resource_shortage": 8
+      },
+      "termination_distribution": {
+        "dead_loop": 13,
+        "max_steps": 1,
+        "success": 1
+      }
+    },
+    {
+      "goal": "iron_chestplate",
+      "group": "Armor",
+      "n_runs": 15,
+      "n_success": 1,
+      "success_rate": 0.06666666666666667,
+      "avg_attempts": 2.93,
+      "avg_steps": 101.0,
+      "avg_steps_success": 117.0,
+      "error_distribution": {
+        "tool_dependency_error": 1,
+        "resource_shortage": 9,
+        "plan_knowledge_error": 4
+      },
+      "termination_distribution": {
+        "dead_loop": 13,
+        "max_steps": 1,
+        "success": 1
+      }
+    },
+    {
+      "goal": "iron_leggings",
+      "group": "Armor",
+      "n_runs": 15,
+      "n_success": 1,
+      "success_rate": 0.06666666666666667,
+      "avg_attempts": 2.87,
+      "avg_steps": 85.6,
+      "avg_steps_success": 81.0,
+      "error_distribution": {
+        "resource_shortage": 9,
+        "plan_knowledge_error": 1,
+        "tool_dependency_error": 4
+      },
+      "termination_distribution": {
+        "dead_loop": 14,
+        "success": 1
+      }
+    },
+    {
+      "goal": "diamond_boots",
+      "group": "Armor",
+      "n_runs": 15,
+      "n_success": 0,
+      "success_rate": 0.0,
+      "avg_attempts": 3.0,
+      "avg_steps": 102.7,
+      "avg_steps_success": 0,
+      "error_distribution": {
+        "resource_shortage": 7,
+        "tool_dependency_error": 3,
+        "plan_knowledge_error": 5
+      },
+      "termination_distribution": {
+        "max_steps": 1,
+        "dead_loop": 14
+      }
+    },
+    {
+      "goal": "diamond_chestplate",
+      "group": "Armor",
+      "n_runs": 15,
+      "n_success": 0,
+      "success_rate": 0.0,
+      "avg_attempts": 3.0,
+      "avg_steps": 97.4,
+      "avg_steps_success": 0,
+      "error_distribution": {
+        "tool_dependency_error": 2,
+        "resource_shortage": 9,
+        "plan_knowledge_error": 4
+      },
+      "termination_distribution": {
+        "dead_loop": 14,
+        "max_steps": 1
+      }
+    },
+    {
+      "goal": "diamond_helmet",
+      "group": "Armor",
+      "n_runs": 15,
+      "n_success": 0,
+      "success_rate": 0.0,
+      "avg_attempts": 3.0,
+      "avg_steps": 112.5,
+      "avg_steps_success": 0,
+      "error_distribution": {
+        "plan_knowledge_error": 3,
+        "resource_shortage": 12
+      },
+      "termination_distribution": {
+        "dead_loop": 13,
+        "max_steps": 2
+      }
+    },
+    {
+      "goal": "diamond_leggings",
+      "group": "Armor",
+      "n_runs": 15,
+      "n_success": 0,
+      "success_rate": 0.0,
+      "avg_attempts": 3.0,
+      "avg_steps": 108.9,
+      "avg_steps_success": 0,
+      "error_distribution": {
+        "plan_knowledge_error": 6,
+        "tool_dependency_error": 1,
+        "resource_shortage": 8
+      },
+      "termination_distribution": {
+        "dead_loop": 14,
+        "max_steps": 1
+      }
+    },
+    {
+      "goal": "golden_chestplate",
+      "group": "Armor",
+      "n_runs": 15,
+      "n_success": 0,
+      "success_rate": 0.0,
+      "avg_attempts": 3.0,
+      "avg_steps": 97.9,
+      "avg_steps_success": 0,
+      "error_distribution": {
+        "resource_shortage": 9,
+        "plan_knowledge_error": 4,
+        "tool_dependency_error": 2
+      },
+      "termination_distribution": {
+        "dead_loop": 13,
+        "max_steps": 2
+      }
+    }
+  ],
+  "error_distribution": {
+    "resource_shortage": 464,
+    "plan_knowledge_error": 171,
+    "tool_dependency_error": 104
+  },
+  "termination_distribution": {
+    "dead_loop": 689,
+    "max_steps": 50,
+    "success": 266
+  },
+  "winning_attempt_distribution": {
+    "failed_all_attempts": 739,
+    "attempt_1": 234,
+    "attempt_3": 16,
+    "attempt_2": 16
+  }
+}

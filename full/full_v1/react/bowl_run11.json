@@ -1,0 +1,137 @@
+{
+  "goal": "bowl",
+  "success": false,
+  "total_steps": 9,
+  "termination": "dead_loop",
+  "trajectory": [
+    {
+      "step": 1,
+      "action": "mine_dirt",
+      "success": true,
+      "inventory_before": {},
+      "inventory_after": {
+        "dirt": 1
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 2,
+      "action": "mine_dirt",
+      "success": true,
+      "inventory_before": {
+        "dirt": 1
+      },
+      "inventory_after": {
+        "dirt": 2
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 3,
+      "action": "mine_dirt",
+      "success": true,
+      "inventory_before": {
+        "dirt": 2
+      },
+      "inventory_after": {
+        "dirt": 3
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 4,
+      "action": "mine_clay_lump",
+      "success": false,
+      "inventory_before": {
+        "dirt": 3
+      },
+      "inventory_after": {
+        "dirt": 3
+      },
+      "message": "action mine_clay_lump NOT exist!'",
+      "done": false
+    },
+    {
+      "step": 5,
+      "action": "mine_clay_lump",
+      "success": false,
+      "inventory_before": {
+        "dirt": 3
+      },
+      "inventory_after": {
+        "dirt": 3
+      },
+      "message": "action mine_clay_lump NOT exist!'",
+      "done": false
+    },
+    {
+      "step": 6,
+      "action": "mine_clay_lump",
+      "success": false,
+      "inventory_before": {
+        "dirt": 3
+      },
+      "inventory_after": {
+        "dirt": 3
+      },
+      "message": "action mine_clay_lump NOT exist!'",
+      "done": false
+    },
+    {
+      "step": 7,
+      "action": "mine_dirt",
+      "success": true,
+      "inventory_before": {
+        "dirt": 3
+      },
+      "inventory_after": {
+        "dirt": 4
+      },
+      "message": "Action executed successfully",
+      "done": false
+    },
+    {
+      "step": 8,
+      "action": "mine_clay_lump",
+      "success": false,
+      "inventory_before": {
+        "dirt": 4
+      },
+      "inventory_after": {
+        "dirt": 4
+      },
+      "message": "action mine_clay_lump NOT exist!'",
+      "done": false
+    },
+    {
+      "step": 9,
+      "action": "mine_clay_lump",
+      "success": false,
+      "inventory_before": {
+        "dirt": 4
+      },
+      "inventory_after": {
+        "dirt": 4
+      },
+      "message": "action mine_clay_lump NOT exist!'",
+      "done": false
+    }
+  ],
+  "dead_loop_reason": "'mine_clay_lump' failed 5+ times in last 20 steps (recurring)",
+  "run_id": 11,
+  "group": "Wooden",
+  "elapsed_sec": 17.04,
+  "errors": {
+    "unknown_action": 5,
+    "missing_tool": 0,
+    "missing_material": 0,
+    "repeated_same_fail": 3,
+    "total_failed_steps": 5,
+    "total_successful_steps": 4,
+    "efficiency": 0.444,
+    "dominant_error_type": "plan_knowledge_error"
+  }
+}

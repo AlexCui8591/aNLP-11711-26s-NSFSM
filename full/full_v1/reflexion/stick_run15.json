@@ -1,0 +1,84 @@
+{
+  "goal": "stick",
+  "success": true,
+  "winning_attempt": 1,
+  "total_attempts": 1,
+  "attempts": [
+    {
+      "attempt": 1,
+      "reflection": "",
+      "result": {
+        "goal": "stick",
+        "success": true,
+        "total_steps": 3,
+        "termination": "success",
+        "trajectory": [
+          {
+            "step": 1,
+            "action": "mine_oak_log",
+            "success": true,
+            "inventory_before": {},
+            "inventory_after": {
+              "oak_log": 1
+            },
+            "message": "Action executed successfully",
+            "done": false
+          },
+          {
+            "step": 2,
+            "action": "craft_oak_planks",
+            "success": true,
+            "inventory_before": {
+              "oak_log": 1
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 4
+            },
+            "message": "Action executed successfully",
+            "done": false
+          },
+          {
+            "step": 3,
+            "action": "craft_stick",
+            "success": true,
+            "inventory_before": {
+              "oak_log": 0,
+              "oak_planks": 4
+            },
+            "inventory_after": {
+              "oak_log": 0,
+              "oak_planks": 2,
+              "stick": 4
+            },
+            "message": "Action executed successfully",
+            "done": true
+          }
+        ],
+        "errors": {
+          "unknown_action": 0,
+          "missing_tool": 0,
+          "missing_material": 0,
+          "repeated_same_fail": 0,
+          "total_failed_steps": 0,
+          "total_successful_steps": 3,
+          "efficiency": 1.0,
+          "dominant_error_type": "none"
+        }
+      }
+    }
+  ],
+  "run_id": 15,
+  "group": "Wooden",
+  "elapsed_sec": 3.43,
+  "final_errors": {
+    "unknown_action": 0,
+    "missing_tool": 0,
+    "missing_material": 0,
+    "repeated_same_fail": 0,
+    "total_failed_steps": 0,
+    "total_successful_steps": 3,
+    "efficiency": 1.0,
+    "dominant_error_type": "none"
+  }
+}
