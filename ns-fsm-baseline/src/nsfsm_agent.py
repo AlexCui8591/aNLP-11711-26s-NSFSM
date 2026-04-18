@@ -1,0 +1,394 @@
+"""Generic NS-FSM runtime agent."""
+
+from __future__ import annotations
+
+import json
+import re
+from typing import Any, Mapping
+
+try:
+    from .context_manager import ContextManager
+    from .datasets.base import TaskSpec, task_spec_to_dict
+    from .fsm import RuntimeFSM
+    from .planner import Planner
+    from .prompts import build_nsfsm_prompt
+    from .rule_checker import RuleChecker
+except ImportError:  # pragma: no cover - supports direct src execution
+    from context_manager import ContextManager
+    from datasets.base import TaskSpec, task_spec_to_dict
+    from fsm import RuntimeFSM
+    from planner import Planner
+    from prompts import build_nsfsm_prompt
+    from rule_checker import RuleChecker
+
+
+class NSFSMAgent:
+    """Run one task under FSM/Datalog action control."""
+
+    def __init__(
+        self,
+        task_spec: TaskSpec | Mapping[str, Any],
+        adapter: Any,
+        fsm: RuntimeFSM,
+        llm: Any | None = None,
+        rule_checker: RuleChecker | None = None,
+        planner: Planner | None = None,
+        context_manager: ContextManager | None = None,
+        planner_only: bool = False,
+        max_blocked_repeats: int = 3,
+        verbose: bool = False,
+    ):
+        self.task_spec = task_spec_to_dict(task_spec)
+        self.adapter = adapter
+        self.fsm = fsm
+        self.llm = llm
+        self.rule_checker = rule_checker or RuleChecker()
+        self.planner = planner or Planner()
+        self.context_manager = context_manager or ContextManager()
+        self.planner_only = planner_only
+        self.max_blocked_repeats = max_blocked_repeats
+        self.verbose = verbose
+        self.trajectory: list[dict[str, Any]] = []
+        self.blocked_actions: list[dict[str, Any]] = []
+        self.fallback_actions: list[dict[str, Any]] = []
+
+    def run_episode(self) -> dict[str, Any]:
+        state = self.adapter.reset(self.task_spec)
+        self.fsm.reset()
+        self.trajectory = []
+        self.blocked_actions = []
+        self.fallback_actions = []
+        termination = "max_steps"
+        max_steps = int(self.task_spec.get("max_steps", 30))
+
+        for step_idx in range(max_steps):
+            if self.adapter.is_done(state, self.task_spec):
+                termination = "success"
+                break
+            if self.fsm.is_terminal():
+                termination = "fsm_terminal"
+                break
+
+            transition_options = self.fsm.get_valid_transitions()
+            legal_actions = self.fsm.get_valid_actions()
+            if not transition_options or not legal_actions:
+                termination = "no_valid_action"
+                break
+
+            context_packet = self.context_manager.build_packet(
+                task_spec=self.task_spec,
+                fsm=self.fsm,
+                adapter=self.adapter,
+                adapter_state=state,
+                history=self.trajectory,
+                blocked_history=self.blocked_actions,
+                fallback_history=self.fallback_actions,
+            )
+
+            proposal = self._propose_action(context_packet)
+            decision = self._select_decision(
+                proposal=proposal,
+                state=state,
+                legal_actions=legal_actions,
+                transition_options=transition_options,
+            )
+            if decision is None:
+                termination = "no_valid_action"
+                break
+
+            previous_fsm_state = self.fsm.current_state
+            step_result = self.adapter.step(
+                {
+                    "action": decision["action"],
+                    "payload": decision.get("payload", {}),
+                }
+            )
+            state = step_result.state
+            info = dict(step_result.info)
+            adapter_success = bool(info.get("success", True))
+
+            fsm_update = {"updated": False, "current_state": self.fsm.current_state}
+            if adapter_success:
+                fsm_update = self.fsm.update(
+                    decision["action"],
+                    decision.get("next_state"),
+                    info,
+                )
+
+            record = {
+                "step": step_idx + 1,
+                "fsm_state_before": previous_fsm_state,
+                "fsm_state_after": self.fsm.current_state,
+                "action": decision["action"],
+                "next_state": decision.get("next_state"),
+                "decision_source": decision.get("source", "unknown"),
+                "blocked": decision.get("blocked", False),
+                "success": adapter_success,
+                "message": info.get("message", ""),
+                "proposal": proposal,
+                "rule_check": decision.get("rule_check", {}),
+                "transition_check": decision.get("transition_check", {}),
+                "fsm_update": fsm_update,
+                "info": info,
+                "adapter_state": state,
+            }
+            self.trajectory.append(record)
+
+            if self.verbose:
+                print(
+                    f"[NS-FSM] step={step_idx + 1} state={previous_fsm_state} "
+                    f"action={decision['action']} -> {self.fsm.current_state} "
+                    f"success={adapter_success}"
+                )
+
+            if step_result.done or self.adapter.is_done(state, self.task_spec):
+                termination = "success" if self._adapter_success(state) else "max_steps"
+                break
+            if self._blocked_dead_loop():
+                termination = "repeated_blocked_actions"
+                break
+        else:
+            termination = "max_steps"
+
+        summary = self.adapter.summarize_result(state)
+        success = bool(summary.get("success", termination == "success"))
+        if success:
+            termination = "success"
+
+        return {
+            "dataset": self.task_spec.get("dataset"),
+            "task_id": self.task_spec.get("task_id"),
+            "task_type": self.task_spec.get("task_type"),
+            "success": success,
+            "total_steps": len(self.trajectory),
+            "termination": termination,
+            "blocked_action_count": len(self.blocked_actions),
+            "fallback_action_count": len(self.fallback_actions),
+            "trajectory": self.trajectory,
+            "metadata": {
+                "task_spec": self.task_spec,
+                "adapter_summary": summary,
+                "fsm": self.fsm.to_dict(),
+                "planner_only": self.planner_only,
+            },
+        }
+
+    def _propose_action(self, context_packet: Mapping[str, Any]) -> dict[str, Any]:
+        if self.planner_only or self.llm is None:
+            return {
+                "thought": "Planner-only mode or no LLM available.",
+                "action": None,
+                "next_state": None,
+                "payload": {},
+                "source": "planner",
+                "raw": "",
+            }
+
+        system_prompt, user_prompt = build_nsfsm_prompt(dict(context_packet))
+        try:
+            raw = self.llm.generate(system_prompt, user_prompt)
+            parsed = parse_nsfsm_response(raw)
+            parsed["source"] = "llm"
+            parsed["raw"] = raw
+            return parsed
+        except Exception as exc:
+            return {
+                "thought": f"LLM failed; using planner fallback. Error: {exc}",
+                "action": None,
+                "next_state": None,
+                "payload": {},
+                "source": "planner",
+                "raw": "",
+                "llm_error": str(exc),
+            }
+
+    def _select_decision(
+        self,
+        proposal: Mapping[str, Any],
+        state: Mapping[str, Any],
+        legal_actions: list[str],
+        transition_options: list[dict[str, Any]],
+    ) -> dict[str, Any] | None:
+        if proposal.get("source") == "planner" and not proposal.get("action"):
+            return self._planner_decision(
+                state=state,
+                legal_actions=legal_actions,
+                transition_options=transition_options,
+                blocked_reason={},
+                record_block=False,
+            )
+
+        proposed_action = proposal.get("action")
+        normalized_action = None
+        if proposed_action:
+            normalized_action = self.adapter.normalize_action(proposed_action, legal_actions)
+
+        proposed_next = proposal.get("next_state")
+        transition_check = (
+            self.fsm.verify_transition(normalized_action, proposed_next)
+            if normalized_action
+            else {"valid": False, "violations": [{"type": "parse_error"}]}
+        )
+        rule_check = self.rule_checker.check(
+            normalized_action,
+            legal_actions,
+            state,
+            self.task_spec,
+            self.adapter,
+            transition_check,
+        )
+
+        if rule_check["legal"] and transition_check.get("valid"):
+            return {
+                "action": normalized_action,
+                "next_state": proposed_next or transition_check.get("inferred_next_state"),
+                "payload": proposal.get("payload", {}),
+                "source": proposal.get("source", "llm"),
+                "blocked": False,
+                "rule_check": rule_check,
+                "transition_check": transition_check,
+            }
+
+        blocked_reason = {
+            "proposal": dict(proposal),
+            "rule_check": rule_check,
+            "transition_check": transition_check,
+        }
+        self.blocked_actions.append(
+            {
+                "step": len(self.trajectory) + 1,
+                "state": self.fsm.current_state,
+                "action": proposed_action,
+                "success": False,
+                "message": rule_check.get("message", "blocked"),
+                "reason": blocked_reason,
+            }
+        )
+        self.fsm.record_blocked_action(proposed_action, blocked_reason)
+
+        return self._planner_decision(
+            state=state,
+            legal_actions=legal_actions,
+            transition_options=transition_options,
+            blocked_reason=blocked_reason,
+            record_block=True,
+        )
+
+    def _planner_decision(
+        self,
+        state: Mapping[str, Any],
+        legal_actions: list[str],
+        transition_options: list[dict[str, Any]],
+        blocked_reason: Mapping[str, Any],
+        record_block: bool,
+    ) -> dict[str, Any] | None:
+        fallback = self.planner.next_action(
+            self.task_spec,
+            state,
+            legal_actions,
+            self.trajectory,
+            transition_options,
+            blocked_reason,
+        )
+        if fallback is None:
+            return None
+
+        fallback_action = self.adapter.normalize_action(fallback["action"], legal_actions)
+        fallback_transition = self.fsm.verify_transition(
+            fallback_action,
+            fallback.get("next_state"),
+        )
+        fallback_rule = self.rule_checker.check(
+            fallback_action,
+            legal_actions,
+            state,
+            self.task_spec,
+            self.adapter,
+            fallback_transition,
+        )
+        if not fallback_action or not fallback_rule["legal"] or not fallback_transition.get("valid"):
+            self.blocked_actions.append(
+                {
+                    "step": len(self.trajectory) + 1,
+                    "state": self.fsm.current_state,
+                    "action": fallback.get("action"),
+                    "success": False,
+                    "message": "Planner fallback was also illegal.",
+                    "reason": {
+                        "rule_check": fallback_rule,
+                        "transition_check": fallback_transition,
+                    },
+                }
+            )
+            return None
+
+        self.fallback_actions.append(
+            {
+                "step": len(self.trajectory) + 1,
+                "state": self.fsm.current_state,
+                "action": fallback_action,
+                "next_state": fallback.get("next_state"),
+                "success": True,
+                "message": fallback.get("reason", "planner fallback"),
+                "reason": fallback,
+            }
+        )
+        self.fsm.record_fallback_action(
+            fallback_action,
+            fallback.get("next_state"),
+            fallback.get("reason", "planner fallback"),
+        )
+        return {
+            "action": fallback_action,
+            "next_state": fallback.get("next_state")
+            or fallback_transition.get("inferred_next_state"),
+            "payload": {},
+            "source": "planner",
+            "blocked": record_block,
+            "rule_check": fallback_rule,
+            "transition_check": fallback_transition,
+        }
+
+    def _adapter_success(self, state: Mapping[str, Any]) -> bool:
+        try:
+            return bool(self.adapter.summarize_result(state).get("success", False))
+        except Exception:
+            return False
+
+    def _blocked_dead_loop(self) -> bool:
+        if len(self.blocked_actions) < self.max_blocked_repeats:
+            return False
+        recent = self.blocked_actions[-self.max_blocked_repeats :]
+        pairs = {(entry.get("state"), entry.get("action")) for entry in recent}
+        return len(pairs) == 1
+
+
+def parse_nsfsm_response(text: str) -> dict[str, Any]:
+    """Parse JSON or Thought/Action/Next State NS-FSM output."""
+
+    stripped = text.strip()
+    if stripped.startswith("{"):
+        try:
+            payload = json.loads(stripped)
+            return {
+                "thought": str(payload.get("thought", "")),
+                "action": payload.get("action"),
+                "next_state": payload.get("next_state") or payload.get("nextState"),
+                "payload": dict(payload.get("payload") or {}),
+            }
+        except json.JSONDecodeError:
+            pass
+
+    thought_match = re.search(
+        r"Thought:\s*(.+?)(?=\nAction:|\nNext State:|\Z)",
+        stripped,
+        re.IGNORECASE | re.DOTALL,
+    )
+    action_match = re.search(r"Action:\s*([^\n]+)", stripped, re.IGNORECASE)
+    next_match = re.search(r"Next State:\s*([^\n]+)", stripped, re.IGNORECASE)
+    return {
+        "thought": thought_match.group(1).strip() if thought_match else "",
+        "action": action_match.group(1).strip() if action_match else None,
+        "next_state": next_match.group(1).strip() if next_match else None,
+        "payload": {},
+    }

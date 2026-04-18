@@ -285,3 +285,121 @@ def build_reflexion_analysis_prompt(
         inventory=format_inventory(inventory),
         history=format_history(trajectory, last_k=last_k),
     )
+
+
+# =============================================================================
+# NS-FSM Prompts
+# =============================================================================
+
+NSFSM_SYSTEM_PROMPT = """You are an NS-FSM controlled agent.
+
+You must obey the externally verified workflow FSM.
+Choose exactly one action from the provided legal action list.
+Choose a next FSM state that is listed for that action.
+Do not invent tools, actions, or next states.
+
+Output format:
+Thought: <brief reasoning>
+Action: <one legal action>
+Next State: <one valid next state>
+"""
+
+
+NSFSM_STEP_PROMPT = """== TASK ==
+Dataset: {dataset}
+Task ID: {task_id}
+Task Type: {task_type}
+Instruction:
+{instruction}
+
+== CURRENT FSM ==
+Current workflow phase:
+{fsm_state}
+
+Validated FSM summary:
+{fsm_summary}
+
+== CURRENT ADAPTER STATE ==
+{adapter_state_summary}
+
+== RECENT ACTION HISTORY ==
+{recent_history}
+
+== BLOCKED ACTION HISTORY ==
+{blocked_history}
+
+== FALLBACK HISTORY ==
+{fallback_history}
+
+== COMPRESSED MEMORY ==
+{compressed_memory}
+
+== LEGAL NEXT ACTIONS ==
+{legal_actions}
+
+== VALID NEXT STATES FOR EACH ACTION: T(current_state) ==
+{transition_options}
+
+Choose exactly one legal action and the intended next FSM state.
+Thought: """
+
+
+def build_nsfsm_prompt(context_packet: dict) -> tuple:
+    """Build (system_prompt, user_prompt) for one NS-FSM decision."""
+
+    task = context_packet.get("task", {})
+    user = NSFSM_STEP_PROMPT.format(
+        dataset=task.get("dataset", ""),
+        task_id=task.get("task_id", ""),
+        task_type=task.get("task_type", ""),
+        instruction=task.get("instruction", ""),
+        fsm_state=context_packet.get("fsm_state", ""),
+        fsm_summary=context_packet.get("fsm_summary", ""),
+        adapter_state_summary=context_packet.get("adapter_state_summary", ""),
+        recent_history=format_nsfsm_records(context_packet.get("recent_history", [])),
+        blocked_history=format_nsfsm_records(context_packet.get("blocked_history", [])),
+        fallback_history=format_nsfsm_records(context_packet.get("fallback_history", [])),
+        compressed_memory=context_packet.get("compressed_memory", "(none)"),
+        legal_actions=format_nsfsm_actions(context_packet.get("legal_actions", [])),
+        transition_options=format_transition_options(
+            context_packet.get("transition_options", [])
+        ),
+    )
+    return NSFSM_SYSTEM_PROMPT, user
+
+
+def format_nsfsm_actions(actions: list) -> str:
+    if not actions:
+        return "  (no legal actions)"
+    return "\n".join(f"  - {action}" for action in actions)
+
+
+def format_transition_options(options: list) -> str:
+    if not options:
+        return "  (no valid transitions)"
+    lines = []
+    for option in options:
+        action = option.get("action", "?")
+        next_state = option.get("next_state", "?")
+        condition = option.get("condition", "")
+        suffix = f" | condition: {condition}" if condition else ""
+        lines.append(f"  - action={action} -> next_state={next_state}{suffix}")
+    return "\n".join(lines)
+
+
+def format_nsfsm_records(records: list, limit: int = 8) -> str:
+    if not records:
+        return "  (none)"
+    lines = []
+    for entry in records[-limit:]:
+        step = entry.get("step", "?")
+        action = entry.get("action", "?")
+        success = entry.get("success")
+        status = "OK" if success is True else "FAILED" if success is False else "?"
+        source = entry.get("source") or entry.get("decision_source") or ""
+        source_text = f" source={source}" if source else ""
+        message = entry.get("message") or entry.get("info", {}).get("message", "")
+        lines.append(f"  Step {step}: [{status}] {action}{source_text}")
+        if message:
+            lines.append(f"    message: {message}")
+    return "\n".join(lines)
