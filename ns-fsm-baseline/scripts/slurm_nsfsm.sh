@@ -29,8 +29,17 @@ if [ -z "${SLURM_JOB_ID:-}" ] && [ "${ALLOW_LOGIN_RUN:-0}" != "1" ]; then
     exit 1
 fi
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+SUBMIT_DIR="${SLURM_SUBMIT_DIR:-$(pwd)}"
+if [ -f "${SUBMIT_DIR}/scripts/run_nsfsm_experiment.py" ]; then
+    ROOT="$(cd "${SUBMIT_DIR}" && pwd)"
+elif [ -f "${SUBMIT_DIR}/../scripts/run_nsfsm_experiment.py" ]; then
+    ROOT="$(cd "${SUBMIT_DIR}/.." && pwd)"
+elif [ -f "${SUBMIT_DIR}/ns-fsm-baseline/scripts/run_nsfsm_experiment.py" ]; then
+    ROOT="$(cd "${SUBMIT_DIR}/ns-fsm-baseline" && pwd)"
+else
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+fi
 PROJECT_ROOT="$(cd "${ROOT}/.." && pwd)"
 cd "$ROOT"
 mkdir -p logs
@@ -63,11 +72,9 @@ export TORCH_EXTENSIONS_DIR="${CACHE_ROOT}/torch_extensions"
 export XDG_CACHE_HOME="${CACHE_ROOT}"
 mkdir -p "$HF_HOME" "$VLLM_CACHE_ROOT" "$TRITON_CACHE_DIR" "$TORCH_EXTENSIONS_DIR"
 
-if [ ! -d "${MC_TEXTWORLD_PATH}/mctextworld" ]; then
+if [ ! -d "${MC_TEXTWORLD_PATH}" ]; then
     echo "ERROR: MC-TextWorld path is not valid:"
     echo "  ${MC_TEXTWORLD_PATH}"
-    echo "Expected:"
-    echo "  ${MC_TEXTWORLD_PATH}/mctextworld"
     echo
     echo "If MC-TextWorld is elsewhere, submit with:"
     echo "  MC_TEXTWORLD_PATH=/path/to/MC-TextWorld sbatch scripts/slurm_nsfsm.sh"
@@ -87,7 +94,7 @@ echo "  MC-TextWorld: ${MC_TEXTWORLD_PATH}"
 
 set -e
 
-python -c "import sys; sys.path.insert(0, '${MC_TEXTWORLD_PATH}'); from mctextworld.simulator import Env; print('real MC-TextWorld ok')"
+python -c "import sys; p='${MC_TEXTWORLD_PATH}'; sys.path.insert(0, p); print('  Checking MC-TextWorld import from:', p); from mctextworld.simulator import Env; print('  real MC-TextWorld ok')"
 
 echo "[1/4] Starting vLLM server..."
 python -m vllm.entrypoints.openai.api_server \

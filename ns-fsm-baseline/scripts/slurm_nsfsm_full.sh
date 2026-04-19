@@ -31,8 +31,17 @@ if [ -z "${SLURM_JOB_ID:-}" ] && [ "${ALLOW_LOGIN_RUN:-0}" != "1" ]; then
     exit 1
 fi
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+SUBMIT_DIR="${SLURM_SUBMIT_DIR:-$(pwd)}"
+if [ -f "${SUBMIT_DIR}/scripts/run_nsfsm_experiment.py" ]; then
+    ROOT="$(cd "${SUBMIT_DIR}" && pwd)"
+elif [ -f "${SUBMIT_DIR}/../scripts/run_nsfsm_experiment.py" ]; then
+    ROOT="$(cd "${SUBMIT_DIR}/.." && pwd)"
+elif [ -f "${SUBMIT_DIR}/ns-fsm-baseline/scripts/run_nsfsm_experiment.py" ]; then
+    ROOT="$(cd "${SUBMIT_DIR}/ns-fsm-baseline" && pwd)"
+else
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+fi
 cd "$ROOT"
 mkdir -p logs
 
