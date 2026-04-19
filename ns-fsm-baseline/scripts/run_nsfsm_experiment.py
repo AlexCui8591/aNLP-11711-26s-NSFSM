@@ -53,6 +53,7 @@ def main() -> None:
                 task_spec=task_spec,
                 adapter=adapter,
                 use_fixed_generic_fsm=args.use_fixed_generic_fsm,
+                use_llm_fsm_design=args.use_llm_fsm_design,
                 config_path=args.config,
             )
             result = NSFSMAgent(
@@ -110,6 +111,14 @@ def parse_args() -> argparse.Namespace:
         help="Path to hyperparams YAML for LLM FSM design/runtime calls.",
     )
     parser.add_argument("--use-fixed-generic-fsm", action="store_true")
+    parser.add_argument(
+        "--use-llm-fsm-design",
+        action="store_true",
+        help=(
+            "Use the LLM FSM designer even for datasets with grounded FSM rules. "
+            "By default, Minecraft uses adapter-grounded dependency FSMs."
+        ),
+    )
     parser.add_argument("--save-fsm-design", action="store_true")
     parser.add_argument("--planner-only", action="store_true")
     parser.add_argument(
@@ -149,6 +158,7 @@ def build_runtime_fsm(
     task_spec: Mapping[str, Any],
     adapter: Any,
     use_fixed_generic_fsm: bool,
+    use_llm_fsm_design: bool,
     config_path: str | None,
 ):
     builder = FSMBuilder()
@@ -158,6 +168,20 @@ def build_runtime_fsm(
     }
     if use_fixed_generic_fsm:
         return builder.from_template(task_spec, adapter), metadata
+
+    if _use_minecraft_grounded_rules(task_spec, adapter, use_llm_fsm_design):
+        fsm = builder.from_template(task_spec, adapter)
+        sequence = list(task_spec.get("metadata", {}).get("required_actions") or [])
+        _assert_grounded_minecraft_fsm(fsm, sequence, task_spec)
+        metadata.update(
+            {
+                "source": "minecraft_grounded_rules",
+                "rule": "ground_truth_dependency_path",
+                "required_action_count": len(sequence),
+                "llm_fsm_error": None,
+            }
+        )
+        return fsm, metadata
 
     try:
         proposal = LLMFSMDesigner(config_path=config_path).design_with_metadata(task_spec, adapter)
@@ -175,6 +199,45 @@ def build_runtime_fsm(
         raise RuntimeError(
             "LLM FSM design failed validation and fallback FSM replacement is disabled."
         ) from exc
+
+
+def _use_minecraft_grounded_rules(
+    task_spec: Mapping[str, Any],
+    adapter: Any,
+    use_llm_fsm_design: bool,
+) -> bool:
+    return (
+        not use_llm_fsm_design
+        and str(task_spec.get("dataset")) == "minecraft"
+        and getattr(adapter, "dataset_name", "") == "minecraft"
+    )
+
+
+def _assert_grounded_minecraft_fsm(
+    fsm: Any,
+    sequence: list[str],
+    task_spec: Mapping[str, Any],
+) -> None:
+    if not sequence:
+        raise ValueError(
+            f"Minecraft grounded FSM requires a dependency action sequence for "
+            f"{task_spec.get('task_id')}."
+        )
+    transitions = fsm.to_dict().get("transitions", [])
+    transition_actions = [item.get("action") for item in transitions]
+    if transition_actions != sequence:
+        raise ValueError(
+            "Minecraft grounded FSM transitions do not match the dependency "
+            f"sequence for {task_spec.get('task_id')}: {transition_actions} != {sequence}"
+        )
+    for state in fsm.to_dict().get("states", []):
+        state_name = state.get("name")
+        if state.get("terminal"):
+            continue
+        if not fsm.get_valid_transitions(state_name):
+            raise ValueError(
+                f"Minecraft grounded FSM state has no legal transitions: {state_name}"
+            )
 
 
 def load_runtime_llm(config_path: str | None):
