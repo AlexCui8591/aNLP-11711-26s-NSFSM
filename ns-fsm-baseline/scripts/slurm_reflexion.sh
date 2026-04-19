@@ -18,9 +18,8 @@
 # ============================================================
 
 # ── Paths ────────────────────────────────────────────────────
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-PROJECT_ROOT="$(cd "${ROOT}/.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ROOT="$(dirname "$SCRIPT_DIR")"
 cd "$ROOT"
 mkdir -p logs
 
@@ -31,17 +30,23 @@ echo "  GPU:  $(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null ||
 echo "  Time: $(date)"
 echo "============================================"
 
+: <<'COMMENT_OUT'
 # ── Environment (all caches → ocean, avoid home quota) ───────
-CACHE_OWNER="${CACHE_OWNER:-$USER}"
-CACHE_ROOT="/ocean/projects/cis250260p/${CACHE_OWNER}/.cache"
-MC_TEXTWORLD_PATH="${MC_TEXTWORLD_PATH:-${PROJECT_ROOT}/MC-TextWorld}"
+export HF_HOME=/ocean/projects/cis250260p/cuiz/.cache/huggingface
+export VLLM_CACHE_ROOT=/ocean/projects/cis250260p/cuiz/.cache/vllm
+export TRITON_CACHE_DIR=/ocean/projects/cis250260p/cuiz/.cache/triton
+export TORCH_EXTENSIONS_DIR=/ocean/projects/cis250260p/cuiz/.cache/torch_extensions
+export XDG_CACHE_HOME=/ocean/projects/cis250260p/cuiz/.cache
+export PYTHONPATH=/ocean/projects/cis250260p/cuiz/aNLP-11711-26s-NSFSM/MC-TextWorld:$PYTHONPATH
+mkdir -p "$HF_HOME" "$VLLM_CACHE_ROOT" "$TRITON_CACHE_DIR" "$TORCH_EXTENSIONS_DIR"
+COMMENT_OUT
 
-export HF_HOME="${CACHE_ROOT}/huggingface"
-export VLLM_CACHE_ROOT="${CACHE_ROOT}/vllm"
-export TRITON_CACHE_DIR="${CACHE_ROOT}/triton"
-export TORCH_EXTENSIONS_DIR="${CACHE_ROOT}/torch_extensions"
-export XDG_CACHE_HOME="${CACHE_ROOT}"
-export PYTHONPATH="${MC_TEXTWORLD_PATH}:${PYTHONPATH:-}"
+export HF_HOME=/ocean/projects/cis250260p/ezhang13/.cache/huggingface
+export VLLM_CACHE_ROOT=/ocean/projects/cis250260p/ezhang13/.cache/vllm
+export TRITON_CACHE_DIR=/ocean/projects/cis250260p/ezhang13/.cache/triton
+export TORCH_EXTENSIONS_DIR=/ocean/projects/cis250260p/ezhang13/.cache/torch_extensions
+export XDG_CACHE_HOME=/ocean/projects/cis250260p/ezhang13/.cache
+export PYTHONPATH=/ocean/projects/cis250260p/ezhang13/aNLP-11711-26s-NSFSM/MC-TextWorld:$PYTHONPATH
 mkdir -p "$HF_HOME" "$VLLM_CACHE_ROOT" "$TRITON_CACHE_DIR" "$TORCH_EXTENSIONS_DIR"
 
 
@@ -54,7 +59,6 @@ conda activate nsfsm
 # Verify environment
 echo "  Python: $(which python)"
 echo "  Conda env: $CONDA_DEFAULT_ENV"
-echo "  MC-TextWorld: $MC_TEXTWORLD_PATH"
 
 set -e
 
@@ -64,7 +68,7 @@ python -m vllm.entrypoints.openai.api_server \
     --model Qwen/Qwen2.5-7B-Instruct \
     --port 8000 \
     --trust-remote-code \
-    --gpu-memory-utilization 0.90 \
+    --gpu-memory-utilization 0.90 
     &> logs/vllm_reflexion_${SLURM_JOB_ID}.log &
 
 VLLM_PID=$!

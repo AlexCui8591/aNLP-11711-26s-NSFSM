@@ -29,9 +29,8 @@ if [ -z "${SLURM_JOB_ID:-}" ] && [ "${ALLOW_LOGIN_RUN:-0}" != "1" ]; then
     exit 1
 fi
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-PROJECT_ROOT="$(cd "${ROOT}/.." && pwd)"
+ROOT="${SLURM_SUBMIT_DIR:-$(cd "$(dirname "$0")" && pwd)}"
+PROJECT_ROOT="$(dirname "$ROOT")"
 cd "$ROOT"
 mkdir -p logs
 
@@ -41,9 +40,9 @@ RUNS="${RUNS:-1}"
 CONFIG_PATH="${CONFIG_PATH:-config/hyperparams_psc.yaml}"
 MODEL_NAME="${MODEL_NAME:-Qwen/Qwen2.5-7B-Instruct}"
 PORT="${PORT:-8000}"
-CACHE_OWNER="${CACHE_OWNER:-$USER}"
+CACHE_OWNER="${CACHE_OWNER:-ezhang13}"
 CACHE_ROOT="/ocean/projects/cis250260p/${CACHE_OWNER}/.cache"
-MC_TEXTWORLD_PATH="${MC_TEXTWORLD_PATH:-${PROJECT_ROOT}/MC-TextWorld}"
+MC_TEXTWORLD_PATH="${MC_TEXTWORLD_PATH:-/ocean/projects/cis250260p/${CACHE_OWNER}/aNLP-11711-26s-NSFSM/MC-TextWorld}"
 JOB_ID="${SLURM_JOB_ID:-manual}"
 
 echo "============================================"
@@ -63,43 +62,7 @@ export TORCH_EXTENSIONS_DIR="${CACHE_ROOT}/torch_extensions"
 export XDG_CACHE_HOME="${CACHE_ROOT}"
 mkdir -p "$HF_HOME" "$VLLM_CACHE_ROOT" "$TRITON_CACHE_DIR" "$TORCH_EXTENSIONS_DIR"
 
-resolve_mctextworld_path() {
-    for candidate in \
-        "${MC_TEXTWORLD_PATH}" \
-        "${PROJECT_ROOT}/MC-TextWorld" \
-        "${ROOT}/MC-TextWorld"; do
-        if [ -d "${candidate}/mctextworld" ]; then
-            echo "${candidate}"
-            return 0
-        fi
-        if [ -d "${candidate}" ]; then
-            nested="$(find "${candidate}" -maxdepth 4 -type d -name mctextworld -print -quit 2>/dev/null || true)"
-            if [ -n "${nested}" ]; then
-                dirname "${nested}"
-                return 0
-            fi
-        fi
-    done
-    return 1
-}
-
-MC_TEXTWORLD_ROOT="$(resolve_mctextworld_path || true)"
-if [ -z "${MC_TEXTWORLD_ROOT}" ]; then
-    echo "ERROR: could not find MC-TextWorld."
-    echo "Checked:"
-    echo "  ${MC_TEXTWORLD_PATH}"
-    echo "  ${PROJECT_ROOT}/MC-TextWorld"
-    echo "  ${ROOT}/MC-TextWorld"
-    echo
-    echo "Expected a directory containing mctextworld/, for example:"
-    echo "  ${PROJECT_ROOT}/MC-TextWorld/mctextworld"
-    echo
-    echo "If it is elsewhere, submit with:"
-    echo "  MC_TEXTWORLD_PATH=/path/to/MC-TextWorld sbatch scripts/slurm_nsfsm.sh"
-    exit 1
-fi
-
-export PYTHONPATH="${MC_TEXTWORLD_ROOT}:${PYTHONPATH:-}"
+export PYTHONPATH="${MC_TEXTWORLD_PATH}:${PYTHONPATH:-}"
 
 module load anaconda3
 source /opt/packages/anaconda3-2024.10-1/etc/profile.d/conda.sh
