@@ -1,0 +1,1117 @@
+{
+  "counts": {
+    "actions": 732,
+    "actions_type_craft": 562,
+    "actions_type_mine": 117,
+    "actions_type_no_op": 1,
+    "actions_type_smelt": 52,
+    "fact_files": 17,
+    "fact_rows": 15791,
+    "items": 717,
+    "plan_steps": 1678,
+    "plans": 211,
+    "recipe_variants": 1450,
+    "tasks": 208
+  },
+  "errors": [],
+  "plan_replay": {
+    "checked": 203,
+    "failed": [
+      {
+        "action": "mine_steve",
+        "inventory": {
+          "diamond_pickaxe": 1
+        },
+        "reason": "unknown action",
+        "step": 0,
+        "task": "test_steve"
+      },
+      {
+        "action": "mine_stones",
+        "inventory": {
+          "iron_pickaxe": 1
+        },
+        "reason": "unknown action",
+        "step": 0,
+        "task": "test_dig_down"
+      },
+      {
+        "action": "mine_yellow_flower",
+        "inventory": {},
+        "reason": "unknown action",
+        "step": 0,
+        "task": "test_yellow_flower"
+      },
+      {
+        "action": "mine_red_flower",
+        "inventory": {},
+        "reason": "unknown action",
+        "step": 0,
+        "task": "test_red_flower"
+      },
+      {
+        "action": "mine_magenta_flower",
+        "inventory": {},
+        "reason": "unknown action",
+        "step": 0,
+        "task": "test_magenta_flower"
+      },
+      {
+        "action": "mine_light_gray_flower",
+        "inventory": {},
+        "reason": "unknown action",
+        "step": 0,
+        "task": "test_light_gray_flower"
+      },
+      {
+        "action": "mine_pink_flower",
+        "inventory": {},
+        "reason": "unknown action",
+        "step": 0,
+        "task": "test_pink_flower"
+      },
+      {
+        "action": "mine_orange_flower",
+        "inventory": {},
+        "reason": "unknown action",
+        "step": 0,
+        "task": "test_orange_flower"
+      },
+      {
+        "action": "mine_blue_flower",
+        "inventory": {},
+        "reason": "unknown action",
+        "step": 0,
+        "task": "test_blue_flower"
+      },
+      {
+        "action": "mine_white_flower",
+        "inventory": {},
+        "reason": "unknown action",
+        "step": 0,
+        "task": "test_white_flower"
+      },
+      {
+        "action": "mine_redstone",
+        "inventory": {
+          "iron_pickaxe": 1
+        },
+        "reason": "unknown action",
+        "step": 0,
+        "task": "test_redstone"
+      },
+      {
+        "action": null,
+        "goal": {
+          "logs": 5
+        },
+        "inventory": {
+          "oak_log": 5
+        },
+        "reason": "plan exhausted after satisfied subgoal",
+        "step": null,
+        "task": "test_plains"
+      },
+      {
+        "action": null,
+        "goal": {
+          "logs": 5
+        },
+        "inventory": {
+          "oak_log": 5
+        },
+        "reason": "plan exhausted after satisfied subgoal",
+        "step": null,
+        "task": "test_forest"
+      },
+      {
+        "action": null,
+        "goal": {
+          "logs": 3
+        },
+        "inventory": {
+          "oak_log": 3
+        },
+        "reason": "plan exhausted after satisfied subgoal",
+        "step": null,
+        "task": "test_village"
+      },
+      {
+        "action": null,
+        "goal": {
+          "logs": 3
+        },
+        "inventory": {
+          "oak_log": 3
+        },
+        "reason": "plan exhausted after satisfied subgoal",
+        "step": null,
+        "task": "test_sheep"
+      },
+      {
+        "action": null,
+        "goal": {
+          "logs": 3
+        },
+        "inventory": {
+          "cobblestone": 64,
+          "diamond": 64,
+          "oak_log": 3
+        },
+        "reason": "plan exhausted after satisfied subgoal",
+        "step": null,
+        "task": "test_inv"
+      },
+      {
+        "action": "mine_stones",
+        "inventory": {},
+        "reason": "unknown action",
+        "step": 0,
+        "task": "test_iron"
+      },
+      {
+        "action": "mine_wool",
+        "inventory": {},
+        "reason": "unknown action",
+        "step": 0,
+        "task": "painting"
+      },
+      {
+        "action": "craft_oak_oak_planks",
+        "inventory": {
+          "oak_log": 2
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "oak_slab"
+      },
+      {
+        "action": "craft_birch_oak_planks",
+        "inventory": {
+          "birch_log": 2
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "birch_slab"
+      },
+      {
+        "action": "mine_redstone",
+        "inventory": {
+          "coal": 4,
+          "crafting_table": 1,
+          "furnace": 1,
+          "gold_ingot": 4,
+          "iron_pickaxe": 1,
+          "oak_log": 2,
+          "oak_planks": 5,
+          "stick": 2,
+          "stone_pickaxe": 1,
+          "wooden_pickaxe": 1
+        },
+        "reason": "unknown action",
+        "step": 20,
+        "task": "clock"
+      },
+      {
+        "action": "craft_oak_oak_planks",
+        "inventory": {
+          "oak_log": 1
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "oak_button"
+      },
+      {
+        "action": "craft_birch_oak_planks",
+        "inventory": {
+          "birch_log": 1
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "birch_button"
+      },
+      {
+        "action": "mine_redstone",
+        "inventory": {
+          "crafting_table": 1,
+          "furnace": 1,
+          "iron_pickaxe": 1,
+          "oak_log": 1,
+          "oak_planks": 5,
+          "stick": 2,
+          "stone_pickaxe": 1,
+          "wooden_pickaxe": 1
+        },
+        "reason": "unknown action",
+        "step": 14,
+        "task": "redstone_torch"
+      },
+      {
+        "action": "mine_redstone",
+        "inventory": {
+          "crafting_table": 1,
+          "furnace": 1,
+          "iron_pickaxe": 1,
+          "oak_log": 1,
+          "oak_planks": 5,
+          "stick": 2,
+          "stone_pickaxe": 1,
+          "wooden_pickaxe": 1
+        },
+        "reason": "unknown action",
+        "step": 14,
+        "task": "redstone"
+      },
+      {
+        "action": "mine_redstone",
+        "inventory": {
+          "crafting_table": 1,
+          "furnace": 1,
+          "iron_pickaxe": 1,
+          "oak_log": 1,
+          "oak_planks": 5,
+          "stick": 2,
+          "stone_pickaxe": 1,
+          "wooden_pickaxe": 1
+        },
+        "reason": "unknown action",
+        "step": 14,
+        "task": "redstone_block"
+      },
+      {
+        "action": "craft_oak_oak_planks",
+        "inventory": {
+          "oak_log": 3
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "oak_door"
+      },
+      {
+        "action": "mine_oak_log",
+        "goal": {
+          "birch_door": 1
+        },
+        "inventory": {
+          "oak_log": 1024
+        },
+        "reason": "task goal not reached after 1024 plan ticks",
+        "step": 0,
+        "task": "birch_door"
+      },
+      {
+        "action": "craft_oak_oak_planks",
+        "inventory": {
+          "oak_log": 3
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "oak_fence_gate"
+      },
+      {
+        "action": "craft_birch_oak_planks",
+        "inventory": {
+          "birch_log": 3
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "birch_fence_gate"
+      },
+      {
+        "action": "craft_oak_oak_planks",
+        "inventory": {
+          "oak_log": 3
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "oak_trapdoor"
+      },
+      {
+        "action": "craft_birch_oak_planks",
+        "inventory": {
+          "birch_log": 3
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "birch_trapdoor"
+      },
+      {
+        "action": "mine_leather",
+        "inventory": {},
+        "reason": "unknown action",
+        "step": 0,
+        "task": "book"
+      },
+      {
+        "action": "craft_oak_oak_planks",
+        "inventory": {
+          "oak_log": 3
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "oak_boat"
+      },
+      {
+        "action": "craft_birch_oak_planks",
+        "inventory": {
+          "birch_log": 3
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "birch_boat"
+      },
+      {
+        "action": "mine_leather",
+        "inventory": {},
+        "reason": "unknown action",
+        "step": 0,
+        "task": "leather_helmet"
+      },
+      {
+        "action": "mine_leather",
+        "inventory": {},
+        "reason": "unknown action",
+        "step": 0,
+        "task": "leather_chestplate"
+      },
+      {
+        "action": "mine_leather",
+        "inventory": {},
+        "reason": "unknown action",
+        "step": 0,
+        "task": "leather_leggings"
+      },
+      {
+        "action": "mine_leather",
+        "inventory": {},
+        "reason": "unknown action",
+        "step": 0,
+        "task": "leather_boots"
+      },
+      {
+        "action": "craft_oak_oak_planks",
+        "inventory": {
+          "oak_log": 3
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "oak_fence"
+      },
+      {
+        "action": "craft_birch_oak_planks",
+        "inventory": {
+          "birch_log": 3
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "birch_fence"
+      },
+      {
+        "action": "mine_redstone",
+        "inventory": {
+          "cobblestone": 4,
+          "crafting_table": 1,
+          "furnace": 1,
+          "iron_ingot": 1,
+          "iron_pickaxe": 1,
+          "oak_log": 1,
+          "oak_planks": 5,
+          "stick": 2,
+          "stone_pickaxe": 1,
+          "wooden_pickaxe": 1
+        },
+        "reason": "unknown action",
+        "step": 15,
+        "task": "piston"
+      },
+      {
+        "action": "mine_redstone",
+        "inventory": {
+          "crafting_table": 1,
+          "furnace": 1,
+          "iron_ingot": 6,
+          "iron_pickaxe": 1,
+          "oak_log": 2,
+          "oak_planks": 3,
+          "stick": 6,
+          "stone_pickaxe": 1,
+          "wooden_pickaxe": 1
+        },
+        "reason": "unknown action",
+        "step": 22,
+        "task": "activator_rail"
+      },
+      {
+        "action": "mine_redstone",
+        "inventory": {
+          "crafting_table": 1,
+          "furnace": 1,
+          "iron_ingot": 4,
+          "iron_pickaxe": 1,
+          "oak_log": 2,
+          "oak_planks": 3,
+          "stick": 6,
+          "stone_pickaxe": 1,
+          "wooden_pickaxe": 1
+        },
+        "reason": "unknown action",
+        "step": 20,
+        "task": "compass"
+      },
+      {
+        "action": "mine_redstone",
+        "inventory": {
+          "cobblestone": 8,
+          "crafting_table": 1,
+          "furnace": 1,
+          "iron_pickaxe": 1,
+          "oak_log": 1,
+          "oak_planks": 3,
+          "stick": 6,
+          "stone_pickaxe": 1,
+          "wooden_pickaxe": 1
+        },
+        "reason": "unknown action",
+        "step": 14,
+        "task": "dropper"
+      },
+      {
+        "action": "mine_redstone",
+        "inventory": {
+          "crafting_table": 1,
+          "furnace": 1,
+          "iron_pickaxe": 1,
+          "oak_log": 1,
+          "oak_planks": 13,
+          "stick": 2,
+          "stone_pickaxe": 1,
+          "wooden_pickaxe": 1
+        },
+        "reason": "unknown action",
+        "step": 14,
+        "task": "note_block"
+      },
+      {
+        "action": "craft_jungle_oak_planks",
+        "inventory": {
+          "jungle_log": 2
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "jungle_slab"
+      },
+      {
+        "action": "craft_jungle_oak_planks",
+        "inventory": {
+          "jungle_log": 1
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "jungle_button"
+      },
+      {
+        "action": "mine_oak_log",
+        "goal": {
+          "jungle_door": 1
+        },
+        "inventory": {
+          "oak_log": 1024
+        },
+        "reason": "task goal not reached after 1024 plan ticks",
+        "step": 0,
+        "task": "jungle_door"
+      },
+      {
+        "action": "craft_jungle_oak_planks",
+        "inventory": {
+          "jungle_log": 3
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "jungle_fence_gate"
+      },
+      {
+        "action": "craft_jungle_oak_planks",
+        "inventory": {
+          "jungle_log": 3
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "jungle_trapdoor"
+      },
+      {
+        "action": "craft_jungle_oak_planks",
+        "inventory": {
+          "jungle_log": 3
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "jungle_boat"
+      },
+      {
+        "action": "craft_jungle_oak_planks",
+        "inventory": {
+          "jungle_log": 3
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "jungle_fence"
+      },
+      {
+        "action": "craft_acacia_oak_planks",
+        "inventory": {
+          "acacia_log": 2
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "acacia_slab"
+      },
+      {
+        "action": "craft_acacia_oak_planks",
+        "inventory": {
+          "acacia_log": 1
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "acacia_button"
+      },
+      {
+        "action": "mine_oak_log",
+        "goal": {
+          "acacia_door": 1
+        },
+        "inventory": {
+          "oak_log": 1024
+        },
+        "reason": "task goal not reached after 1024 plan ticks",
+        "step": 0,
+        "task": "acacia_door"
+      },
+      {
+        "action": "craft_acacia_oak_planks",
+        "inventory": {
+          "acacia_log": 3
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "acacia_fence_gate"
+      },
+      {
+        "action": "craft_acacia_oak_planks",
+        "inventory": {
+          "acacia_log": 3
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "acacia_trapdoor"
+      },
+      {
+        "action": "craft_acacia_oak_planks",
+        "inventory": {
+          "acacia_log": 3
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "acacia_boat"
+      },
+      {
+        "action": "craft_acacia_oak_planks",
+        "inventory": {
+          "acacia_log": 3
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "acacia_fence"
+      },
+      {
+        "action": "mine_yellow_flower",
+        "inventory": {},
+        "reason": "unknown action",
+        "step": 0,
+        "task": "yellow_dye"
+      },
+      {
+        "action": "mine_yellow_flower",
+        "inventory": {
+          "white_wool": 1
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "yellow_wool"
+      },
+      {
+        "action": "mine_yellow_flower",
+        "inventory": {
+          "white_wool": 3
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "yellow_bed"
+      },
+      {
+        "action": "mine_yellow_flower",
+        "inventory": {
+          "white_carpet": 3
+        },
+        "reason": "unknown action",
+        "step": 2,
+        "task": "yellow_carpet"
+      },
+      {
+        "action": "mine_yellow_flower",
+        "inventory": {
+          "white_wool": 6
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "yellow_banner"
+      },
+      {
+        "action": "mine_red_flower",
+        "inventory": {},
+        "reason": "unknown action",
+        "step": 0,
+        "task": "red_dye"
+      },
+      {
+        "action": "mine_red_flower",
+        "inventory": {
+          "white_wool": 1
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "red_wool"
+      },
+      {
+        "action": "mine_red_flower",
+        "inventory": {
+          "white_wool": 3
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "red_bed"
+      },
+      {
+        "action": "mine_red_flower",
+        "inventory": {
+          "white_carpet": 3
+        },
+        "reason": "unknown action",
+        "step": 2,
+        "task": "red_carpet"
+      },
+      {
+        "action": "mine_red_flower",
+        "inventory": {
+          "white_wool": 6
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "red_banner"
+      },
+      {
+        "action": "mine_magenta_flower",
+        "inventory": {},
+        "reason": "unknown action",
+        "step": 0,
+        "task": "magenta_dye"
+      },
+      {
+        "action": "mine_magenta_flower",
+        "inventory": {
+          "white_wool": 1
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "magenta_wool"
+      },
+      {
+        "action": "mine_magenta_flower",
+        "inventory": {
+          "white_wool": 3
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "magenta_bed"
+      },
+      {
+        "action": "mine_magenta_flower",
+        "inventory": {
+          "white_carpet": 3
+        },
+        "reason": "unknown action",
+        "step": 2,
+        "task": "magenta_carpet"
+      },
+      {
+        "action": "mine_magenta_flower",
+        "inventory": {
+          "white_wool": 6
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "magenta_banner"
+      },
+      {
+        "action": "mine_light_gray_flower",
+        "inventory": {},
+        "reason": "unknown action",
+        "step": 0,
+        "task": "light_gray_dye"
+      },
+      {
+        "action": "mine_light_gray_flower",
+        "inventory": {
+          "white_wool": 1
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "light_gray_wool"
+      },
+      {
+        "action": "mine_light_gray_flower",
+        "inventory": {
+          "white_wool": 3
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "light_gray_bed"
+      },
+      {
+        "action": "mine_light_gray_flower",
+        "inventory": {
+          "white_carpet": 3
+        },
+        "reason": "unknown action",
+        "step": 2,
+        "task": "light_gray_carpet"
+      },
+      {
+        "action": "mine_light_gray_flower",
+        "inventory": {
+          "white_wool": 6
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "light_gray_banner"
+      },
+      {
+        "action": "mine_pink_flower",
+        "inventory": {},
+        "reason": "unknown action",
+        "step": 0,
+        "task": "pink_dye"
+      },
+      {
+        "action": "mine_pink_flower",
+        "inventory": {
+          "white_wool": 1
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "pink_wool"
+      },
+      {
+        "action": "mine_pink_flower",
+        "inventory": {
+          "white_wool": 3
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "pink_bed"
+      },
+      {
+        "action": "mine_pink_flower",
+        "inventory": {
+          "white_carpet": 3
+        },
+        "reason": "unknown action",
+        "step": 2,
+        "task": "pink_carpet"
+      },
+      {
+        "action": "mine_pink_flower",
+        "inventory": {
+          "white_wool": 6
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "pink_banner"
+      },
+      {
+        "action": "mine_orange_flower",
+        "inventory": {},
+        "reason": "unknown action",
+        "step": 0,
+        "task": "orange_dye"
+      },
+      {
+        "action": "mine_orange_flower",
+        "inventory": {
+          "white_wool": 1
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "orange_wool"
+      },
+      {
+        "action": "mine_orange_flower",
+        "inventory": {
+          "white_wool": 3
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "orange_bed"
+      },
+      {
+        "action": "mine_orange_flower",
+        "inventory": {
+          "white_carpet": 3
+        },
+        "reason": "unknown action",
+        "step": 2,
+        "task": "orange_carpet"
+      },
+      {
+        "action": "mine_orange_flower",
+        "inventory": {
+          "white_wool": 6
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "orange_banner"
+      },
+      {
+        "action": "mine_blue_flower",
+        "inventory": {},
+        "reason": "unknown action",
+        "step": 0,
+        "task": "blue_dye"
+      },
+      {
+        "action": "mine_blue_flower",
+        "inventory": {
+          "white_wool": 1
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "blue_wool"
+      },
+      {
+        "action": "mine_blue_flower",
+        "inventory": {
+          "white_wool": 3
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "blue_bed"
+      },
+      {
+        "action": "mine_blue_flower",
+        "inventory": {
+          "white_carpet": 3
+        },
+        "reason": "unknown action",
+        "step": 2,
+        "task": "blue_carpet"
+      },
+      {
+        "action": "mine_blue_flower",
+        "inventory": {
+          "white_wool": 6
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "blue_banner"
+      },
+      {
+        "action": "mine_blue_flower",
+        "inventory": {},
+        "reason": "unknown action",
+        "step": 0,
+        "task": "light_blue_dye"
+      },
+      {
+        "action": "mine_blue_flower",
+        "inventory": {
+          "white_wool": 1
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "light_blue_wool"
+      },
+      {
+        "action": "mine_blue_flower",
+        "inventory": {
+          "white_wool": 3
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "light_blue_bed"
+      },
+      {
+        "action": "mine_blue_flower",
+        "inventory": {
+          "white_carpet": 3
+        },
+        "reason": "unknown action",
+        "step": 2,
+        "task": "light_blue_carpet"
+      },
+      {
+        "action": "mine_blue_flower",
+        "inventory": {
+          "white_wool": 6
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "light_blue_banner"
+      },
+      {
+        "action": "mine_blue_flower",
+        "inventory": {},
+        "reason": "unknown action",
+        "step": 0,
+        "task": "purple_dye"
+      },
+      {
+        "action": "mine_blue_flower",
+        "inventory": {
+          "white_wool": 1
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "purple_wool"
+      },
+      {
+        "action": "mine_blue_flower",
+        "inventory": {
+          "white_wool": 3
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "purple_bed"
+      },
+      {
+        "action": "mine_blue_flower",
+        "inventory": {
+          "white_carpet": 3
+        },
+        "reason": "unknown action",
+        "step": 2,
+        "task": "purple_carpet"
+      },
+      {
+        "action": "mine_blue_flower",
+        "inventory": {
+          "white_wool": 6
+        },
+        "reason": "unknown action",
+        "step": 1,
+        "task": "purple_banner"
+      },
+      {
+        "action": "mine_white_flower",
+        "inventory": {},
+        "reason": "unknown action",
+        "step": 0,
+        "task": "white_dye"
+      },
+      {
+        "action": "mine_wool",
+        "inventory": {},
+        "reason": "unknown action",
+        "step": 0,
+        "task": "item_frame"
+      }
+    ],
+    "passed": 96,
+    "skipped_no_task": [
+      "oak_oak_planks",
+      "birch_oak_planks",
+      "oak_sign",
+      "birch_sign",
+      "jungle_oak_planks",
+      "jungle_sign",
+      "acacia_oak_planks",
+      "acacia_sign"
+    ]
+  },
+  "rows_by_file": {
+    "action.facts": 732,
+    "action_type.facts": 732,
+    "goal.facts": 208,
+    "init_has.facts": 8,
+    "item.facts": 717,
+    "output.facts": 1449,
+    "plan_step.facts": 1678,
+    "plan_subgoal.facts": 1678,
+    "plan_task.facts": 211,
+    "precondition.facts": 2318,
+    "produces.facts": 1449,
+    "recipe.facts": 1450,
+    "recipe_order.facts": 1450,
+    "task.facts": 208,
+    "task_biome.facts": 208,
+    "task_group.facts": 208,
+    "tool_need.facts": 1087
+  },
+  "warnings": [
+    "duplicate task id in tasks.json: orange_bed",
+    "plan references unknown action: craft_acacia_oak_planks",
+    "plan references unknown action: craft_birch_oak_planks",
+    "plan references unknown action: craft_jungle_oak_planks",
+    "plan references unknown action: craft_oak_oak_planks",
+    "plan references unknown action: mine_blue_flower",
+    "plan references unknown action: mine_leather",
+    "plan references unknown action: mine_light_gray_flower",
+    "plan references unknown action: mine_magenta_flower",
+    "plan references unknown action: mine_orange_flower",
+    "plan references unknown action: mine_pink_flower",
+    "plan references unknown action: mine_red_flower",
+    "plan references unknown action: mine_redstone",
+    "plan references unknown action: mine_steve",
+    "plan references unknown action: mine_stones",
+    "plan references unknown action: mine_white_flower",
+    "plan references unknown action: mine_wool",
+    "plan references unknown action: mine_yellow_flower",
+    "plans.json has no matching task in tasks.json: acacia_oak_planks",
+    "plans.json has no matching task in tasks.json: acacia_sign",
+    "plans.json has no matching task in tasks.json: birch_oak_planks",
+    "plans.json has no matching task in tasks.json: birch_sign",
+    "plans.json has no matching task in tasks.json: jungle_oak_planks",
+    "plans.json has no matching task in tasks.json: jungle_sign",
+    "plans.json has no matching task in tasks.json: oak_oak_planks",
+    "plans.json has no matching task in tasks.json: oak_sign",
+    "tasks.json has no matching plan in plans.json: acacia_planks",
+    "tasks.json has no matching plan in plans.json: birch_planks",
+    "tasks.json has no matching plan in plans.json: jungle_planks",
+    "tasks.json has no matching plan in plans.json: oak_planks",
+    "plan replay failed for test_steve step 0: unknown action",
+    "plan replay failed for test_dig_down step 0: unknown action",
+    "plan replay failed for test_yellow_flower step 0: unknown action",
+    "plan replay failed for test_red_flower step 0: unknown action",
+    "plan replay failed for test_magenta_flower step 0: unknown action",
+    "plan replay failed for test_light_gray_flower step 0: unknown action",
+    "plan replay failed for test_pink_flower step 0: unknown action",
+    "plan replay failed for test_orange_flower step 0: unknown action",
+    "plan replay failed for test_blue_flower step 0: unknown action",
+    "plan replay failed for test_white_flower step 0: unknown action",
+    "plan replay failed for test_redstone step 0: unknown action",
+    "plan replay failed for test_plains step None: plan exhausted after satisfied subgoal",
+    "plan replay failed for test_forest step None: plan exhausted after satisfied subgoal",
+    "plan replay failed for test_village step None: plan exhausted after satisfied subgoal",
+    "plan replay failed for test_sheep step None: plan exhausted after satisfied subgoal",
+    "plan replay failed for test_inv step None: plan exhausted after satisfied subgoal",
+    "plan replay failed for test_iron step 0: unknown action",
+    "plan replay failed for painting step 0: unknown action",
+    "plan replay failed for oak_slab step 1: unknown action",
+    "plan replay failed for birch_slab step 1: unknown action",
+    "plan replay failed for clock step 20: unknown action",
+    "plan replay failed for oak_button step 1: unknown action",
+    "plan replay failed for birch_button step 1: unknown action",
+    "plan replay failed for redstone_torch step 14: unknown action",
+    "plan replay failed for redstone step 14: unknown action",
+    "... and 82 more plan replay failures"
+  ]
+}
