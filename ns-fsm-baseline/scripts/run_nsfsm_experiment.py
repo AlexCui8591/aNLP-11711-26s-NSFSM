@@ -62,6 +62,7 @@ def main() -> None:
                 fsm=fsm,
                 llm=runtime_llm,
                 planner_only=args.planner_only,
+                max_llm_retries=args.max_llm_retries,
                 verbose=not args.quiet,
             ).run_episode()
             result["run_id"] = run_idx
@@ -121,6 +122,15 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--save-fsm-design", action="store_true")
     parser.add_argument("--planner-only", action="store_true")
+    parser.add_argument(
+        "--max-llm-retries",
+        type=int,
+        default=1,
+        help=(
+            "How many extra LLM action proposals to request after verifier "
+            "rejection before forcing a planner action from the legal list."
+        ),
+    )
     parser.add_argument(
         "--instruction",
         default="Create a short plan for evaluating a model on a QA dataset.",
