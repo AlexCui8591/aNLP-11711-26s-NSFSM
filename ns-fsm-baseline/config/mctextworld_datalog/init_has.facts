@@ -1,0 +1,8 @@
+test_steve	diamond_pickaxe	1
+test_obsidian	diamond_pickaxe	1
+test_dig_down	iron_pickaxe	1
+test_inv	cobblestone	64
+test_inv	diamond	64
+test_diamond	iron_pickaxe	1
+test_redstone	iron_pickaxe	1
+test_gold	iron_pickaxe	1

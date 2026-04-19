@@ -1,0 +1,83 @@
+// MC-TextWorld action validity rules.
+// These rules expect static facts exported from action_lib.json plus a runtime
+// has.facts file containing the current inventory as: item<TAB>count.
+
+.decl action_type(aid:symbol, kind:symbol)
+.input action_type
+
+.decl recipe(rid:symbol, aid:symbol)
+.input recipe
+
+.decl recipe_order(rid:symbol, idx:number)
+.input recipe_order
+
+.decl precondition(rid:symbol, item:symbol, needed:number)
+.input precondition
+
+.decl tool_need(rid:symbol, tool:symbol, needed:number)
+.input tool_need
+
+.decl output_fact(rid:symbol, item:symbol, count:number)
+.input output_fact
+
+.decl has(item:symbol, count:number)
+.input has
+
+.decl has_any(item:symbol)
+has_any(Item) :- has(Item, _).
+
+.decl precond_unmet(rid:symbol)
+precond_unmet(RID) :-
+    precondition(RID, Item, Needed),
+    has(Item, Have),
+    Have < Needed.
+precond_unmet(RID) :-
+    precondition(RID, Item, _),
+    !has_any(Item).
+
+.decl tool_unmet(rid:symbol)
+tool_unmet(RID) :-
+    tool_need(RID, Tool, Needed),
+    has(Tool, Have),
+    Have < Needed.
+tool_unmet(RID) :-
+    tool_need(RID, Tool, _),
+    !has_any(Tool).
+
+.decl recipe_ok(rid:symbol)
+recipe_ok(RID) :-
+    recipe(RID, _),
+    !precond_unmet(RID),
+    !tool_unmet(RID).
+
+.decl valid_action(aid:symbol)
+valid_action(AID) :-
+    recipe(RID, AID),
+    recipe_ok(RID).
+
+.decl missing_precondition(aid:symbol, rid:symbol, item:symbol, needed:number, have:number)
+missing_precondition(AID, RID, Item, Needed, Have) :-
+    recipe(RID, AID),
+    precondition(RID, Item, Needed),
+    has(Item, Have),
+    Have < Needed.
+missing_precondition(AID, RID, Item, Needed, 0) :-
+    recipe(RID, AID),
+    precondition(RID, Item, Needed),
+    !has_any(Item).
+
+.decl missing_tool(aid:symbol, rid:symbol, tool:symbol, needed:number, have:number)
+missing_tool(AID, RID, Tool, Needed, Have) :-
+    recipe(RID, AID),
+    tool_need(RID, Tool, Needed),
+    has(Tool, Have),
+    Have < Needed.
+missing_tool(AID, RID, Tool, Needed, 0) :-
+    recipe(RID, AID),
+    tool_need(RID, Tool, Needed),
+    !has_any(Tool).
+
+.output recipe_ok
+.output valid_action
+.output missing_precondition
+.output missing_tool
