@@ -41,9 +41,9 @@ RUNS="${RUNS:-1}"
 CONFIG_PATH="${CONFIG_PATH:-config/hyperparams_psc.yaml}"
 MODEL_NAME="${MODEL_NAME:-Qwen/Qwen2.5-7B-Instruct}"
 PORT="${PORT:-8000}"
-CACHE_OWNER="${CACHE_OWNER:-$USER}"
+CACHE_OWNER="${CACHE_OWNER:-ezhang13}"
 CACHE_ROOT="/ocean/projects/cis250260p/${CACHE_OWNER}/.cache"
-MC_TEXTWORLD_PATH="${MC_TEXTWORLD_PATH:-${PROJECT_ROOT}/MC-TextWorld}"
+MC_TEXTWORLD_PATH="${MC_TEXTWORLD_PATH:-/ocean/projects/cis250260p/ezhang13/aNLP-11711-26s-NSFSM/MC-TextWorld}"
 JOB_ID="${SLURM_JOB_ID:-manual}"
 
 echo "============================================"
@@ -63,36 +63,18 @@ export TORCH_EXTENSIONS_DIR="${CACHE_ROOT}/torch_extensions"
 export XDG_CACHE_HOME="${CACHE_ROOT}"
 mkdir -p "$HF_HOME" "$VLLM_CACHE_ROOT" "$TRITON_CACHE_DIR" "$TORCH_EXTENSIONS_DIR"
 
-resolve_mctextworld_root() {
-    for candidate in \
-        "${MC_TEXTWORLD_PATH}" \
-        "${PROJECT_ROOT}/MC-TextWorld" \
-        "${ROOT}/MC-TextWorld"; do
-        if [ -d "${candidate}/mctextworld" ]; then
-            echo "${candidate}"
-            return 0
-        fi
-        if [ -d "${candidate}" ]; then
-            nested="$(find "${candidate}" -maxdepth 6 -type d -name mctextworld -print -quit 2>/dev/null || true)"
-            if [ -n "${nested}" ]; then
-                dirname "${nested}"
-                return 0
-            fi
-        fi
-    done
-    return 1
-}
-
-MC_TEXTWORLD_ROOT="$(resolve_mctextworld_root || true)"
-if [ -n "${MC_TEXTWORLD_ROOT}" ]; then
-    export PYTHONPATH="${MC_TEXTWORLD_ROOT}:${PYTHONPATH:-}"
-else
-    echo "WARN: could not find MC-TextWorld source directory. Will try installed Python package."
-    echo "Checked:"
+if [ ! -d "${MC_TEXTWORLD_PATH}/mctextworld" ]; then
+    echo "ERROR: MC-TextWorld path is not valid:"
     echo "  ${MC_TEXTWORLD_PATH}"
-    echo "  ${PROJECT_ROOT}/MC-TextWorld"
-    echo "  ${ROOT}/MC-TextWorld"
+    echo "Expected:"
+    echo "  ${MC_TEXTWORLD_PATH}/mctextworld"
+    echo
+    echo "If MC-TextWorld is elsewhere, submit with:"
+    echo "  MC_TEXTWORLD_PATH=/path/to/MC-TextWorld sbatch scripts/slurm_nsfsm.sh"
+    exit 1
 fi
+
+export PYTHONPATH="${MC_TEXTWORLD_PATH}:${PYTHONPATH:-}"
 
 module load anaconda3
 source /opt/packages/anaconda3-2024.10-1/etc/profile.d/conda.sh
@@ -101,11 +83,11 @@ conda activate nsfsm
 echo "  Python:    $(which python)"
 echo "  Conda env: ${CONDA_DEFAULT_ENV}"
 echo "  Project root: ${PROJECT_ROOT}"
-echo "  MC-TextWorld: ${MC_TEXTWORLD_ROOT:-installed package or not found yet}"
+echo "  MC-TextWorld: ${MC_TEXTWORLD_PATH}"
 
 set -e
 
-python -c "from mctextworld.simulator import Env; print('real MC-TextWorld ok')"
+python -c "import sys; sys.path.insert(0, '${MC_TEXTWORLD_PATH}'); from mctextworld.simulator import Env; print('real MC-TextWorld ok')"
 
 echo "[1/4] Starting vLLM server..."
 python -m vllm.entrypoints.openai.api_server \

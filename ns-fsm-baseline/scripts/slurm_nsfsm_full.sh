@@ -41,6 +41,7 @@ export RUNS="${RUNS:-15}"
 export CONFIG_PATH="${CONFIG_PATH:-config/hyperparams_psc.yaml}"
 export MODEL_NAME="${MODEL_NAME:-Qwen/Qwen2.5-7B-Instruct}"
 export PORT="${PORT:-8000}"
+export MC_TEXTWORLD_PATH="${MC_TEXTWORLD_PATH:-/ocean/projects/cis250260p/ezhang13/aNLP-11711-26s-NSFSM/MC-TextWorld}"
 
 # Empty TASK_IDS means run all tasks selected by the Minecraft adapter.
 export TASK_IDS="${TASK_IDS-}"
