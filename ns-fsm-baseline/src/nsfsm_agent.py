@@ -69,8 +69,7 @@ class NSFSMAgent:
                 termination = "fsm_terminal"
                 break
 
-            transition_options = self.fsm.get_valid_transitions()
-            legal_actions = self.fsm.get_valid_actions()
+            transition_options, legal_actions = self._runtime_transition_options(state)
             if not transition_options or not legal_actions:
                 termination = "no_valid_action"
                 break
@@ -83,6 +82,8 @@ class NSFSMAgent:
                 history=self.trajectory,
                 blocked_history=self.blocked_actions,
                 fallback_history=self.fallback_actions,
+                transition_options=transition_options,
+                legal_actions=legal_actions,
             )
 
             proposal = self._propose_action(context_packet)
@@ -201,6 +202,29 @@ class NSFSMAgent:
                 "raw": "",
                 "llm_error": str(exc),
             }
+
+    def _runtime_transition_options(
+        self,
+        state: Mapping[str, Any],
+    ) -> tuple[list[dict[str, Any]], list[str]]:
+        static_options = self.fsm.get_valid_transitions()
+        if self.task_spec.get("dataset") != "minecraft":
+            return static_options, self.fsm.get_valid_actions()
+
+        try:
+            executable = set(self.adapter.get_available_tools(self.task_spec, state))
+        except Exception:
+            executable = set()
+
+        filtered_options = [
+            dict(option)
+            for option in static_options
+            if str(option.get("action")) in executable
+        ]
+        filtered_actions = list(
+            dict.fromkeys(str(option.get("action")) for option in filtered_options)
+        )
+        return filtered_options, filtered_actions
 
     def _select_decision(
         self,

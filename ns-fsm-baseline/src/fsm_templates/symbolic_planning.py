@@ -31,6 +31,15 @@ class SymbolicPlanningFSM(FSMTemplate):
                 sequence = []
         if not sequence:
             sequence = [str(action) for action in spec.get("available_tools", [])[:1]]
+        if metadata.get("grounded_fsm_mode") == "branching_dependency_dag":
+            return _branching_dependency_design(
+                actions=sequence,
+                success_signals=spec.get("success_criteria", []),
+                risk_note=(
+                    "Minecraft grounded FSM generated as a branching dependency DAG. "
+                    "Runtime legal actions are intersected with MC-TextWorld executable actions."
+                ),
+            )
         return _linear_design(
             actions=sequence,
             success_signals=spec.get("success_criteria", []),
@@ -81,3 +90,65 @@ def _linear_design(
         "success_signals": success_signals,
         "risk_notes": [risk_note],
     }
+
+
+def _branching_dependency_design(
+    actions: list[str],
+    success_signals: list[str],
+    risk_note: str,
+) -> dict[str, Any]:
+    """Build a compact branching FSM over grounded dependency actions.
+
+    The FSM statically permits every dependency action from START/IN_PROGRESS,
+    while the runtime intersects this list with the current MC-TextWorld
+    executable-action set. This gives each state multiple safe possible paths
+    without allowing actions outside the verified dependency closure.
+    """
+
+    actions = list(dict.fromkeys(str(action) for action in actions if str(action)))
+    if not actions:
+        return {
+            "states": ["START", "DONE"],
+            "initial_state": "START",
+            "terminal_states": ["DONE"],
+            "transitions_by_state": {"START": [], "DONE": []},
+            "fallback_policy": {"on_invalid_action": "fail_no_dependency_actions"},
+            "success_signals": success_signals,
+            "risk_notes": [risk_note, "No dependency actions were available."],
+        }
+
+    final_action = actions[-1]
+    transitions = {
+        "START": _branching_options(actions, final_action),
+        "IN_PROGRESS": _branching_options(actions, final_action),
+        "DONE": [],
+    }
+    return {
+        "states": ["START", "IN_PROGRESS", "DONE"],
+        "initial_state": "START",
+        "terminal_states": ["DONE"],
+        "transitions_by_state": transitions,
+        "fallback_policy": {
+            "on_invalid_action": "retry_with_current_executable_dependency_action",
+            "on_dead_end": "fail_fast_no_executable_dependency_action",
+        },
+        "success_signals": success_signals,
+        "risk_notes": [risk_note],
+    }
+
+
+def _branching_options(actions: list[str], final_action: str) -> list[dict[str, str]]:
+    options = []
+    for action in actions:
+        next_state = "DONE" if action == final_action else "IN_PROGRESS"
+        options.append(
+            {
+                "action": action,
+                "next_state": next_state,
+                "condition": (
+                    "Action is in the grounded dependency closure and is "
+                    "currently executable in MC-TextWorld."
+                ),
+            }
+        )
+    return options

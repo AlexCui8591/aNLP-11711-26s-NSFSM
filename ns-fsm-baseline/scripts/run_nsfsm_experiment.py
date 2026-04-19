@@ -176,7 +176,7 @@ def build_runtime_fsm(
         metadata.update(
             {
                 "source": "minecraft_grounded_rules",
-                "rule": "ground_truth_dependency_path",
+                "rule": "branching_dependency_dag_with_runtime_executable_filter",
                 "required_action_count": len(sequence),
                 "llm_fsm_error": None,
             }
@@ -225,10 +225,26 @@ def _assert_grounded_minecraft_fsm(
         )
     transitions = fsm.to_dict().get("transitions", [])
     transition_actions = [item.get("action") for item in transitions]
-    if transition_actions != sequence:
+    sequence_set = set(sequence)
+    transition_action_set = set(transition_actions)
+    if not sequence_set.issubset(transition_action_set):
         raise ValueError(
-            "Minecraft grounded FSM transitions do not match the dependency "
-            f"sequence for {task_spec.get('task_id')}: {transition_actions} != {sequence}"
+            "Minecraft grounded FSM is missing dependency actions for "
+            f"{task_spec.get('task_id')}: missing={sorted(sequence_set - transition_action_set)}"
+        )
+    extra_actions = transition_action_set - sequence_set
+    if extra_actions:
+        raise ValueError(
+            "Minecraft grounded FSM contains actions outside the dependency "
+            f"closure for {task_spec.get('task_id')}: {sorted(extra_actions)}"
+        )
+    final_action = sequence[-1]
+    if not any(
+        item.get("action") == final_action and item.get("next_state") in fsm.terminal_states
+        for item in transitions
+    ):
+        raise ValueError(
+            f"Minecraft grounded FSM final action does not reach DONE: {final_action}"
         )
     for state in fsm.to_dict().get("states", []):
         state_name = state.get("name")

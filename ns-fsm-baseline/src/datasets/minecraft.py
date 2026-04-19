@@ -113,6 +113,7 @@ class MinecraftAdapter(DatasetAdapter):
                 "goal_type": raw.get("type", "craft"),
                 "optimal_sequence": optimal_sequence,
                 "required_actions": optimal_sequence,
+                "grounded_fsm_mode": "branching_dependency_dag",
             },
         )
 

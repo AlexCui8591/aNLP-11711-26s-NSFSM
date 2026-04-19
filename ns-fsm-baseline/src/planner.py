@@ -87,6 +87,14 @@ class Planner:
             or task_spec.get("metadata", {}).get("optimal_sequence")
             or []
         )
+        if (
+            task_spec.get("dataset") == "minecraft"
+            and task_spec.get("metadata", {}).get("grounded_fsm_mode") == "branching_dependency_dag"
+        ):
+            for action in reversed(sequence):
+                if action in legal_names:
+                    return str(action)
+
         completed = [entry.get("action") for entry in history if entry.get("success", True)]
         for action in sequence:
             if action in legal_names and action not in completed:
