@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import json
 import os
 import sys
@@ -136,7 +137,12 @@ def select_tasks(adapter: Any, args: argparse.Namespace) -> list[dict[str, Any] 
         if groups and task.get("group") not in groups:
             continue
         selected.append(task)
-    return selected or tasks[:1]
+    if not selected and (task_ids or groups):
+        raise ValueError(
+            "No tasks matched the requested filters. "
+            f"task_ids={sorted(task_ids) or 'ALL'} groups={sorted(groups) or 'ALL'}"
+        )
+    return selected
 
 
 def build_runtime_fsm(
@@ -187,9 +193,17 @@ def summarize(results: list[Mapping[str, Any]], dataset: str) -> dict[str, Any]:
     total_steps = sum(int(result.get("total_steps", 0)) for result in results)
     blocked = sum(int(result.get("blocked_action_count", 0)) for result in results)
     fallback = sum(int(result.get("fallback_action_count", 0)) for result in results)
+    goal_stats = _goal_stats(results)
+    group_stats = _group_stats(goal_stats)
     return {
+        "agent": "nsfsm",
         "dataset": dataset,
+        "total_goals": len(goal_stats),
         "total_runs": total,
+        "total_success": successes,
+        "overall_success_rate": round(successes / total, 3) if total else 0.0,
+        "group_stats": group_stats,
+        "goal_stats": goal_stats,
         "successes": successes,
         "success_rate": successes / total if total else 0.0,
         "avg_steps": total_steps / total if total else 0.0,
@@ -206,6 +220,103 @@ def summarize(results: list[Mapping[str, Any]], dataset: str) -> dict[str, Any]:
             for result in results
         ],
     }
+
+
+def _goal_stats(results: list[Mapping[str, Any]]) -> list[dict[str, Any]]:
+    grouped: dict[str, list[Mapping[str, Any]]] = {}
+    for result in results:
+        task_id = str(result.get("task_id") or "unknown")
+        grouped.setdefault(task_id, []).append(result)
+
+    rows = []
+    for task_id, items in grouped.items():
+        first = items[0]
+        task_spec = first.get("metadata", {}).get("task_spec", {})
+        metadata = task_spec.get("metadata", {}) if isinstance(task_spec, Mapping) else {}
+        goal = str(metadata.get("goal_item") or task_id.split("/", 1)[-1])
+        group = str(metadata.get("group") or "custom")
+        n_runs = len(items)
+        n_success = sum(1 for item in items if item.get("success"))
+        step_values = [int(item.get("total_steps", 0)) for item in items]
+        termination_distribution = Counter(
+            str(item.get("termination") or "unknown") for item in items
+        )
+        error_distribution = Counter(
+            _error_type(item) for item in items if not item.get("success")
+        )
+        rows.append(
+            {
+                "goal": goal,
+                "group": group,
+                "n_runs": n_runs,
+                "n_success": n_success,
+                "success_rate": round(n_success / n_runs, 3) if n_runs else 0.0,
+                "avg_steps": round(sum(step_values) / n_runs, 1) if n_runs else 0.0,
+                "blocked_action_count": sum(
+                    int(item.get("blocked_action_count", 0)) for item in items
+                ),
+                "fallback_action_count": sum(
+                    int(item.get("fallback_action_count", 0)) for item in items
+                ),
+                "error_distribution": dict(error_distribution),
+                "termination_distribution": dict(termination_distribution),
+            }
+        )
+
+    return sorted(rows, key=lambda row: (_group_order(row["group"]), row["goal"]))
+
+
+def _group_stats(goal_stats: list[Mapping[str, Any]]) -> dict[str, dict[str, Any]]:
+    grouped: dict[str, dict[str, Any]] = {}
+    for row in goal_stats:
+        group = str(row.get("group") or "custom")
+        bucket = grouped.setdefault(
+            group,
+            {
+                "goals": 0,
+                "total_runs": 0,
+                "total_success": 0,
+                "blocked_action_count": 0,
+                "fallback_action_count": 0,
+            },
+        )
+        bucket["goals"] += 1
+        bucket["total_runs"] += int(row.get("n_runs", 0))
+        bucket["total_success"] += int(row.get("n_success", 0))
+        bucket["blocked_action_count"] += int(row.get("blocked_action_count", 0))
+        bucket["fallback_action_count"] += int(row.get("fallback_action_count", 0))
+
+    ordered = {}
+    for group in sorted(grouped, key=_group_order):
+        bucket = grouped[group]
+        total_runs = bucket["total_runs"]
+        bucket["success_rate"] = round(bucket["total_success"] / total_runs, 3) if total_runs else 0.0
+        ordered[group] = bucket
+    return ordered
+
+
+def _error_type(result: Mapping[str, Any]) -> str:
+    termination = str(result.get("termination") or "unknown")
+    if termination == "no_valid_action":
+        return "fsm_no_executable_action"
+    if int(result.get("blocked_action_count", 0)) > 0:
+        return "blocked_by_verifier"
+    if termination == "max_steps":
+        return "max_steps"
+    return termination
+
+
+def _group_order(group: str) -> tuple[int, str]:
+    order = {
+        "Wooden": 0,
+        "Stone": 1,
+        "Iron": 2,
+        "Golden": 3,
+        "Diamond": 4,
+        "Redstone": 5,
+        "Armor": 6,
+    }
+    return order.get(group, 99), group
 
 
 def safe_name(value: str) -> str:
