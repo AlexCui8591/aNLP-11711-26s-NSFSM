@@ -46,7 +46,7 @@ fi
 cd "$ROOT"
 mkdir -p logs
 
-export TAG="${TAG:-nsfsm_mc_full_grounded_r15}"
+export TAG="${TAG:-nsfsm_full}"
 export RUNS="${RUNS:-15}"
 export CONFIG_PATH="${CONFIG_PATH:-config/hyperparams_psc.yaml}"
 export MODEL_NAME="${MODEL_NAME:-Qwen/Qwen2.5-7B-Instruct}"
