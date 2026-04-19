@@ -23,6 +23,7 @@
 #   TAG=nsfsm_full_v2 RUNS=5 sbatch scripts/slurm_nsfsm_full.sh
 #   GROUPS=Wooden RUNS=15 sbatch scripts/slurm_nsfsm_full.sh
 #   TASK_IDS=minecraft/stick,minecraft/wooden_pickaxe RUNS=15 sbatch scripts/slurm_nsfsm_full.sh
+#   RESUME=1 sbatch scripts/slurm_nsfsm_full.sh
 
 if [ -z "${SLURM_JOB_ID:-}" ] && [ "${ALLOW_LOGIN_RUN:-0}" != "1" ]; then
     echo "ERROR: submit this script with sbatch, not bash."
@@ -51,6 +52,7 @@ export CONFIG_PATH="${CONFIG_PATH:-config/hyperparams_psc.yaml}"
 export MODEL_NAME="${MODEL_NAME:-Qwen/Qwen2.5-7B-Instruct}"
 export PORT="${PORT:-8000}"
 export MC_TEXTWORLD_PATH="${MC_TEXTWORLD_PATH:-/ocean/projects/cis250260p/ezhang13/aNLP-11711-26s-NSFSM/MC-TextWorld}"
+export RESUME="${RESUME:-0}"
 
 # Empty TASK_IDS means run all tasks selected by the Minecraft adapter.
 export TASK_IDS="${TASK_IDS-}"
@@ -65,6 +67,7 @@ echo "  Tag:       ${TAG}"
 echo "  Runs:      ${RUNS}"
 echo "  Task IDs:  ${TASK_IDS:-ALL}"
 echo "  Groups:    ${GROUPS:-ALL}"
+echo "  Resume:    ${RESUME}"
 echo "============================================"
 
 bash scripts/slurm_nsfsm.sh

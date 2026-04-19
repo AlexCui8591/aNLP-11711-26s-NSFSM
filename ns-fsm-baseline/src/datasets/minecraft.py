@@ -12,11 +12,6 @@ from copy import deepcopy
 from typing import Any, Mapping
 
 try:
-    from ..minecraft_fallback import MinecraftFallbackSimulator, load_action_library
-except ImportError:  # pragma: no cover - supports direct src execution
-    from minecraft_fallback import MinecraftFallbackSimulator, load_action_library
-
-try:
     from .base import DatasetAdapter, StepResult, TaskSpec, task_spec_to_dict
 except ImportError:  # pragma: no cover - supports direct src execution
     from base import DatasetAdapter, StepResult, TaskSpec, task_spec_to_dict
@@ -40,11 +35,9 @@ class MinecraftAdapter(DatasetAdapter):
         self.task_spec: dict[str, Any] | None = None
         self.state: dict[str, Any] = {}
         self.trajectory: list[dict[str, Any]] = []
-        self._fallback_env = False
         self.env = None
         self.parser = None
         self.ground_truth = None
-        self._fallback_simulator = None
 
     def list_tasks(self) -> list[dict[str, Any]]:
         if self._goals_cache is not None:
@@ -127,23 +120,9 @@ class MinecraftAdapter(DatasetAdapter):
         self.task_spec = task_spec_to_dict(task_spec)
         goal = self.task_spec.get("metadata", {}).get("goal_item")
         self.trajectory = []
-        try:
-            wrapper_cls = self._get_wrapper_cls()
-            self.env = wrapper_cls(max_steps=int(self.task_spec.get("max_steps", 100)))
-            self.state = self.env.reset(goal)
-            self._fallback_env = False
-        except Exception as exc:
-            self.env = None
-            self._fallback_env = True
-            self.state = {
-                "inventory": {},
-                "position": [0, 0, 0],
-                "biome": "plains",
-                "step": 0,
-                "max_steps": int(self.task_spec.get("max_steps", 100)),
-                "goal": goal,
-                "fallback_env_reason": str(exc),
-            }
+        wrapper_cls = self._get_wrapper_cls()
+        self.env = wrapper_cls(max_steps=int(self.task_spec.get("max_steps", 100)))
+        self.state = self.env.reset(goal)
         return self.get_observation()
 
     def step(self, action: str | Mapping[str, Any]) -> StepResult:
@@ -151,7 +130,7 @@ class MinecraftAdapter(DatasetAdapter):
             raise RuntimeError("Call reset(task_spec) before MinecraftAdapter.step(action).")
         action_name = self._action_name(action)
         if self.env is None:
-            return self._fallback_step(action_name)
+            raise RuntimeError("MC-TextWorld environment is not initialized.")
         obs, done, info = self.env.step(action_name)
         self.state = obs
         return StepResult(self.get_observation(), done, info)
@@ -177,8 +156,6 @@ class MinecraftAdapter(DatasetAdapter):
         state: Mapping[str, Any],
     ) -> list[str]:
         inventory = dict(state.get("inventory", {}))
-        if self._fallback_env:
-            return self._candidate_actions(inventory)
         if inventory or self.env is not None:
             try:
                 parser = self._get_parser()
@@ -260,63 +237,11 @@ class MinecraftAdapter(DatasetAdapter):
             return list(self._actions_cache)
 
         try:
-            raw = self._action_library()
-            actions = sorted(action for action in raw if action != "no_op")
+            actions = sorted(action for action in self._get_parser().valid_actions if action != "no_op")
         except Exception:
-            try:
-                actions = sorted(action for action in self._get_parser().valid_actions if action != "no_op")
-            except Exception:
-                actions = []
+            actions = []
         self._actions_cache = actions
         return list(actions)
-
-    def _fallback_step(self, action_name: str) -> StepResult:
-        inventory_before = deepcopy(self.state.get("inventory", {}))
-        success, message, inventory_after = self._apply_action(action_name, inventory_before)
-        self.state["inventory"] = inventory_after
-        self.state["step"] = int(self.state.get("step", 0)) + 1
-        goal = self.state.get("goal")
-        goal_achieved = bool(goal and inventory_after.get(goal, 0) >= 1)
-        timeout = self.state["step"] >= int(self.state.get("max_steps", 100))
-        done = goal_achieved or timeout
-        info = {
-            "success": success,
-            "message": message,
-            "goal_achieved": goal_achieved,
-            "timeout": timeout,
-            "fallback_env": True,
-        }
-        self.trajectory.append(
-            {
-                "step": self.state["step"],
-                "action": action_name,
-                "success": success,
-                "inventory_before": inventory_before,
-                "inventory_after": deepcopy(inventory_after),
-                "message": message,
-                "done": done,
-            }
-        )
-        return StepResult(self.get_observation(), done, info)
-
-    def _candidate_actions(self, inventory: Mapping[str, int]) -> list[str]:
-        return self._get_fallback_simulator().candidate_actions(inventory)
-
-    def _apply_action(
-        self,
-        action_name: str,
-        inventory: Mapping[str, int],
-    ) -> tuple[bool, str, dict[str, int]]:
-        return self._get_fallback_simulator().step(action_name, inventory)
-
-    def _action_library(self) -> dict[str, list[dict[str, Any]]]:
-        return self._get_fallback_simulator().action_library
-
-    def _get_fallback_simulator(self) -> MinecraftFallbackSimulator:
-        if self._fallback_simulator is None:
-            summary_path = os.path.join(self.root, "config", "action_lib_summary.json")
-            self._fallback_simulator = MinecraftFallbackSimulator(load_action_library(summary_path))
-        return self._fallback_simulator
 
     def _get_ground_truth(self):
         if self.ground_truth is None:

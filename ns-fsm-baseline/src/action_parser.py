@@ -3,18 +3,16 @@ import os
 import re
 import sys
 
-try:
-    from .minecraft_fallback import MinecraftFallbackSimulator, normalize_action_library
-except ImportError:  # pragma: no cover - supports direct src execution
-    from minecraft_fallback import MinecraftFallbackSimulator, normalize_action_library
-
 # 加载 ActionLibrary 用于 get_candidate_actions
 mc_path = os.path.join(os.path.dirname(__file__), '..', '..', 'MC-TextWorld')
 sys.path.insert(0, mc_path)
 try:
     from mctextworld.action import ActionLibrary
-except ImportError:  # pragma: no cover - depends on optional external package
+except ImportError as exc:  # pragma: no cover - depends on optional external package
     ActionLibrary = None
+    _MC_TEXTWORLD_ACTION_IMPORT_ERROR = exc
+else:
+    _MC_TEXTWORLD_ACTION_IMPORT_ERROR = None
 
 
 # MC-TextWorld 中所有木材变体
@@ -58,12 +56,11 @@ class ActionParser:
             raw = json.load(f)
 
         # action_lib.json 可能是 {name: [...]} 或 [...] 两种格式
-        self._action_lib_dict = normalize_action_library(raw)
+        self._action_lib_dict = self._normalize_action_library(raw)
 
         self.valid_actions = set(self._action_lib_dict.keys())
         self.action_types = {"mine", "craft", "smelt"}
         self._action_library = ActionLibrary() if ActionLibrary is not None else None
-        self._fallback_simulator = MinecraftFallbackSimulator(self._action_lib_dict)
 
     # ------------------------------------------------------------------
     # 公开接口
@@ -110,7 +107,10 @@ class ActionParser:
             candidates = self._action_library.get_candidate_actions(inventory)
             return [action for action in candidates if action != "no_op"]
 
-        return self._fallback_simulator.candidate_actions(inventory)
+        raise ImportError(
+            "MC-TextWorld ActionLibrary is required to compute executable actions. "
+            f"Could not import mctextworld.action.ActionLibrary from {mc_path}."
+        ) from _MC_TEXTWORLD_ACTION_IMPORT_ERROR
 
     # ------------------------------------------------------------------
     # 内部方法
@@ -165,3 +165,12 @@ class ActionParser:
                 return c
 
         return ""
+
+    @staticmethod
+    def _normalize_action_library(raw):
+        if isinstance(raw, list):
+            action_lib = {}
+            for entry in raw:
+                action_lib.setdefault(entry["action"], []).append(entry)
+            return action_lib
+        return {str(action): list(variants) for action, variants in dict(raw).items()}

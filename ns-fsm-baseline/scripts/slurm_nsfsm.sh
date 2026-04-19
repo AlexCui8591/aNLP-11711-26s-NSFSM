@@ -17,6 +17,7 @@
 # Optional overrides:
 #   TAG=minecraft_compare_small_vllm_r1 TASK_IDS=minecraft/stick,minecraft/wooden_pickaxe RUNS=1 sbatch scripts/slurm_nsfsm.sh
 #   TAG=full_v1 TASK_IDS="" RUNS=15 sbatch scripts/slurm_nsfsm.sh
+#   RESUME=1 sbatch scripts/slurm_nsfsm.sh
 #   NSFSM_EXTRA_ARGS="--planner-only" sbatch scripts/slurm_nsfsm.sh
 
 if [ -z "${SLURM_JOB_ID:-}" ] && [ "${ALLOW_LOGIN_RUN:-0}" != "1" ]; then
@@ -50,6 +51,7 @@ RUNS="${RUNS:-1}"
 CONFIG_PATH="${CONFIG_PATH:-config/hyperparams_psc.yaml}"
 MODEL_NAME="${MODEL_NAME:-Qwen/Qwen2.5-7B-Instruct}"
 PORT="${PORT:-8000}"
+RESUME="${RESUME:-0}"
 CACHE_OWNER="${CACHE_OWNER:-ezhang13}"
 CACHE_ROOT="/ocean/projects/cis250260p/${CACHE_OWNER}/.cache"
 MC_TEXTWORLD_PATH="${MC_TEXTWORLD_PATH:-/ocean/projects/cis250260p/ezhang13/aNLP-11711-26s-NSFSM/MC-TextWorld}"
@@ -63,6 +65,7 @@ echo "  Time:     $(date)"
 echo "  Tag:      ${TAG}"
 echo "  Task IDs: ${TASK_IDS}"
 echo "  Runs:     ${RUNS}"
+echo "  Resume:   ${RESUME}"
 echo "============================================"
 
 export HF_HOME="${CACHE_ROOT}/huggingface"
@@ -128,6 +131,11 @@ done
 echo "  vLLM is ready! (took ${WAITED}s)"
 
 echo "[3/4] Running NS-FSM experiment..."
+RESUME_ARG=()
+if [ "${RESUME}" = "1" ]; then
+    RESUME_ARG=(--resume)
+fi
+
 python scripts/run_nsfsm_experiment.py \
     --dataset minecraft \
     --task-ids "${TASK_IDS}" \
@@ -135,8 +143,8 @@ python scripts/run_nsfsm_experiment.py \
     --tag "${TAG}" \
     --config "${CONFIG_PATH}" \
     --save-fsm-design \
-    --resume \
     --quiet \
+    "${RESUME_ARG[@]}" \
     ${NSFSM_EXTRA_ARGS:-}
 
 echo "[4/4] Analyzing NS-FSM results..."

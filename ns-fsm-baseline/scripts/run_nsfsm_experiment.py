@@ -161,7 +161,7 @@ def build_runtime_fsm(
 
     try:
         proposal = LLMFSMDesigner(config_path=config_path).design_with_metadata(task_spec, adapter)
-        fsm = builder.from_design(proposal.fsm_design, task_spec, adapter, allow_fallback=True)
+        fsm = builder.from_design(proposal.fsm_design, task_spec, adapter, allow_fallback=False)
         metadata.update(
             {
                 "task_hash": proposal.task_hash,
@@ -171,9 +171,10 @@ def build_runtime_fsm(
         )
         return fsm, metadata
     except Exception as exc:
-        metadata["source"] = "template_after_llm_error"
         metadata["llm_fsm_error"] = str(exc)
-        return builder.from_template(task_spec, adapter), metadata
+        raise RuntimeError(
+            "LLM FSM design failed validation and fallback FSM replacement is disabled."
+        ) from exc
 
 
 def load_runtime_llm(config_path: str | None):
