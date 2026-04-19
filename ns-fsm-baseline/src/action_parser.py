@@ -3,10 +3,18 @@ import os
 import re
 import sys
 
+try:
+    from .minecraft_fallback import MinecraftFallbackSimulator, normalize_action_library
+except ImportError:  # pragma: no cover - supports direct src execution
+    from minecraft_fallback import MinecraftFallbackSimulator, normalize_action_library
+
 # 加载 ActionLibrary 用于 get_candidate_actions
 mc_path = os.path.join(os.path.dirname(__file__), '..', '..', 'MC-TextWorld')
 sys.path.insert(0, mc_path)
-from mctextworld.action import ActionLibrary
+try:
+    from mctextworld.action import ActionLibrary
+except ImportError:  # pragma: no cover - depends on optional external package
+    ActionLibrary = None
 
 
 # MC-TextWorld 中所有木材变体
@@ -39,19 +47,23 @@ class ActionParser:
                 os.path.dirname(__file__), '..', '..', 'MC-TextWorld',
                 'mctextworld', 'action_lib.json'
             )
+            if not os.path.exists(action_lib_path):
+                action_lib_path = os.path.join(
+                    os.path.dirname(os.path.dirname(__file__)),
+                    "config",
+                    "action_lib_summary.json",
+                )
 
         with open(action_lib_path, "r", encoding="utf-8") as f:
             raw = json.load(f)
 
         # action_lib.json 可能是 {name: [...]} 或 [...] 两种格式
-        if isinstance(raw, list):
-            self._action_lib_dict = {entry["action"]: entry for entry in raw}
-        else:
-            self._action_lib_dict = raw
+        self._action_lib_dict = normalize_action_library(raw)
 
         self.valid_actions = set(self._action_lib_dict.keys())
         self.action_types = {"mine", "craft", "smelt"}
-        self._action_library = ActionLibrary()
+        self._action_library = ActionLibrary() if ActionLibrary is not None else None
+        self._fallback_simulator = MinecraftFallbackSimulator(self._action_lib_dict)
 
     # ------------------------------------------------------------------
     # 公开接口
@@ -94,8 +106,11 @@ class ActionParser:
         返回当前 inventory 下所有可执行的 action 列表。
         用于在 prompt 中向 LLM 展示合法选项，减少无效输出。
         """
-        candidates = self._action_library.get_candidate_actions(inventory)
-        return [action for action in candidates if action != "no_op"]
+        if self._action_library is not None:
+            candidates = self._action_library.get_candidate_actions(inventory)
+            return [action for action in candidates if action != "no_op"]
+
+        return self._fallback_simulator.candidate_actions(inventory)
 
     # ------------------------------------------------------------------
     # 内部方法

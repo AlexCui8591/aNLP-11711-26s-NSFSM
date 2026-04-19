@@ -2,11 +2,19 @@ import os
 import sys
 import copy
 
+try:
+    from .minecraft_fallback import MinecraftFallbackSimulator
+except ImportError:  # pragma: no cover - supports direct src execution
+    from minecraft_fallback import MinecraftFallbackSimulator
+
 # Add MC-TextWorld to path
 mc_path = os.path.join(os.path.dirname(__file__), '..', '..', 'MC-TextWorld')
 sys.path.insert(0, mc_path)
 
-from mctextworld.simulator import Env
+try:
+    from mctextworld.simulator import Env
+except ImportError:  # pragma: no cover - depends on optional external package
+    Env = None
 
 
 class MCTextWorldWrapper:
@@ -17,6 +25,9 @@ class MCTextWorldWrapper:
         self.step_count = 0
         self.trajectory = []
         self._action_lib = None          # lazily cached reference
+        self._fallback_simulator = None
+        self._fallback_env = False
+        self._fallback_obs = None
 
     def reset(self, goal: str) -> dict:
         """
@@ -26,6 +37,17 @@ class MCTextWorldWrapper:
         self.goal = goal
         self.step_count = 0
         self.trajectory = []
+        self._fallback_env = Env is None
+
+        if self._fallback_env:
+            self.env = None
+            self._fallback_obs = {
+                "inventory": {},
+                "position": [0, 0, 0],
+                "biome": "plains",
+            }
+            return self._get_obs(self._fallback_obs)
+
         self.env = Env(
             task_name=f"Obtain 1 {goal}",
             init_inv={},
@@ -43,6 +65,9 @@ class MCTextWorldWrapper:
           - done: True when goal achieved or max_steps reached
           - info: {'success': bool, 'message': str, 'goal_achieved': bool, 'timeout': bool}
         """
+        if self._fallback_env:
+            return self._fallback_step(action)
+
         inv_before = copy.deepcopy(self.env.obs['inventory'])
         obs, _reward, goal_achieved, raw_info = self.env.step(action)
         self.step_count += 1
@@ -79,6 +104,10 @@ class MCTextWorldWrapper:
 
     def get_inventory(self) -> dict:
         """Return current inventory as {item: qty}, excluding zero-quantity entries."""
+        if self._fallback_env and self._fallback_obs is not None:
+            return {
+                k: v for k, v in self._fallback_obs.get('inventory', {}).items() if v > 0
+            }
         if self.env is None:
             return {}
         return {k: v for k, v in self.env.obs['inventory'].items() if v > 0}
@@ -145,7 +174,10 @@ class MCTextWorldWrapper:
     def _get_action_lib(self) -> dict:
         """Lazily cache a reference to the MC-TextWorld action library dict."""
         if self._action_lib is None:
-            self._action_lib = self.env.action_lib.action_lib
+            if self.env is not None:
+                self._action_lib = self.env.action_lib.action_lib
+            else:
+                self._action_lib = self._get_fallback_simulator().action_library
         return self._action_lib
 
     def _get_obs(self, raw_obs: dict) -> dict:
@@ -157,3 +189,49 @@ class MCTextWorldWrapper:
             "max_steps": self.max_steps,
             "goal": self.goal,
         }
+
+    # ── fallback simulator ───────────────────────────────────────────────────
+
+    def _fallback_step(self, action: str) -> tuple:
+        """Execute an action with a lightweight inventory simulator.
+
+        This is used when the optional MC-TextWorld package is not installed,
+        for example on an HPC login node where only the repository files were
+        pulled. It preserves the high-level action semantics needed for ReAct,
+        Reflexion, and NS-FSM comparison smoke tests.
+        """
+        if self._fallback_obs is None:
+            raise RuntimeError("Call reset(goal) before step(action).")
+
+        inv_before = copy.deepcopy(self._fallback_obs["inventory"])
+        success, message, inv_after = self._get_fallback_simulator().step(action, inv_before)
+        self._fallback_obs["inventory"] = inv_after
+        self.step_count += 1
+
+        goal_achieved = inv_after.get(self.goal, 0) >= 1
+        timeout = self.step_count >= self.max_steps
+        done = goal_achieved or timeout
+
+        self.trajectory.append({
+            "step": self.step_count,
+            "action": action,
+            "success": success,
+            "inventory_before": inv_before,
+            "inventory_after": copy.deepcopy(inv_after),
+            "message": message,
+            "done": goal_achieved,
+        })
+
+        info = {
+            "success": success,
+            "message": message,
+            "goal_achieved": goal_achieved,
+            "timeout": timeout,
+            "fallback_env": True,
+        }
+        return self._get_obs(self._fallback_obs), done, info
+
+    def _get_fallback_simulator(self) -> MinecraftFallbackSimulator:
+        if self._fallback_simulator is None:
+            self._fallback_simulator = MinecraftFallbackSimulator()
+        return self._fallback_simulator

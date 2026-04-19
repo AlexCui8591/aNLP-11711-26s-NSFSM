@@ -33,12 +33,13 @@ def main() -> None:
         task_spec=task_spec,
         adapter=adapter,
         use_fixed_generic_fsm=args.use_fixed_generic_fsm,
+        config_path=args.config,
     )
     agent = NSFSMAgent(
         task_spec=task_spec,
         adapter=adapter,
         fsm=fsm,
-        llm=None,
+        llm=None if args.planner_only else load_runtime_llm(args.config),
         planner_only=args.planner_only,
         verbose=not args.quiet,
     )
@@ -69,6 +70,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-steps", type=int, default=None)
     parser.add_argument("--tag", default=datetime.now().strftime("%Y%m%d_%H%M%S"))
     parser.add_argument(
+        "--config",
+        default=None,
+        help="Path to hyperparams YAML for LLM FSM design/runtime calls.",
+    )
+    parser.add_argument(
         "--use-fixed-generic-fsm",
         action="store_true",
         help="Skip LLM FSM design and use template/fallback FSM.",
@@ -95,6 +101,7 @@ def build_runtime_fsm(
     task_spec: Mapping[str, Any],
     adapter: Any,
     use_fixed_generic_fsm: bool,
+    config_path: str | None,
 ):
     builder = FSMBuilder()
     metadata: dict[str, Any] = {
@@ -105,7 +112,7 @@ def build_runtime_fsm(
         return builder.from_template(task_spec, adapter), metadata
 
     try:
-        proposal = LLMFSMDesigner().design_with_metadata(task_spec, adapter)
+        proposal = LLMFSMDesigner(config_path=config_path).design_with_metadata(task_spec, adapter)
         fsm = builder.from_design(proposal.fsm_design, task_spec, adapter, allow_fallback=True)
         metadata.update(
             {
@@ -119,6 +126,17 @@ def build_runtime_fsm(
         metadata["source"] = "template_after_llm_error"
         metadata["llm_fsm_error"] = str(exc)
         return builder.from_template(task_spec, adapter), metadata
+
+
+def load_runtime_llm(config_path: str | None):
+    try:
+        from llm_interface import LLMInterface
+    except Exception as exc:
+        raise RuntimeError(
+            "LLMInterface could not be imported. Install optional LLM "
+            "dependencies or run with --planner-only."
+        ) from exc
+    return LLMInterface(config_path)
 
 
 def safe_name(value: str) -> str:

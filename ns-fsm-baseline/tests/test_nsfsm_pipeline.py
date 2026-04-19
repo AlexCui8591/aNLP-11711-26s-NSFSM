@@ -20,6 +20,8 @@ from datasets.minecraft import MinecraftAdapter
 from datasets.registry import get_adapter, list_datasets
 from datasets.structured import StructuredScenarioAdapter
 from datasets.swe_bench import SWEBenchAdapter
+from action_parser import ActionParser
+from env_wrapper import MCTextWorldWrapper
 from fsm_builder import FSMBuilder
 from fsm_designer import LLMFSMDesigner
 from fsm_validator import FSMDesignValidator, build_generic_tool_use_fsm_design
@@ -146,6 +148,18 @@ class NSFSMTests(unittest.TestCase):
             result = adapter.step(action)
             self.assertTrue(result.info["success"], result.info)
         self.assertTrue(result.done)
+
+    def test_baseline_env_and_action_parser_fallbacks(self):
+        parser = ActionParser()
+        self.assertIn("mine_oak_log", parser.get_candidate_actions({}))
+
+        env = MCTextWorldWrapper(max_steps=5)
+        env.reset("stick")
+        for action in ["mine_oak_log", "craft_oak_planks", "craft_stick"]:
+            _obs, done, info = env.step(action)
+            self.assertTrue(info["success"], info)
+        self.assertTrue(done)
+        self.assertGreaterEqual(env.get_inventory().get("stick", 0), 1)
 
     def test_swe_bench_adapter_and_agent(self):
         adapter = SWEBenchAdapter()

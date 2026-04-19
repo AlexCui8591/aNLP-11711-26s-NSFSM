@@ -12,6 +12,11 @@ from copy import deepcopy
 from typing import Any, Mapping
 
 try:
+    from ..minecraft_fallback import MinecraftFallbackSimulator, load_action_library
+except ImportError:  # pragma: no cover - supports direct src execution
+    from minecraft_fallback import MinecraftFallbackSimulator, load_action_library
+
+try:
     from .base import DatasetAdapter, StepResult, TaskSpec, task_spec_to_dict
 except ImportError:  # pragma: no cover - supports direct src execution
     from base import DatasetAdapter, StepResult, TaskSpec, task_spec_to_dict
@@ -39,6 +44,7 @@ class MinecraftAdapter(DatasetAdapter):
         self.env = None
         self.parser = None
         self.ground_truth = None
+        self._fallback_simulator = None
 
     def list_tasks(self) -> list[dict[str, Any]]:
         if self._goals_cache is not None:
@@ -294,74 +300,23 @@ class MinecraftAdapter(DatasetAdapter):
         return StepResult(self.get_observation(), done, info)
 
     def _candidate_actions(self, inventory: Mapping[str, int]) -> list[str]:
-        candidates = []
-        for action_name, variants in self._action_library().items():
-            if action_name == "no_op":
-                continue
-            if any(self._has_requirements(variant, inventory) for variant in variants):
-                candidates.append(action_name)
-        return sorted(candidates)
+        return self._get_fallback_simulator().candidate_actions(inventory)
 
     def _apply_action(
         self,
         action_name: str,
         inventory: Mapping[str, int],
     ) -> tuple[bool, str, dict[str, int]]:
-        variants = self._action_library().get(action_name)
-        if not variants:
-            return False, f"Unknown action '{action_name}'.", dict(inventory)
-
-        for variant in variants:
-            if not self._has_requirements(variant, inventory):
-                continue
-            updated = dict(inventory)
-            for item, qty in variant.get("precondition", {}).items():
-                updated[item] = updated.get(item, 0) - int(qty)
-                if updated[item] <= 0:
-                    updated.pop(item, None)
-            for item, qty in variant.get("output", {}).items():
-                updated[item] = updated.get(item, 0) + int(qty)
-            return True, "Action executed in fallback simulator.", updated
-
-        return False, self._missing_requirements_message(action_name, variants, inventory), dict(inventory)
-
-    @staticmethod
-    def _has_requirements(
-        variant: Mapping[str, Any],
-        inventory: Mapping[str, int],
-    ) -> bool:
-        for item, qty in variant.get("precondition", {}).items():
-            if int(inventory.get(item, 0)) < int(qty):
-                return False
-        for item, qty in variant.get("tool", {}).items():
-            if int(inventory.get(item, 0)) < int(qty):
-                return False
-        return True
-
-    @staticmethod
-    def _missing_requirements_message(
-        action_name: str,
-        variants: list[Mapping[str, Any]],
-        inventory: Mapping[str, int],
-    ) -> str:
-        if not variants:
-            return f"Unknown action '{action_name}'."
-        variant = variants[0]
-        missing = []
-        for source in ("tool", "precondition"):
-            for item, qty in variant.get(source, {}).items():
-                have = int(inventory.get(item, 0))
-                need = int(qty)
-                if have < need:
-                    missing.append(f"{item} need {need}, have {have}")
-        if not missing:
-            return f"Action '{action_name}' failed."
-        return f"Failed {action_name}: " + "; ".join(missing)
+        return self._get_fallback_simulator().step(action_name, inventory)
 
     def _action_library(self) -> dict[str, list[dict[str, Any]]]:
-        summary_path = os.path.join(self.root, "config", "action_lib_summary.json")
-        with open(summary_path, "r", encoding="utf-8") as f:
-            return json.load(f)
+        return self._get_fallback_simulator().action_library
+
+    def _get_fallback_simulator(self) -> MinecraftFallbackSimulator:
+        if self._fallback_simulator is None:
+            summary_path = os.path.join(self.root, "config", "action_lib_summary.json")
+            self._fallback_simulator = MinecraftFallbackSimulator(load_action_library(summary_path))
+        return self._fallback_simulator
 
     def _get_ground_truth(self):
         if self.ground_truth is None:
