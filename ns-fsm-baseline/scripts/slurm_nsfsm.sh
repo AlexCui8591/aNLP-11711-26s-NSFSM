@@ -16,6 +16,7 @@
 #   sbatch scripts/slurm_nsfsm.sh
 # Optional overrides:
 #   TAG=minecraft_compare_small_vllm_r1 TASK_IDS=minecraft/stick,minecraft/wooden_pickaxe RUNS=1 sbatch scripts/slurm_nsfsm.sh
+#   TAG=full_v1 TASK_IDS="" RUNS=15 sbatch scripts/slurm_nsfsm.sh
 #   NSFSM_EXTRA_ARGS="--planner-only" sbatch scripts/slurm_nsfsm.sh
 
 if [ -z "${SLURM_JOB_ID:-}" ] && [ "${ALLOW_LOGIN_RUN:-0}" != "1" ]; then
@@ -35,7 +36,7 @@ cd "$ROOT"
 mkdir -p logs
 
 TAG="${TAG:-minecraft_compare_stick_vllm_r1}"
-TASK_IDS="${TASK_IDS:-minecraft/stick}"
+TASK_IDS="${TASK_IDS-minecraft/stick}"
 RUNS="${RUNS:-1}"
 CONFIG_PATH="${CONFIG_PATH:-config/hyperparams_psc.yaml}"
 MODEL_NAME="${MODEL_NAME:-Qwen/Qwen2.5-7B-Instruct}"
