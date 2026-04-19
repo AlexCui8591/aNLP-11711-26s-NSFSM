@@ -29,8 +29,7 @@ if [ -z "${SLURM_JOB_ID:-}" ] && [ "${ALLOW_LOGIN_RUN:-0}" != "1" ]; then
     exit 1
 fi
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-ROOT="$(dirname "$SCRIPT_DIR")"
+ROOT="${SLURM_SUBMIT_DIR:-$(cd "$(dirname "$0")" && pwd)}"
 PROJECT_ROOT="$(dirname "$ROOT")"
 cd "$ROOT"
 mkdir -p logs
@@ -63,57 +62,7 @@ export TORCH_EXTENSIONS_DIR="${CACHE_ROOT}/torch_extensions"
 export XDG_CACHE_HOME="${CACHE_ROOT}"
 mkdir -p "$HF_HOME" "$VLLM_CACHE_ROOT" "$TRITON_CACHE_DIR" "$TORCH_EXTENSIONS_DIR"
 
-find_mctextworld_root() {
-    if [ -n "${MC_TEXTWORLD_PATH:-}" ] && [ -d "${MC_TEXTWORLD_PATH}/mctextworld" ]; then
-        echo "${MC_TEXTWORLD_PATH}"
-        return 0
-    fi
-
-    for candidate in \
-        "${PROJECT_ROOT}/MC-TextWorld" \
-        "${ROOT}/MC-TextWorld" \
-        "${PROJECT_ROOT}/mc-textworld" \
-        "${ROOT}/mc-textworld" \
-        "${PROJECT_ROOT}/mctextworld" \
-        "${ROOT}/mctextworld"; do
-        if [ -d "${candidate}/mctextworld" ]; then
-            echo "${candidate}"
-            return 0
-        fi
-        if [ -d "${candidate}" ]; then
-            nested="$(find "${candidate}" -maxdepth 4 -type d -name mctextworld -print -quit 2>/dev/null || true)"
-            if [ -n "${nested}" ]; then
-                dirname "${nested}"
-                return 0
-            fi
-        fi
-    done
-
-    nested="$(find "${PROJECT_ROOT}" "${ROOT}" -maxdepth 4 -type d -name mctextworld -print -quit 2>/dev/null || true)"
-    if [ -n "${nested}" ]; then
-        dirname "${nested}"
-        return 0
-    fi
-
-    return 1
-}
-
-MC_TEXTWORLD_ROOT="$(find_mctextworld_root || true)"
-if [ -z "${MC_TEXTWORLD_ROOT}" ]; then
-    echo "ERROR: could not find the MC-TextWorld Python package."
-    echo "Looked under:"
-    echo "  ${PROJECT_ROOT}/MC-TextWorld"
-    echo "  ${ROOT}/MC-TextWorld"
-    echo
-    echo "Expected a directory like:"
-    echo "  MC-TextWorld/mctextworld/simulator.py"
-    echo
-    echo "If your MC-TextWorld lives elsewhere, submit with:"
-    echo "  MC_TEXTWORLD_PATH=/path/to/MC-TextWorld sbatch scripts/slurm_nsfsm.sh"
-    exit 1
-fi
-
-export PYTHONPATH="${MC_TEXTWORLD_ROOT}:${PYTHONPATH:-}"
+export PYTHONPATH="${MC_TEXTWORLD_PATH}:${PYTHONPATH:-}"
 
 module load anaconda3
 source /opt/packages/anaconda3-2024.10-1/etc/profile.d/conda.sh
