@@ -26,9 +26,17 @@ class MinecraftAdapter(DatasetAdapter):
         self,
         goals_path: str | None = None,
         max_steps: int | None = None,
+        task_source: str = "buildable",
+        task_source_path: str | None = None,
     ):
         self.root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        self.task_source = task_source
         self.goals_path = goals_path or os.path.join(self.root, "config", "goals_67.json")
+        self.task_source_path = task_source_path or os.path.join(
+            self.root,
+            "config",
+            "mctextworld_ground_truth_buildable_tasks.json",
+        )
         self.max_steps_override = max_steps
         self._goals_cache: list[dict[str, Any]] | None = None
         self._actions_cache: list[str] | None = None
@@ -42,6 +50,10 @@ class MinecraftAdapter(DatasetAdapter):
 
     def list_tasks(self) -> list[dict[str, Any]]:
         if self._goals_cache is not None:
+            return deepcopy(self._goals_cache)
+
+        if self.task_source == "buildable":
+            self._goals_cache = self._list_buildable_tasks()
             return deepcopy(self._goals_cache)
 
         with open(self.goals_path, "r", encoding="utf-8") as f:
@@ -64,6 +76,37 @@ class MinecraftAdapter(DatasetAdapter):
         self._goals_cache = tasks
         return deepcopy(tasks)
 
+    def _list_buildable_tasks(self) -> list[dict[str, Any]]:
+        with open(self.task_source_path, "r", encoding="utf-8") as f:
+            payload = json.load(f)
+
+        tasks: list[dict[str, Any]] = []
+        for entry in payload.get("tasks", []):
+            raw_goal = entry.get("goal", {})
+            if not isinstance(raw_goal, Mapping) or not raw_goal:
+                continue
+            goal, quantity = next(iter(raw_goal.items()))
+            synthesized_actions = [str(action) for action in entry.get("synthesized_actions", [])]
+            task_id = str(entry.get("task_id") or goal)
+            max_steps = self.max_steps_override or max(20, len(synthesized_actions) + 5)
+            prefixed_task_id = task_id if task_id.startswith("minecraft/") else f"minecraft/{task_id}"
+            tasks.append(
+                {
+                    **entry,
+                    "dataset": self.dataset_name,
+                    "task_id": prefixed_task_id,
+                    "goal": str(goal),
+                    "goal_condition": {str(goal): int(quantity)},
+                    "type": "dependency_graph_buildable",
+                    "instruction": f"Obtain {int(quantity)} {goal}.",
+                    "group": entry.get("group", "buildable"),
+                    "max_steps": max_steps,
+                    "synthesized_actions": synthesized_actions,
+                    "task_source": "buildable",
+                }
+            )
+        return tasks
+
     def load_or_wrap(self, raw_input: str | Mapping[str, Any]) -> dict[str, Any]:
         if isinstance(raw_input, str):
             task_id = raw_input.strip()
@@ -82,21 +125,34 @@ class MinecraftAdapter(DatasetAdapter):
             }
 
         raw = dict(raw_input)
+        raw_goal = raw.get("goal")
+        if isinstance(raw_goal, Mapping) and raw_goal:
+            goal, quantity = next(iter(raw_goal.items()))
+            raw["goal"] = str(goal)
+            raw.setdefault("goal_condition", {str(goal): int(quantity)})
         if "goal" not in raw:
             task_id = str(raw.get("task_id", "minecraft/custom"))
             raw["goal"] = task_id.split("/", 1)[-1]
         raw.setdefault("dataset", self.dataset_name)
-        raw.setdefault("task_id", f"minecraft/{raw['goal']}")
+        raw["task_id"] = str(raw.get("task_id", f"minecraft/{raw['goal']}"))
+        if not raw["task_id"].startswith("minecraft/"):
+            raw["task_id"] = f"minecraft/{raw['task_id']}"
         raw.setdefault("instruction", f"Obtain 1 {raw['goal']}.")
         raw.setdefault("type", "craft")
         raw.setdefault("group", "custom")
-        raw.setdefault("max_steps", self.max_steps_override or 100)
+        raw.setdefault(
+            "max_steps",
+            self.max_steps_override or max(20, len(raw.get("synthesized_actions", [])) + 5),
+        )
         return raw
 
     def to_task_spec(self, raw_task: Mapping[str, Any]) -> TaskSpec:
         raw = self.load_or_wrap(raw_task)
         goal = str(raw["goal"])
-        optimal_sequence = self._optimal_sequence(goal)
+        optimal_sequence = [str(action) for action in raw.get("synthesized_actions", [])]
+        if not optimal_sequence:
+            optimal_sequence = self._optimal_sequence(goal)
+        goal_quantity = int(raw.get("goal_condition", {}).get(goal, 1))
 
         return TaskSpec(
             dataset=self.dataset_name,
@@ -104,14 +160,17 @@ class MinecraftAdapter(DatasetAdapter):
             task_type="symbolic_planning",
             instruction=str(raw.get("instruction", f"Obtain 1 {goal}.")),
             initial_state={"inventory": {}, "goal": goal, "step": 0},
-            goal_condition={f"inventory.{goal}": ">=1"},
+            goal_condition={f"inventory.{goal}": f">={goal_quantity}"},
             available_tools=self._all_actions(),
             max_steps=int(raw.get("max_steps", self.max_steps_override or 100)),
-            success_criteria=[f"Inventory contains at least 1 {goal}."],
+            success_criteria=[f"Inventory contains at least {goal_quantity} {goal}."],
             metadata={
                 "goal_item": goal,
+                "goal_quantity": goal_quantity,
+                "goal_condition": {goal: goal_quantity},
                 "group": raw.get("group", "custom"),
                 "goal_type": raw.get("type", "craft"),
+                "task_source": raw.get("task_source", self.task_source),
                 "optimal_sequence": optimal_sequence,
                 "required_actions": optimal_sequence,
             },
@@ -160,9 +219,11 @@ class MinecraftAdapter(DatasetAdapter):
     ) -> bool:
         spec = task_spec_to_dict(task_spec)
         goal = spec.get("metadata", {}).get("goal_item")
+        goal_quantity = int(spec.get("metadata", {}).get("goal_quantity", 1))
         inventory = state.get("inventory", {})
-        return bool(goal and inventory.get(goal, 0) >= 1) or int(state.get("step", 0)) >= int(
-            spec.get("max_steps", 100)
+        return (
+            bool(goal and inventory.get(goal, 0) >= goal_quantity)
+            or int(state.get("step", 0)) >= int(spec.get("max_steps", 100))
         )
 
     def get_available_tools(
@@ -270,7 +331,8 @@ class MinecraftAdapter(DatasetAdapter):
         self.state["inventory"] = inventory_after
         self.state["step"] = int(self.state.get("step", 0)) + 1
         goal = self.state.get("goal")
-        goal_achieved = bool(goal and inventory_after.get(goal, 0) >= 1)
+        goal_quantity = int((self.task_spec or {}).get("metadata", {}).get("goal_quantity", 1))
+        goal_achieved = bool(goal and inventory_after.get(goal, 0) >= goal_quantity)
         timeout = self.state["step"] >= int(self.state.get("max_steps", 100))
         done = goal_achieved or timeout
         info = {
