@@ -33,6 +33,8 @@ class ContextManager:
         history: list[dict[str, Any]] | None = None,
         blocked_history: list[dict[str, Any]] | None = None,
         fallback_history: list[dict[str, Any]] | None = None,
+        transition_options: list[dict[str, Any]] | None = None,
+        legal_actions: list[str] | None = None,
     ) -> dict[str, Any]:
         spec = task_spec_to_dict(task_spec)
         history = history or []
@@ -51,8 +53,16 @@ class ContextManager:
                 "success_criteria": spec.get("success_criteria", []),
             },
             "fsm_state": fsm.current_state,
-            "transition_options": fsm.get_valid_transitions(),
-            "legal_actions": fsm.get_valid_actions(),
+            "transition_options": (
+                deepcopy(transition_options)
+                if transition_options is not None
+                else fsm.get_valid_transitions()
+            ),
+            "legal_actions": (
+                list(legal_actions)
+                if legal_actions is not None
+                else fsm.get_valid_actions()
+            ),
             "fsm_summary": self._fsm_summary(fsm),
             "recent_history": deepcopy(history[-self.recent_k :]),
             "blocked_history": deepcopy(blocked_history[-self.recent_k :]),

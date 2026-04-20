@@ -35,6 +35,7 @@ class NSFSMAgent:
         planner: Planner | None = None,
         context_manager: ContextManager | None = None,
         planner_only: bool = False,
+        max_llm_retries: int = 1,
         max_blocked_repeats: int = 3,
         verbose: bool = False,
     ):
@@ -46,6 +47,7 @@ class NSFSMAgent:
         self.planner = planner or Planner()
         self.context_manager = context_manager or ContextManager()
         self.planner_only = planner_only
+        self.max_llm_retries = max_llm_retries
         self.max_blocked_repeats = max_blocked_repeats
         self.verbose = verbose
         self.trajectory: list[dict[str, Any]] = []
@@ -69,8 +71,7 @@ class NSFSMAgent:
                 termination = "fsm_terminal"
                 break
 
-            transition_options = self.fsm.get_valid_transitions()
-            legal_actions = self.fsm.get_valid_actions()
+            transition_options, legal_actions = self._runtime_transition_options(state)
             if not transition_options or not legal_actions:
                 termination = "no_valid_action"
                 break
@@ -83,11 +84,12 @@ class NSFSMAgent:
                 history=self.trajectory,
                 blocked_history=self.blocked_actions,
                 fallback_history=self.fallback_actions,
+                transition_options=transition_options,
+                legal_actions=legal_actions,
             )
 
-            proposal = self._propose_action(context_packet)
-            decision = self._select_decision(
-                proposal=proposal,
+            decision, proposal = self._verified_decision_with_retries(
+                context_packet=context_packet,
                 state=state,
                 legal_actions=legal_actions,
                 transition_options=transition_options,
@@ -202,22 +204,90 @@ class NSFSMAgent:
                 "llm_error": str(exc),
             }
 
-    def _select_decision(
+    def _verified_decision_with_retries(
+        self,
+        context_packet: Mapping[str, Any],
+        state: Mapping[str, Any],
+        legal_actions: list[str],
+        transition_options: list[dict[str, Any]],
+    ) -> tuple[dict[str, Any] | None, dict[str, Any]]:
+        if self.planner_only or self.llm is None:
+            proposal = self._propose_action(context_packet)
+            return (
+                self._planner_decision(
+                    state=state,
+                    legal_actions=legal_actions,
+                    transition_options=transition_options,
+                    blocked_reason={},
+                    record_block=False,
+                ),
+                proposal,
+            )
+
+        last_proposal: dict[str, Any] = {}
+        last_blocked_reason: dict[str, Any] = {}
+        attempts = self.max_llm_retries + 1
+        for attempt_idx in range(1, attempts + 1):
+            retry_packet = dict(context_packet)
+            if last_blocked_reason:
+                retry_packet["last_verification_error"] = last_blocked_reason
+            proposal = self._propose_action(retry_packet)
+            proposal["attempt"] = attempt_idx
+            last_proposal = proposal
+
+            decision, blocked_reason = self._try_llm_decision(
+                proposal=proposal,
+                state=state,
+                legal_actions=legal_actions,
+                transition_options=transition_options,
+            )
+            if decision is not None:
+                return decision, proposal
+
+            last_blocked_reason = blocked_reason
+            self._record_blocked_action(proposal, blocked_reason)
+
+        planner_decision = self._planner_decision(
+            state=state,
+            legal_actions=legal_actions,
+            transition_options=transition_options,
+            blocked_reason=last_blocked_reason,
+            record_block=True,
+        )
+        if planner_decision is not None:
+            planner_decision["forced_after_llm_retries"] = True
+        return planner_decision, last_proposal
+
+    def _runtime_transition_options(
+        self,
+        state: Mapping[str, Any],
+    ) -> tuple[list[dict[str, Any]], list[str]]:
+        static_options = self.fsm.get_valid_transitions()
+        if self.task_spec.get("dataset") != "minecraft":
+            return static_options, self.fsm.get_valid_actions()
+
+        try:
+            executable = set(self.adapter.get_available_tools(self.task_spec, state))
+        except Exception:
+            executable = set()
+
+        filtered_options = [
+            dict(option)
+            for option in static_options
+            if str(option.get("action")) in executable
+        ]
+        filtered_actions = list(
+            dict.fromkeys(str(option.get("action")) for option in filtered_options)
+        )
+        return filtered_options, filtered_actions
+
+    def _try_llm_decision(
         self,
         proposal: Mapping[str, Any],
         state: Mapping[str, Any],
         legal_actions: list[str],
         transition_options: list[dict[str, Any]],
-    ) -> dict[str, Any] | None:
-        if proposal.get("source") == "planner" and not proposal.get("action"):
-            return self._planner_decision(
-                state=state,
-                legal_actions=legal_actions,
-                transition_options=transition_options,
-                blocked_reason={},
-                record_block=False,
-            )
-
+    ) -> tuple[dict[str, Any] | None, dict[str, Any]]:
         proposed_action = proposal.get("action")
         normalized_action = None
         if proposed_action:
@@ -247,32 +317,32 @@ class NSFSMAgent:
                 "blocked": False,
                 "rule_check": rule_check,
                 "transition_check": transition_check,
-            }
+            }, {}
 
         blocked_reason = {
             "proposal": dict(proposal),
             "rule_check": rule_check,
             "transition_check": transition_check,
         }
+        return None, blocked_reason
+
+    def _record_blocked_action(
+        self,
+        proposal: Mapping[str, Any],
+        blocked_reason: Mapping[str, Any],
+    ) -> None:
+        rule_check = dict(blocked_reason.get("rule_check", {}))
         self.blocked_actions.append(
             {
                 "step": len(self.trajectory) + 1,
                 "state": self.fsm.current_state,
-                "action": proposed_action,
+                "action": proposal.get("action"),
                 "success": False,
                 "message": rule_check.get("message", "blocked"),
                 "reason": blocked_reason,
             }
         )
-        self.fsm.record_blocked_action(proposed_action, blocked_reason)
-
-        return self._planner_decision(
-            state=state,
-            legal_actions=legal_actions,
-            transition_options=transition_options,
-            blocked_reason=blocked_reason,
-            record_block=True,
-        )
+        self.fsm.record_blocked_action(proposal.get("action"), blocked_reason)
 
     def _planner_decision(
         self,

@@ -43,7 +43,6 @@ class MinecraftAdapter(DatasetAdapter):
         self.task_spec: dict[str, Any] | None = None
         self.state: dict[str, Any] = {}
         self.trajectory: list[dict[str, Any]] = []
-        self._fallback_env = False
         self.env = None
         self.parser = None
         self.ground_truth = None
@@ -173,6 +172,7 @@ class MinecraftAdapter(DatasetAdapter):
                 "task_source": raw.get("task_source", self.task_source),
                 "optimal_sequence": optimal_sequence,
                 "required_actions": optimal_sequence,
+                "grounded_fsm_mode": "branching_dependency_dag",
             },
         )
 
@@ -180,23 +180,9 @@ class MinecraftAdapter(DatasetAdapter):
         self.task_spec = task_spec_to_dict(task_spec)
         goal = self.task_spec.get("metadata", {}).get("goal_item")
         self.trajectory = []
-        try:
-            wrapper_cls = self._get_wrapper_cls()
-            self.env = wrapper_cls(max_steps=int(self.task_spec.get("max_steps", 100)))
-            self.state = self.env.reset(goal)
-            self._fallback_env = False
-        except Exception as exc:
-            self.env = None
-            self._fallback_env = True
-            self.state = {
-                "inventory": {},
-                "position": [0, 0, 0],
-                "biome": "plains",
-                "step": 0,
-                "max_steps": int(self.task_spec.get("max_steps", 100)),
-                "goal": goal,
-                "fallback_env_reason": str(exc),
-            }
+        wrapper_cls = self._get_wrapper_cls()
+        self.env = wrapper_cls(max_steps=int(self.task_spec.get("max_steps", 100)))
+        self.state = self.env.reset(goal)
         return self.get_observation()
 
     def step(self, action: str | Mapping[str, Any]) -> StepResult:
@@ -204,7 +190,7 @@ class MinecraftAdapter(DatasetAdapter):
             raise RuntimeError("Call reset(task_spec) before MinecraftAdapter.step(action).")
         action_name = self._action_name(action)
         if self.env is None:
-            return self._fallback_step(action_name)
+            raise RuntimeError("MC-TextWorld environment is not initialized.")
         obs, done, info = self.env.step(action_name)
         self.state = obs
         return StepResult(self.get_observation(), done, info)
@@ -232,8 +218,6 @@ class MinecraftAdapter(DatasetAdapter):
         state: Mapping[str, Any],
     ) -> list[str]:
         inventory = dict(state.get("inventory", {}))
-        if self._fallback_env:
-            return self._candidate_actions(inventory)
         if inventory or self.env is not None:
             try:
                 parser = self._get_parser()
@@ -315,13 +299,9 @@ class MinecraftAdapter(DatasetAdapter):
             return list(self._actions_cache)
 
         try:
-            raw = self._action_library()
-            actions = sorted(action for action in raw if action != "no_op")
+            actions = sorted(action for action in self._get_parser().valid_actions if action != "no_op")
         except Exception:
-            try:
-                actions = sorted(action for action in self._get_parser().valid_actions if action != "no_op")
-            except Exception:
-                actions = []
+            actions = []
         self._actions_cache = actions
         return list(actions)
 

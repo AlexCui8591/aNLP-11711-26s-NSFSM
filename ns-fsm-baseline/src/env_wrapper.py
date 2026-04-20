@@ -6,7 +6,13 @@ import copy
 mc_path = os.path.join(os.path.dirname(__file__), '..', '..', 'MC-TextWorld')
 sys.path.insert(0, mc_path)
 
-from mctextworld.simulator import Env
+try:
+    from mctextworld.simulator import Env
+except ImportError as exc:  # pragma: no cover - depends on optional external package
+    Env = None
+    _MC_TEXTWORLD_IMPORT_ERROR = exc
+else:
+    _MC_TEXTWORLD_IMPORT_ERROR = None
 
 
 class MCTextWorldWrapper:
@@ -26,6 +32,12 @@ class MCTextWorldWrapper:
         self.goal = goal
         self.step_count = 0
         self.trajectory = []
+        if Env is None:
+            raise ImportError(
+                "MC-TextWorld is required for Minecraft experiments. "
+                f"Could not import mctextworld.simulator.Env from {mc_path}."
+            ) from _MC_TEXTWORLD_IMPORT_ERROR
+
         self.env = Env(
             task_name=f"Obtain 1 {goal}",
             init_inv={},
@@ -43,6 +55,9 @@ class MCTextWorldWrapper:
           - done: True when goal achieved or max_steps reached
           - info: {'success': bool, 'message': str, 'goal_achieved': bool, 'timeout': bool}
         """
+        if self.env is None:
+            raise RuntimeError("Call reset(goal) before step(action).")
+
         inv_before = copy.deepcopy(self.env.obs['inventory'])
         obs, _reward, goal_achieved, raw_info = self.env.step(action)
         self.step_count += 1
@@ -145,6 +160,8 @@ class MCTextWorldWrapper:
     def _get_action_lib(self) -> dict:
         """Lazily cache a reference to the MC-TextWorld action library dict."""
         if self._action_lib is None:
+            if self.env is None:
+                raise RuntimeError("MC-TextWorld environment is not initialized.")
             self._action_lib = self.env.action_lib.action_lib
         return self._action_lib
 

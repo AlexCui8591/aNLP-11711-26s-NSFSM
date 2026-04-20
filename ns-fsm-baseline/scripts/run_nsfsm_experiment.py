@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import json
 import os
 import sys
@@ -42,6 +43,7 @@ def main() -> None:
     output_dir = os.path.join(ROOT, "results", "full", args.tag, adapter.dataset_name, "nsfsm")
     os.makedirs(output_dir, exist_ok=True)
     results = []
+    runtime_llm = None if args.planner_only else load_runtime_llm(args.config)
 
     for raw_task in raw_tasks:
         task_spec = adapter.to_task_spec(adapter.load_or_wrap(raw_task)).to_dict()
@@ -69,6 +71,7 @@ def main() -> None:
                 fsm=fsm,
                 llm=llm,
                 planner_only=args.planner_only,
+                max_llm_retries=args.max_llm_retries,
                 verbose=not args.quiet,
             ).run_episode()
             result["run_id"] = run_idx
@@ -123,7 +126,20 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument("--summary-only", action="store_true")
+    parser.add_argument(
+        "--config",
+        default=None,
+        help="Path to hyperparams YAML for LLM FSM design/runtime calls.",
+    )
     parser.add_argument("--use-fixed-generic-fsm", action="store_true")
+    parser.add_argument(
+        "--use-llm-fsm-design",
+        action="store_true",
+        help=(
+            "Use the LLM FSM designer even for datasets with grounded FSM rules. "
+            "By default, Minecraft uses adapter-grounded dependency FSMs."
+        ),
+    )
     parser.add_argument("--save-fsm-design", action="store_true")
     parser.add_argument("--planner-only", action="store_true")
     parser.add_argument(
@@ -170,7 +186,12 @@ def select_tasks(adapter: Any, args: argparse.Namespace) -> list[dict[str, Any] 
         if groups and task.get("group") not in groups:
             continue
         selected.append(task)
-    return selected or tasks[:1]
+    if not selected and (task_ids or groups):
+        raise ValueError(
+            "No tasks matched the requested filters. "
+            f"task_ids={sorted(task_ids) or 'ALL'} groups={sorted(groups) or 'ALL'}"
+        )
+    return selected
 
 
 def build_runtime_fsm(
@@ -187,6 +208,20 @@ def build_runtime_fsm(
     if use_fixed_generic_fsm:
         return builder.from_template(task_spec, adapter), metadata
 
+    if _use_minecraft_grounded_rules(task_spec, adapter, use_llm_fsm_design):
+        fsm = builder.from_template(task_spec, adapter)
+        sequence = list(task_spec.get("metadata", {}).get("required_actions") or [])
+        _assert_grounded_minecraft_fsm(fsm, sequence, task_spec)
+        metadata.update(
+            {
+                "source": "minecraft_grounded_rules",
+                "rule": "branching_dependency_dag_with_runtime_executable_filter",
+                "required_action_count": len(sequence),
+                "llm_fsm_error": None,
+            }
+        )
+        return fsm, metadata
+
     try:
         proposal = LLMFSMDesigner(config_path=llm_config).design_with_metadata(task_spec, adapter)
         fsm = builder.from_design(proposal.fsm_design, task_spec, adapter, allow_fallback=True)
@@ -199,9 +234,76 @@ def build_runtime_fsm(
         )
         return fsm, metadata
     except Exception as exc:
-        metadata["source"] = "template_after_llm_error"
         metadata["llm_fsm_error"] = str(exc)
-        return builder.from_template(task_spec, adapter), metadata
+        raise RuntimeError(
+            "LLM FSM design failed validation and fallback FSM replacement is disabled."
+        ) from exc
+
+
+def _use_minecraft_grounded_rules(
+    task_spec: Mapping[str, Any],
+    adapter: Any,
+    use_llm_fsm_design: bool,
+) -> bool:
+    return (
+        not use_llm_fsm_design
+        and str(task_spec.get("dataset")) == "minecraft"
+        and getattr(adapter, "dataset_name", "") == "minecraft"
+    )
+
+
+def _assert_grounded_minecraft_fsm(
+    fsm: Any,
+    sequence: list[str],
+    task_spec: Mapping[str, Any],
+) -> None:
+    if not sequence:
+        raise ValueError(
+            f"Minecraft grounded FSM requires a dependency action sequence for "
+            f"{task_spec.get('task_id')}."
+        )
+    transitions = fsm.to_dict().get("transitions", [])
+    transition_actions = [item.get("action") for item in transitions]
+    sequence_set = set(sequence)
+    transition_action_set = set(transition_actions)
+    if not sequence_set.issubset(transition_action_set):
+        raise ValueError(
+            "Minecraft grounded FSM is missing dependency actions for "
+            f"{task_spec.get('task_id')}: missing={sorted(sequence_set - transition_action_set)}"
+        )
+    extra_actions = transition_action_set - sequence_set
+    if extra_actions:
+        raise ValueError(
+            "Minecraft grounded FSM contains actions outside the dependency "
+            f"closure for {task_spec.get('task_id')}: {sorted(extra_actions)}"
+        )
+    final_action = sequence[-1]
+    if not any(
+        item.get("action") == final_action and item.get("next_state") in fsm.terminal_states
+        for item in transitions
+    ):
+        raise ValueError(
+            f"Minecraft grounded FSM final action does not reach DONE: {final_action}"
+        )
+    for state in fsm.to_dict().get("states", []):
+        state_name = state.get("name")
+        if state.get("terminal"):
+            continue
+        if not fsm.get_valid_transitions(state_name):
+            raise ValueError(
+                f"Minecraft grounded FSM state has no legal transitions: {state_name}"
+            )
+
+
+def load_runtime_llm(config_path: str | None):
+    try:
+        from llm_interface import LLMInterface
+    except Exception as exc:
+        raise RuntimeError(
+            "LLMInterface could not be imported. Install optional LLM "
+            "dependencies or run with --planner-only."
+        ) from exc
+    return LLMInterface(config_path)
 
 
 def summarize(results: list[Mapping[str, Any]], dataset: str) -> dict[str, Any]:
@@ -210,9 +312,17 @@ def summarize(results: list[Mapping[str, Any]], dataset: str) -> dict[str, Any]:
     total_steps = sum(int(result.get("total_steps", 0)) for result in results)
     blocked = sum(int(result.get("blocked_action_count", 0)) for result in results)
     fallback = sum(int(result.get("fallback_action_count", 0)) for result in results)
+    goal_stats = _goal_stats(results)
+    group_stats = _group_stats(goal_stats)
     return {
+        "agent": "nsfsm",
         "dataset": dataset,
+        "total_goals": len(goal_stats),
         "total_runs": total,
+        "total_success": successes,
+        "overall_success_rate": round(successes / total, 3) if total else 0.0,
+        "group_stats": group_stats,
+        "goal_stats": goal_stats,
         "successes": successes,
         "success_rate": successes / total if total else 0.0,
         "avg_steps": total_steps / total if total else 0.0,
@@ -229,6 +339,103 @@ def summarize(results: list[Mapping[str, Any]], dataset: str) -> dict[str, Any]:
             for result in results
         ],
     }
+
+
+def _goal_stats(results: list[Mapping[str, Any]]) -> list[dict[str, Any]]:
+    grouped: dict[str, list[Mapping[str, Any]]] = {}
+    for result in results:
+        task_id = str(result.get("task_id") or "unknown")
+        grouped.setdefault(task_id, []).append(result)
+
+    rows = []
+    for task_id, items in grouped.items():
+        first = items[0]
+        task_spec = first.get("metadata", {}).get("task_spec", {})
+        metadata = task_spec.get("metadata", {}) if isinstance(task_spec, Mapping) else {}
+        goal = str(metadata.get("goal_item") or task_id.split("/", 1)[-1])
+        group = str(metadata.get("group") or "custom")
+        n_runs = len(items)
+        n_success = sum(1 for item in items if item.get("success"))
+        step_values = [int(item.get("total_steps", 0)) for item in items]
+        termination_distribution = Counter(
+            str(item.get("termination") or "unknown") for item in items
+        )
+        error_distribution = Counter(
+            _error_type(item) for item in items if not item.get("success")
+        )
+        rows.append(
+            {
+                "goal": goal,
+                "group": group,
+                "n_runs": n_runs,
+                "n_success": n_success,
+                "success_rate": round(n_success / n_runs, 3) if n_runs else 0.0,
+                "avg_steps": round(sum(step_values) / n_runs, 1) if n_runs else 0.0,
+                "blocked_action_count": sum(
+                    int(item.get("blocked_action_count", 0)) for item in items
+                ),
+                "fallback_action_count": sum(
+                    int(item.get("fallback_action_count", 0)) for item in items
+                ),
+                "error_distribution": dict(error_distribution),
+                "termination_distribution": dict(termination_distribution),
+            }
+        )
+
+    return sorted(rows, key=lambda row: (_group_order(row["group"]), row["goal"]))
+
+
+def _group_stats(goal_stats: list[Mapping[str, Any]]) -> dict[str, dict[str, Any]]:
+    grouped: dict[str, dict[str, Any]] = {}
+    for row in goal_stats:
+        group = str(row.get("group") or "custom")
+        bucket = grouped.setdefault(
+            group,
+            {
+                "goals": 0,
+                "total_runs": 0,
+                "total_success": 0,
+                "blocked_action_count": 0,
+                "fallback_action_count": 0,
+            },
+        )
+        bucket["goals"] += 1
+        bucket["total_runs"] += int(row.get("n_runs", 0))
+        bucket["total_success"] += int(row.get("n_success", 0))
+        bucket["blocked_action_count"] += int(row.get("blocked_action_count", 0))
+        bucket["fallback_action_count"] += int(row.get("fallback_action_count", 0))
+
+    ordered = {}
+    for group in sorted(grouped, key=_group_order):
+        bucket = grouped[group]
+        total_runs = bucket["total_runs"]
+        bucket["success_rate"] = round(bucket["total_success"] / total_runs, 3) if total_runs else 0.0
+        ordered[group] = bucket
+    return ordered
+
+
+def _error_type(result: Mapping[str, Any]) -> str:
+    termination = str(result.get("termination") or "unknown")
+    if termination == "no_valid_action":
+        return "fsm_no_executable_action"
+    if int(result.get("blocked_action_count", 0)) > 0:
+        return "blocked_by_verifier"
+    if termination == "max_steps":
+        return "max_steps"
+    return termination
+
+
+def _group_order(group: str) -> tuple[int, str]:
+    order = {
+        "Wooden": 0,
+        "Stone": 1,
+        "Iron": 2,
+        "Golden": 3,
+        "Diamond": 4,
+        "Redstone": 5,
+        "Armor": 6,
+    }
+    return order.get(group, 99), group
 
 
 def safe_name(value: str) -> str:

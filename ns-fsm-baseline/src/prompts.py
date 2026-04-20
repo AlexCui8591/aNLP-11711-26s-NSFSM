@@ -328,6 +328,9 @@ Validated FSM summary:
 == BLOCKED ACTION HISTORY ==
 {blocked_history}
 
+== LAST VERIFICATION ERROR ==
+{last_verification_error}
+
 == FALLBACK HISTORY ==
 {fallback_history}
 
@@ -358,6 +361,9 @@ def build_nsfsm_prompt(context_packet: dict) -> tuple:
         adapter_state_summary=context_packet.get("adapter_state_summary", ""),
         recent_history=format_nsfsm_records(context_packet.get("recent_history", [])),
         blocked_history=format_nsfsm_records(context_packet.get("blocked_history", [])),
+        last_verification_error=format_verification_error(
+            context_packet.get("last_verification_error", {})
+        ),
         fallback_history=format_nsfsm_records(context_packet.get("fallback_history", [])),
         compressed_memory=context_packet.get("compressed_memory", "(none)"),
         legal_actions=format_nsfsm_actions(context_packet.get("legal_actions", [])),
@@ -384,6 +390,24 @@ def format_transition_options(options: list) -> str:
         condition = option.get("condition", "")
         suffix = f" | condition: {condition}" if condition else ""
         lines.append(f"  - action={action} -> next_state={next_state}{suffix}")
+    return "\n".join(lines)
+
+
+def format_verification_error(error: dict) -> str:
+    if not error:
+        return "  (none)"
+    proposal = error.get("proposal", {})
+    rule = error.get("rule_check", {})
+    transition = error.get("transition_check", {})
+    lines = [
+        f"  rejected_action: {proposal.get('action')}",
+        f"  rejected_next_state: {proposal.get('next_state')}",
+        f"  rule_reason: {rule.get('reason_type')} - {rule.get('message')}",
+    ]
+    violations = transition.get("violations") or []
+    if violations:
+        lines.append(f"  transition_violations: {violations}")
+    lines.append("  Choose a different action from LEGAL NEXT ACTIONS exactly.")
     return "\n".join(lines)
 
 
