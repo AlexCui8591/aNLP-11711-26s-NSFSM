@@ -18,18 +18,28 @@ sys.path.insert(0, SRC)
 from datasets.registry import get_adapter, registry_warning
 from fsm_builder import FSMBuilder
 from fsm_designer import LLMFSMDesigner
+from llm_interface import LLMInterface
 from nsfsm_agent import NSFSMAgent
 
 
 def main() -> None:
     args = parse_args()
-    adapter = get_adapter(args.dataset)
+    if args.use_llm and args.planner_only:
+        raise SystemExit("--use-llm cannot be combined with --planner-only.")
+
+    adapter_kwargs: dict[str, Any] = {}
+    if args.dataset == "minecraft":
+        adapter_kwargs["task_source"] = args.minecraft_task_source
+        if args.minecraft_task_source_path:
+            adapter_kwargs["task_source_path"] = args.minecraft_task_source_path
+    adapter = get_adapter(args.dataset, **adapter_kwargs)
     warning = registry_warning(args.dataset, adapter)
     raw_tasks = select_tasks(adapter, args)
     if args.summary_only:
         print(json.dumps({"selected_tasks": len(raw_tasks)}, indent=2))
         return
 
+    llm = build_llm(args)
     output_dir = os.path.join(ROOT, "results", "full", args.tag, adapter.dataset_name, "nsfsm")
     os.makedirs(output_dir, exist_ok=True)
     results = []
@@ -53,14 +63,13 @@ def main() -> None:
                 task_spec=task_spec,
                 adapter=adapter,
                 use_fixed_generic_fsm=args.use_fixed_generic_fsm,
-                use_llm_fsm_design=args.use_llm_fsm_design,
-                config_path=args.config,
+                llm_config=args.llm_config or None,
             )
             result = NSFSMAgent(
                 task_spec=task_spec,
                 adapter=adapter,
                 fsm=fsm,
-                llm=runtime_llm,
+                llm=llm,
                 planner_only=args.planner_only,
                 max_llm_retries=args.max_llm_retries,
                 verbose=not args.quiet,
@@ -98,6 +107,17 @@ def main() -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dataset", default="generic")
+    parser.add_argument(
+        "--minecraft-task-source",
+        choices=["buildable", "goals_67"],
+        default="buildable",
+        help="Minecraft task source. Use buildable for the cleaned dependency-graph task set.",
+    )
+    parser.add_argument(
+        "--minecraft-task-source-path",
+        default="",
+        help="Optional path to the cleaned Minecraft buildable task JSON.",
+    )
     parser.add_argument("--task-type", default="")
     parser.add_argument("--task-ids", default="", help="Comma-separated task IDs.")
     parser.add_argument("--groups", default="", help="Comma-separated groups when supported.")
@@ -123,13 +143,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--save-fsm-design", action="store_true")
     parser.add_argument("--planner-only", action="store_true")
     parser.add_argument(
-        "--max-llm-retries",
-        type=int,
-        default=1,
-        help=(
-            "How many extra LLM action proposals to request after verifier "
-            "rejection before forcing a planner action from the legal list."
-        ),
+        "--use-llm",
+        action="store_true",
+        help="Use LLMInterface for NS-FSM action proposals. Without this, runs use planner fallback.",
+    )
+    parser.add_argument(
+        "--llm-config",
+        default="",
+        help="Optional YAML config path for LLMInterface and LLM FSM designer.",
     )
     parser.add_argument(
         "--instruction",
@@ -137,6 +158,15 @@ def parse_args() -> argparse.Namespace:
         help="Default generic instruction when dataset has no task list.",
     )
     return parser.parse_args()
+
+
+def build_llm(args: argparse.Namespace) -> Any | None:
+    if not args.use_llm:
+        return None
+    try:
+        return LLMInterface(args.llm_config or None)
+    except Exception as exc:
+        raise SystemExit(f"Failed to initialize LLMInterface: {exc}") from exc
 
 
 def select_tasks(adapter: Any, args: argparse.Namespace) -> list[dict[str, Any] | str]:
@@ -168,8 +198,7 @@ def build_runtime_fsm(
     task_spec: Mapping[str, Any],
     adapter: Any,
     use_fixed_generic_fsm: bool,
-    use_llm_fsm_design: bool,
-    config_path: str | None,
+    llm_config: str | None = None,
 ):
     builder = FSMBuilder()
     metadata: dict[str, Any] = {
@@ -194,8 +223,8 @@ def build_runtime_fsm(
         return fsm, metadata
 
     try:
-        proposal = LLMFSMDesigner(config_path=config_path).design_with_metadata(task_spec, adapter)
-        fsm = builder.from_design(proposal.fsm_design, task_spec, adapter, allow_fallback=False)
+        proposal = LLMFSMDesigner(config_path=llm_config).design_with_metadata(task_spec, adapter)
+        fsm = builder.from_design(proposal.fsm_design, task_spec, adapter, allow_fallback=True)
         metadata.update(
             {
                 "task_hash": proposal.task_hash,

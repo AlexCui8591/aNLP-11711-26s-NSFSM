@@ -1,0 +1,25 @@
+# NS-FSM PSC 32B rollout configuration.
+# Assumes a local OpenAI-compatible vLLM server at http://localhost:8000/v1.
+
+llm:
+  model_name: "Qwen/Qwen2.5-32B-Instruct"
+  backend: "vllm"
+  api_base: "http://localhost:8000/v1"
+  api_key: "psc_placeholder"
+  temperature: 0.2
+  max_retries: 2
+  timeout: 180
+
+env:
+  max_steps_per_episode: 160
+  num_runs: 3
+
+nsfsm:
+  task_source: "buildable"
+  use_template_fsm: true
+  save_fsm_design: false
+
+wandb:
+  project: "nsfsm-mctextworld"
+  entity: null
+  mode: "online"
