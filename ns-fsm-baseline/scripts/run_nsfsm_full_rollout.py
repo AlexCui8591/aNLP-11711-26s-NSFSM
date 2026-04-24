@@ -213,6 +213,7 @@ def run_one_episode(
             task_spec=task_spec,
             adapter=adapter,
             use_fixed_generic_fsm=not args.use_llm_fsm_designer,
+            use_llm_fsm_design=args.use_llm_fsm_designer,
             llm_config=args.config,
         )
         result = NSFSMAgent(

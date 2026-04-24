@@ -32,6 +32,14 @@ def main() -> None:
         adapter_kwargs["task_source"] = args.minecraft_task_source
         if args.minecraft_task_source_path:
             adapter_kwargs["task_source_path"] = args.minecraft_task_source_path
+    elif args.dataset == "robotouille":
+        adapter_kwargs["split"] = args.robotouille_split
+        if args.robotouille_ground_truth_path:
+            adapter_kwargs["ground_truth_path"] = args.robotouille_ground_truth_path
+        if args.robotouille_root:
+            adapter_kwargs["robotouille_root"] = args.robotouille_root
+        if args.robotouille_seed is not None:
+            adapter_kwargs["seed"] = args.robotouille_seed
     adapter = get_adapter(args.dataset, **adapter_kwargs)
     warning = registry_warning(args.dataset, adapter)
     raw_tasks = select_tasks(adapter, args)
@@ -43,8 +51,6 @@ def main() -> None:
     output_dir = os.path.join(ROOT, "results", "full", args.tag, adapter.dataset_name, "nsfsm")
     os.makedirs(output_dir, exist_ok=True)
     results = []
-    runtime_llm = None if args.planner_only else load_runtime_llm(args.config)
-
     for raw_task in raw_tasks:
         task_spec = adapter.to_task_spec(adapter.load_or_wrap(raw_task)).to_dict()
         if args.task_type:
@@ -63,6 +69,7 @@ def main() -> None:
                 task_spec=task_spec,
                 adapter=adapter,
                 use_fixed_generic_fsm=args.use_fixed_generic_fsm,
+                use_llm_fsm_design=args.use_llm_fsm_design,
                 llm_config=args.llm_config or None,
             )
             result = NSFSMAgent(
@@ -118,6 +125,27 @@ def parse_args() -> argparse.Namespace:
         default="",
         help="Optional path to the cleaned Minecraft buildable task JSON.",
     )
+    parser.add_argument(
+        "--robotouille-split",
+        choices=["asynchronous", "synchronous"],
+        default="asynchronous",
+    )
+    parser.add_argument(
+        "--robotouille-ground-truth-path",
+        default="",
+        help="Optional path to the Robotouille stateful ground-truth FSM JSON.",
+    )
+    parser.add_argument(
+        "--robotouille-root",
+        default="",
+        help="Optional path to the local Robotouille repository root.",
+    )
+    parser.add_argument(
+        "--robotouille-seed",
+        type=int,
+        default=None,
+        help="Override the Robotouille evaluation seed for single-task runs.",
+    )
     parser.add_argument("--task-type", default="")
     parser.add_argument("--task-ids", default="", help="Comma-separated task IDs.")
     parser.add_argument("--groups", default="", help="Comma-separated groups when supported.")
@@ -142,6 +170,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--save-fsm-design", action="store_true")
     parser.add_argument("--planner-only", action="store_true")
+    parser.add_argument("--max-llm-retries", type=int, default=1)
     parser.add_argument(
         "--use-llm",
         action="store_true",
@@ -198,6 +227,7 @@ def build_runtime_fsm(
     task_spec: Mapping[str, Any],
     adapter: Any,
     use_fixed_generic_fsm: bool,
+    use_llm_fsm_design: bool,
     llm_config: str | None = None,
 ):
     builder = FSMBuilder()
@@ -217,6 +247,19 @@ def build_runtime_fsm(
                 "source": "minecraft_grounded_rules",
                 "rule": "branching_dependency_dag_with_runtime_executable_filter",
                 "required_action_count": len(sequence),
+                "llm_fsm_error": None,
+            }
+        )
+        return fsm, metadata
+
+    if _use_robotouille_grounded_rules(task_spec, adapter, use_llm_fsm_design):
+        design = adapter.build_grounded_fsm_design(task_spec)
+        fsm = builder.from_design(design, task_spec, adapter, allow_fallback=False)
+        metadata.update(
+            {
+                "source": "robotouille_ground_truth_rules",
+                "rule": "stateful_ground_truth_with_runtime_executable_filter",
+                "required_action_count": len(task_spec.get("available_tools") or []),
                 "llm_fsm_error": None,
             }
         )
@@ -249,6 +292,21 @@ def _use_minecraft_grounded_rules(
         not use_llm_fsm_design
         and str(task_spec.get("dataset")) == "minecraft"
         and getattr(adapter, "dataset_name", "") == "minecraft"
+    )
+
+
+def _use_robotouille_grounded_rules(
+    task_spec: Mapping[str, Any],
+    adapter: Any,
+    use_llm_fsm_design: bool,
+) -> bool:
+    return (
+        not use_llm_fsm_design
+        and str(task_spec.get("dataset")) == "robotouille"
+        and getattr(adapter, "dataset_name", "") == "robotouille"
+        and task_spec.get("metadata", {}).get("grounded_fsm_mode")
+        == "robotouille_human_verified_task_graph"
+        and hasattr(adapter, "build_grounded_fsm_design")
     )
 
 

@@ -50,6 +50,17 @@ def get_adapter_cls(name: str | None) -> Type[DatasetAdapter]:
         except Exception:
             return GenericScenarioAdapter
 
+    if dataset_name == "robotouille":
+        try:
+            try:
+                from .robotouille import RobotouilleAdapter
+            except ImportError:  # pragma: no cover
+                from robotouille import RobotouilleAdapter
+            register_dataset("robotouille", RobotouilleAdapter)
+            return RobotouilleAdapter
+        except Exception:
+            return GenericScenarioAdapter
+
     if dataset_name in {"swe_bench", "swe-bench", "swebench"}:
         try:
             try:
@@ -76,6 +87,7 @@ def list_datasets() -> list[str]:
 
     names = set(DATASET_REGISTRY)
     names.add("minecraft")
+    names.add("robotouille")
     names.add("swe_bench")
     return sorted(names)
 

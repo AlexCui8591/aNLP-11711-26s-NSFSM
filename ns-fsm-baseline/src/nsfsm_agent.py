@@ -111,9 +111,10 @@ class NSFSMAgent:
 
             fsm_update = {"updated": False, "current_state": self.fsm.current_state}
             if adapter_success:
+                preferred_next_state = info.get("fsm_next_state") or decision.get("next_state")
                 fsm_update = self.fsm.update(
                     decision["action"],
-                    decision.get("next_state"),
+                    preferred_next_state,
                     info,
                 )
 
@@ -262,14 +263,20 @@ class NSFSMAgent:
         self,
         state: Mapping[str, Any],
     ) -> tuple[list[dict[str, Any]], list[str]]:
+        if hasattr(self.adapter, "set_runtime_fsm_state"):
+            try:
+                self.adapter.set_runtime_fsm_state(self.fsm.current_state)
+            except Exception:
+                pass
         static_options = self.fsm.get_valid_transitions()
-        if self.task_spec.get("dataset") != "minecraft":
-            return static_options, self.fsm.get_valid_actions()
 
         try:
             executable = set(self.adapter.get_available_tools(self.task_spec, state))
         except Exception:
             executable = set()
+
+        if self.task_spec.get("dataset") != "minecraft" and not executable:
+            return static_options, self.fsm.get_valid_actions()
 
         filtered_options = [
             dict(option)

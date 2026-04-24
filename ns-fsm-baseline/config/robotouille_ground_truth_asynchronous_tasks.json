@@ -1,0 +1,6596 @@
+{
+  "criterion": "candidate_async_task_graph_needs_human_verification",
+  "source": "Robotouille official ReAct evaluation config + environment JSON + domain/robotouille.json",
+  "split": "asynchronous",
+  "task_count": 10,
+  "tasks": [
+    {
+      "candidate_action_skeleton": [
+        {
+          "legal_action_templates": [
+            "move_to_bread",
+            "pick_up_bread",
+            "move_to_table",
+            "place_bread_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "bread",
+              "table"
+            ],
+            "ids": [
+              1,
+              2
+            ],
+            "predicate": "item_on"
+          },
+          "subgoal": "place bread at table"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_chicken",
+            "pick_up_chicken",
+            "move_to_stove",
+            "place_chicken_on_stove",
+            "cook_chicken",
+            "wait_until_chicken_cooked"
+          ],
+          "requires_async_wait": true,
+          "source_goal": {
+            "args": [
+              "chicken"
+            ],
+            "ids": [
+              3
+            ],
+            "predicate": "iscooked"
+          },
+          "subgoal": "cook chicken"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_chicken",
+            "pick_up_chicken",
+            "move_to_table",
+            "place_chicken_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "chicken",
+              "table"
+            ],
+            "ids": [
+              3,
+              2
+            ],
+            "predicate": "item_at"
+          },
+          "subgoal": "place chicken at table"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_cheese",
+            "pick_up_cheese",
+            "move_to_table",
+            "place_cheese_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "cheese",
+              "table"
+            ],
+            "ids": [
+              4,
+              2
+            ],
+            "predicate": "item_at"
+          },
+          "subgoal": "place cheese at table"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_bread",
+            "pick_up_bread",
+            "move_to_table",
+            "place_bread_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "bread",
+              "table"
+            ],
+            "ids": [
+              5,
+              2
+            ],
+            "predicate": "item_at"
+          },
+          "subgoal": "place bread at table"
+        },
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "bread"
+            ],
+            "ids": [
+              5
+            ],
+            "predicate": "clear"
+          },
+          "subgoal": "satisfy clear(bread)"
+        }
+      ],
+      "candidate_state_graph": {
+        "DONE": [],
+        "START": [
+          {
+            "action": "move_to_bread",
+            "condition": "Begin candidate subgoal: place bread at table",
+            "next_state": "SUBGOAL_1"
+          }
+        ],
+        "SUBGOAL_1": [
+          {
+            "action": "move_to_bread",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_1"
+          },
+          {
+            "action": "pick_up_bread",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_1"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_1"
+          },
+          {
+            "action": "place_bread_on_table",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_1"
+          },
+          {
+            "action": "move_to_chicken",
+            "condition": "Begin candidate subgoal: cook chicken",
+            "next_state": "SUBGOAL_2"
+          }
+        ],
+        "SUBGOAL_2": [
+          {
+            "action": "move_to_chicken",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "pick_up_chicken",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "move_to_stove",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "place_chicken_on_stove",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "cook_chicken",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "wait_until_chicken_cooked",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "continue_independent_subtask_while_waiting",
+            "condition": "Async branch: preserve cooking/frying state while doing useful work.",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "move_to_chicken",
+            "condition": "Begin candidate subgoal: place chicken at table",
+            "next_state": "SUBGOAL_3"
+          }
+        ],
+        "SUBGOAL_3": [
+          {
+            "action": "move_to_chicken",
+            "condition": "Candidate legal action for place chicken at table",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "pick_up_chicken",
+            "condition": "Candidate legal action for place chicken at table",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place chicken at table",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "place_chicken_on_table",
+            "condition": "Candidate legal action for place chicken at table",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "move_to_cheese",
+            "condition": "Begin candidate subgoal: place cheese at table",
+            "next_state": "SUBGOAL_4"
+          }
+        ],
+        "SUBGOAL_4": [
+          {
+            "action": "move_to_cheese",
+            "condition": "Candidate legal action for place cheese at table",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "pick_up_cheese",
+            "condition": "Candidate legal action for place cheese at table",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place cheese at table",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "place_cheese_on_table",
+            "condition": "Candidate legal action for place cheese at table",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "move_to_bread",
+            "condition": "Begin candidate subgoal: place bread at table",
+            "next_state": "SUBGOAL_5"
+          }
+        ],
+        "SUBGOAL_5": [
+          {
+            "action": "move_to_bread",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "pick_up_bread",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "place_bread_on_table",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_5"
+          }
+        ],
+        "SUBGOAL_6": [
+          {
+            "action": "verify_goal_complete",
+            "condition": "All candidate subgoals have been satisfied.",
+            "next_state": "DONE"
+          }
+        ]
+      },
+      "config": {
+        "cook_time": {
+          "default": 3
+        },
+        "num_cuts": {
+          "default": 3
+        }
+      },
+      "containers": [],
+      "dataset": "robotouille",
+      "domain_actions": [
+        "move",
+        "pick-up-item",
+        "place-item",
+        "pick-up-container",
+        "place-container",
+        "cook",
+        "cut",
+        "fry",
+        "fill-pot",
+        "boil-water",
+        "add-to",
+        "fill-bowl",
+        "stack",
+        "unstack",
+        "wait"
+      ],
+      "environment_name": "asynchronous/0_cheese_chicken_sandwich",
+      "environment_path": "Robotouille/environments/env_generator/examples/asynchronous/0_cheese_chicken_sandwich.json",
+      "fsm_mode": "robotouille_human_verified_task_graph",
+      "goal_description": "Prepare a cheese chicken sandwich on a table",
+      "goal_predicates": [
+        {
+          "args": [
+            "bread",
+            "table"
+          ],
+          "ids": [
+            1,
+            2
+          ],
+          "predicate": "item_on"
+        },
+        {
+          "args": [
+            "chicken"
+          ],
+          "ids": [
+            3
+          ],
+          "predicate": "iscooked"
+        },
+        {
+          "args": [
+            "chicken",
+            "table"
+          ],
+          "ids": [
+            3,
+            2
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "cheese",
+            "table"
+          ],
+          "ids": [
+            4,
+            2
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "bread",
+            "table"
+          ],
+          "ids": [
+            5,
+            2
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "bread"
+          ],
+          "ids": [
+            5
+          ],
+          "predicate": "clear"
+        }
+      ],
+      "group": "asynchronous",
+      "human_verified_actions": [],
+      "items": [
+        {
+          "name": "bread",
+          "stack-level": 0,
+          "x": 0,
+          "y": 1
+        },
+        {
+          "name": "bread",
+          "stack-level": 1,
+          "x": 0,
+          "y": 1
+        },
+        {
+          "name": "chicken",
+          "predicates": [
+            "iscookable"
+          ],
+          "stack-level": 0,
+          "x": 1,
+          "y": 3
+        },
+        {
+          "name": "cheese",
+          "stack-level": 0,
+          "x": 2,
+          "y": 3
+        }
+      ],
+      "meals": [],
+      "optimal_steps": 21,
+      "stations": [
+        {
+          "name": "table",
+          "x": 0,
+          "y": 1
+        },
+        {
+          "name": "stove",
+          "x": 3,
+          "y": 1
+        },
+        {
+          "name": "table",
+          "x": 1,
+          "y": 3
+        },
+        {
+          "name": "table",
+          "x": 2,
+          "y": 3
+        }
+      ],
+      "task_id": "robotouille/asynchronous/0_cheese_chicken_sandwich",
+      "testing_seeds": [
+        42,
+        84,
+        126,
+        168,
+        210,
+        252,
+        294,
+        336,
+        378,
+        420
+      ],
+      "verified_plan_status": "needs_human_verification"
+    },
+    {
+      "candidate_action_skeleton": [
+        {
+          "legal_action_templates": [
+            "move_to_bread",
+            "pick_up_bread",
+            "move_to_table",
+            "place_bread_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "bread",
+              "table"
+            ],
+            "ids": [
+              1,
+              2
+            ],
+            "predicate": "item_on"
+          },
+          "subgoal": "place bread at table"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_lettuce",
+            "pick_up_lettuce",
+            "move_to_board",
+            "place_lettuce_on_board",
+            "cut_lettuce",
+            "cut_lettuce",
+            "cut_lettuce"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "lettuce"
+            ],
+            "ids": [
+              3
+            ],
+            "predicate": "iscut"
+          },
+          "subgoal": "cut lettuce"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_lettuce",
+            "pick_up_lettuce",
+            "move_to_table",
+            "place_lettuce_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "lettuce",
+              "table"
+            ],
+            "ids": [
+              3,
+              2
+            ],
+            "predicate": "item_at"
+          },
+          "subgoal": "place lettuce at table"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_chicken",
+            "pick_up_chicken",
+            "move_to_stove",
+            "place_chicken_on_stove",
+            "cook_chicken",
+            "wait_until_chicken_cooked"
+          ],
+          "requires_async_wait": true,
+          "source_goal": {
+            "args": [
+              "chicken"
+            ],
+            "ids": [
+              4
+            ],
+            "predicate": "iscooked"
+          },
+          "subgoal": "cook chicken"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_chicken",
+            "pick_up_chicken",
+            "move_to_table",
+            "place_chicken_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "chicken",
+              "table"
+            ],
+            "ids": [
+              4,
+              2
+            ],
+            "predicate": "item_at"
+          },
+          "subgoal": "place chicken at table"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_bread",
+            "pick_up_bread",
+            "move_to_table",
+            "place_bread_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "bread",
+              "table"
+            ],
+            "ids": [
+              5,
+              2
+            ],
+            "predicate": "item_at"
+          },
+          "subgoal": "place bread at table"
+        },
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "bread"
+            ],
+            "ids": [
+              5
+            ],
+            "predicate": "clear"
+          },
+          "subgoal": "satisfy clear(bread)"
+        }
+      ],
+      "candidate_state_graph": {
+        "DONE": [],
+        "START": [
+          {
+            "action": "move_to_bread",
+            "condition": "Begin candidate subgoal: place bread at table",
+            "next_state": "SUBGOAL_1"
+          }
+        ],
+        "SUBGOAL_1": [
+          {
+            "action": "move_to_bread",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_1"
+          },
+          {
+            "action": "pick_up_bread",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_1"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_1"
+          },
+          {
+            "action": "place_bread_on_table",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_1"
+          },
+          {
+            "action": "move_to_lettuce",
+            "condition": "Begin candidate subgoal: cut lettuce",
+            "next_state": "SUBGOAL_2"
+          }
+        ],
+        "SUBGOAL_2": [
+          {
+            "action": "move_to_lettuce",
+            "condition": "Candidate legal action for cut lettuce",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "pick_up_lettuce",
+            "condition": "Candidate legal action for cut lettuce",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "move_to_board",
+            "condition": "Candidate legal action for cut lettuce",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "place_lettuce_on_board",
+            "condition": "Candidate legal action for cut lettuce",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "cut_lettuce",
+            "condition": "Candidate legal action for cut lettuce",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "cut_lettuce",
+            "condition": "Candidate legal action for cut lettuce",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "cut_lettuce",
+            "condition": "Candidate legal action for cut lettuce",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "move_to_lettuce",
+            "condition": "Begin candidate subgoal: place lettuce at table",
+            "next_state": "SUBGOAL_3"
+          }
+        ],
+        "SUBGOAL_3": [
+          {
+            "action": "move_to_lettuce",
+            "condition": "Candidate legal action for place lettuce at table",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "pick_up_lettuce",
+            "condition": "Candidate legal action for place lettuce at table",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place lettuce at table",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "place_lettuce_on_table",
+            "condition": "Candidate legal action for place lettuce at table",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "move_to_chicken",
+            "condition": "Begin candidate subgoal: cook chicken",
+            "next_state": "SUBGOAL_4"
+          }
+        ],
+        "SUBGOAL_4": [
+          {
+            "action": "move_to_chicken",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "pick_up_chicken",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "move_to_stove",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "place_chicken_on_stove",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "cook_chicken",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "wait_until_chicken_cooked",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "continue_independent_subtask_while_waiting",
+            "condition": "Async branch: preserve cooking/frying state while doing useful work.",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "move_to_chicken",
+            "condition": "Begin candidate subgoal: place chicken at table",
+            "next_state": "SUBGOAL_5"
+          }
+        ],
+        "SUBGOAL_5": [
+          {
+            "action": "move_to_chicken",
+            "condition": "Candidate legal action for place chicken at table",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "pick_up_chicken",
+            "condition": "Candidate legal action for place chicken at table",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place chicken at table",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "place_chicken_on_table",
+            "condition": "Candidate legal action for place chicken at table",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "move_to_bread",
+            "condition": "Begin candidate subgoal: place bread at table",
+            "next_state": "SUBGOAL_6"
+          }
+        ],
+        "SUBGOAL_6": [
+          {
+            "action": "move_to_bread",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_6"
+          },
+          {
+            "action": "pick_up_bread",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_6"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_6"
+          },
+          {
+            "action": "place_bread_on_table",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_6"
+          }
+        ],
+        "SUBGOAL_7": [
+          {
+            "action": "verify_goal_complete",
+            "condition": "All candidate subgoals have been satisfied.",
+            "next_state": "DONE"
+          }
+        ]
+      },
+      "config": {
+        "cook_time": {
+          "default": 3
+        },
+        "num_cuts": {
+          "default": 3
+        }
+      },
+      "containers": [],
+      "dataset": "robotouille",
+      "domain_actions": [
+        "move",
+        "pick-up-item",
+        "place-item",
+        "pick-up-container",
+        "place-container",
+        "cook",
+        "cut",
+        "fry",
+        "fill-pot",
+        "boil-water",
+        "add-to",
+        "fill-bowl",
+        "stack",
+        "unstack",
+        "wait"
+      ],
+      "environment_name": "asynchronous/1_lettuce_chicken_sandwich",
+      "environment_path": "Robotouille/environments/env_generator/examples/asynchronous/1_lettuce_chicken_sandwich.json",
+      "fsm_mode": "robotouille_human_verified_task_graph",
+      "goal_description": "Prepare a lettuce chicken sandwich on a table",
+      "goal_predicates": [
+        {
+          "args": [
+            "bread",
+            "table"
+          ],
+          "ids": [
+            1,
+            2
+          ],
+          "predicate": "item_on"
+        },
+        {
+          "args": [
+            "lettuce"
+          ],
+          "ids": [
+            3
+          ],
+          "predicate": "iscut"
+        },
+        {
+          "args": [
+            "lettuce",
+            "table"
+          ],
+          "ids": [
+            3,
+            2
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "chicken"
+          ],
+          "ids": [
+            4
+          ],
+          "predicate": "iscooked"
+        },
+        {
+          "args": [
+            "chicken",
+            "table"
+          ],
+          "ids": [
+            4,
+            2
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "bread",
+            "table"
+          ],
+          "ids": [
+            5,
+            2
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "bread"
+          ],
+          "ids": [
+            5
+          ],
+          "predicate": "clear"
+        }
+      ],
+      "group": "asynchronous",
+      "human_verified_actions": [],
+      "items": [
+        {
+          "name": "bread",
+          "stack-level": 0,
+          "x": 0,
+          "y": 1
+        },
+        {
+          "name": "bread",
+          "stack-level": 1,
+          "x": 0,
+          "y": 1
+        },
+        {
+          "name": "chicken",
+          "predicates": [
+            "iscookable"
+          ],
+          "stack-level": 0,
+          "x": 1,
+          "y": 3
+        },
+        {
+          "name": "lettuce",
+          "predicates": [
+            "iscuttable"
+          ],
+          "stack-level": 0,
+          "x": 2,
+          "y": 3
+        }
+      ],
+      "meals": [],
+      "optimal_steps": 27,
+      "stations": [
+        {
+          "name": "table",
+          "x": 0,
+          "y": 1
+        },
+        {
+          "name": "board",
+          "x": 2,
+          "y": 1
+        },
+        {
+          "name": "stove",
+          "x": 3,
+          "y": 1
+        },
+        {
+          "name": "table",
+          "x": 1,
+          "y": 3
+        },
+        {
+          "name": "table",
+          "x": 2,
+          "y": 3
+        }
+      ],
+      "task_id": "robotouille/asynchronous/1_lettuce_chicken_sandwich",
+      "testing_seeds": [
+        42,
+        84,
+        126,
+        168,
+        210,
+        252,
+        294,
+        336,
+        378,
+        420
+      ],
+      "verified_plan_status": "needs_human_verification"
+    },
+    {
+      "candidate_action_skeleton": [
+        {
+          "legal_action_templates": [
+            "move_to_bread",
+            "pick_up_bread",
+            "move_to_table",
+            "place_bread_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "bread",
+              "table"
+            ],
+            "ids": [
+              1,
+              2
+            ],
+            "predicate": "item_on"
+          },
+          "subgoal": "place bread at table"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_lettuce",
+            "pick_up_lettuce",
+            "move_to_board",
+            "place_lettuce_on_board",
+            "cut_lettuce",
+            "cut_lettuce",
+            "cut_lettuce"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "lettuce"
+            ],
+            "ids": [
+              3
+            ],
+            "predicate": "iscut"
+          },
+          "subgoal": "cut lettuce"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_lettuce",
+            "pick_up_lettuce",
+            "move_to_table",
+            "place_lettuce_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "lettuce",
+              "table"
+            ],
+            "ids": [
+              3,
+              2
+            ],
+            "predicate": "item_at"
+          },
+          "subgoal": "place lettuce at table"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_tomato",
+            "pick_up_tomato",
+            "move_to_board",
+            "place_tomato_on_board",
+            "cut_tomato",
+            "cut_tomato",
+            "cut_tomato"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "tomato"
+            ],
+            "ids": [
+              4
+            ],
+            "predicate": "iscut"
+          },
+          "subgoal": "cut tomato"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_tomato",
+            "pick_up_tomato",
+            "move_to_table",
+            "place_tomato_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "tomato",
+              "table"
+            ],
+            "ids": [
+              4,
+              2
+            ],
+            "predicate": "item_at"
+          },
+          "subgoal": "place tomato at table"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_chicken",
+            "pick_up_chicken",
+            "move_to_fryer",
+            "place_chicken_on_fryer",
+            "fry_chicken",
+            "wait_until_chicken_fried"
+          ],
+          "requires_async_wait": true,
+          "source_goal": {
+            "args": [
+              "chicken"
+            ],
+            "ids": [
+              5
+            ],
+            "predicate": "isfried"
+          },
+          "subgoal": "fry chicken"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_chicken",
+            "pick_up_chicken",
+            "move_to_table",
+            "place_chicken_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "chicken",
+              "table"
+            ],
+            "ids": [
+              5,
+              2
+            ],
+            "predicate": "item_at"
+          },
+          "subgoal": "place chicken at table"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_bread",
+            "pick_up_bread",
+            "move_to_table",
+            "place_bread_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "bread",
+              "table"
+            ],
+            "ids": [
+              6,
+              2
+            ],
+            "predicate": "item_at"
+          },
+          "subgoal": "place bread at table"
+        },
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "bread"
+            ],
+            "ids": [
+              6
+            ],
+            "predicate": "clear"
+          },
+          "subgoal": "satisfy clear(bread)"
+        }
+      ],
+      "candidate_state_graph": {
+        "DONE": [],
+        "START": [
+          {
+            "action": "move_to_bread",
+            "condition": "Begin candidate subgoal: place bread at table",
+            "next_state": "SUBGOAL_1"
+          }
+        ],
+        "SUBGOAL_1": [
+          {
+            "action": "move_to_bread",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_1"
+          },
+          {
+            "action": "pick_up_bread",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_1"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_1"
+          },
+          {
+            "action": "place_bread_on_table",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_1"
+          },
+          {
+            "action": "move_to_lettuce",
+            "condition": "Begin candidate subgoal: cut lettuce",
+            "next_state": "SUBGOAL_2"
+          }
+        ],
+        "SUBGOAL_2": [
+          {
+            "action": "move_to_lettuce",
+            "condition": "Candidate legal action for cut lettuce",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "pick_up_lettuce",
+            "condition": "Candidate legal action for cut lettuce",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "move_to_board",
+            "condition": "Candidate legal action for cut lettuce",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "place_lettuce_on_board",
+            "condition": "Candidate legal action for cut lettuce",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "cut_lettuce",
+            "condition": "Candidate legal action for cut lettuce",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "cut_lettuce",
+            "condition": "Candidate legal action for cut lettuce",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "cut_lettuce",
+            "condition": "Candidate legal action for cut lettuce",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "move_to_lettuce",
+            "condition": "Begin candidate subgoal: place lettuce at table",
+            "next_state": "SUBGOAL_3"
+          }
+        ],
+        "SUBGOAL_3": [
+          {
+            "action": "move_to_lettuce",
+            "condition": "Candidate legal action for place lettuce at table",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "pick_up_lettuce",
+            "condition": "Candidate legal action for place lettuce at table",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place lettuce at table",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "place_lettuce_on_table",
+            "condition": "Candidate legal action for place lettuce at table",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "move_to_tomato",
+            "condition": "Begin candidate subgoal: cut tomato",
+            "next_state": "SUBGOAL_4"
+          }
+        ],
+        "SUBGOAL_4": [
+          {
+            "action": "move_to_tomato",
+            "condition": "Candidate legal action for cut tomato",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "pick_up_tomato",
+            "condition": "Candidate legal action for cut tomato",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "move_to_board",
+            "condition": "Candidate legal action for cut tomato",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "place_tomato_on_board",
+            "condition": "Candidate legal action for cut tomato",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "cut_tomato",
+            "condition": "Candidate legal action for cut tomato",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "cut_tomato",
+            "condition": "Candidate legal action for cut tomato",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "cut_tomato",
+            "condition": "Candidate legal action for cut tomato",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "move_to_tomato",
+            "condition": "Begin candidate subgoal: place tomato at table",
+            "next_state": "SUBGOAL_5"
+          }
+        ],
+        "SUBGOAL_5": [
+          {
+            "action": "move_to_tomato",
+            "condition": "Candidate legal action for place tomato at table",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "pick_up_tomato",
+            "condition": "Candidate legal action for place tomato at table",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place tomato at table",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "place_tomato_on_table",
+            "condition": "Candidate legal action for place tomato at table",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "move_to_chicken",
+            "condition": "Begin candidate subgoal: fry chicken",
+            "next_state": "SUBGOAL_6"
+          }
+        ],
+        "SUBGOAL_6": [
+          {
+            "action": "move_to_chicken",
+            "condition": "Candidate legal action for fry chicken",
+            "next_state": "SUBGOAL_6"
+          },
+          {
+            "action": "pick_up_chicken",
+            "condition": "Candidate legal action for fry chicken",
+            "next_state": "SUBGOAL_6"
+          },
+          {
+            "action": "move_to_fryer",
+            "condition": "Candidate legal action for fry chicken",
+            "next_state": "SUBGOAL_6"
+          },
+          {
+            "action": "place_chicken_on_fryer",
+            "condition": "Candidate legal action for fry chicken",
+            "next_state": "SUBGOAL_6"
+          },
+          {
+            "action": "fry_chicken",
+            "condition": "Candidate legal action for fry chicken",
+            "next_state": "SUBGOAL_6"
+          },
+          {
+            "action": "wait_until_chicken_fried",
+            "condition": "Candidate legal action for fry chicken",
+            "next_state": "SUBGOAL_6"
+          },
+          {
+            "action": "continue_independent_subtask_while_waiting",
+            "condition": "Async branch: preserve cooking/frying state while doing useful work.",
+            "next_state": "SUBGOAL_6"
+          },
+          {
+            "action": "move_to_chicken",
+            "condition": "Begin candidate subgoal: place chicken at table",
+            "next_state": "SUBGOAL_7"
+          }
+        ],
+        "SUBGOAL_7": [
+          {
+            "action": "move_to_chicken",
+            "condition": "Candidate legal action for place chicken at table",
+            "next_state": "SUBGOAL_7"
+          },
+          {
+            "action": "pick_up_chicken",
+            "condition": "Candidate legal action for place chicken at table",
+            "next_state": "SUBGOAL_7"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place chicken at table",
+            "next_state": "SUBGOAL_7"
+          },
+          {
+            "action": "place_chicken_on_table",
+            "condition": "Candidate legal action for place chicken at table",
+            "next_state": "SUBGOAL_7"
+          },
+          {
+            "action": "move_to_bread",
+            "condition": "Begin candidate subgoal: place bread at table",
+            "next_state": "SUBGOAL_8"
+          }
+        ],
+        "SUBGOAL_8": [
+          {
+            "action": "move_to_bread",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_8"
+          },
+          {
+            "action": "pick_up_bread",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_8"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_8"
+          },
+          {
+            "action": "place_bread_on_table",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_8"
+          }
+        ],
+        "SUBGOAL_9": [
+          {
+            "action": "verify_goal_complete",
+            "condition": "All candidate subgoals have been satisfied.",
+            "next_state": "DONE"
+          }
+        ]
+      },
+      "config": {
+        "cook_time": {
+          "default": 3
+        },
+        "num_cuts": {
+          "default": 3
+        }
+      },
+      "containers": [],
+      "dataset": "robotouille",
+      "domain_actions": [
+        "move",
+        "pick-up-item",
+        "place-item",
+        "pick-up-container",
+        "place-container",
+        "cook",
+        "cut",
+        "fry",
+        "fill-pot",
+        "boil-water",
+        "add-to",
+        "fill-bowl",
+        "stack",
+        "unstack",
+        "wait"
+      ],
+      "environment_name": "asynchronous/2_lettuce_tomato_fried_chicken_sandwich",
+      "environment_path": "Robotouille/environments/env_generator/examples/asynchronous/2_lettuce_tomato_fried_chicken_sandwich.json",
+      "fsm_mode": "robotouille_human_verified_task_graph",
+      "goal_description": "Prepare a fried chicken sandwich with lettuce and tomato on a table",
+      "goal_predicates": [
+        {
+          "args": [
+            "bread",
+            "table"
+          ],
+          "ids": [
+            1,
+            2
+          ],
+          "predicate": "item_on"
+        },
+        {
+          "args": [
+            "lettuce"
+          ],
+          "ids": [
+            3
+          ],
+          "predicate": "iscut"
+        },
+        {
+          "args": [
+            "lettuce",
+            "table"
+          ],
+          "ids": [
+            3,
+            2
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "tomato"
+          ],
+          "ids": [
+            4
+          ],
+          "predicate": "iscut"
+        },
+        {
+          "args": [
+            "tomato",
+            "table"
+          ],
+          "ids": [
+            4,
+            2
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "chicken"
+          ],
+          "ids": [
+            5
+          ],
+          "predicate": "isfried"
+        },
+        {
+          "args": [
+            "chicken",
+            "table"
+          ],
+          "ids": [
+            5,
+            2
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "bread",
+            "table"
+          ],
+          "ids": [
+            6,
+            2
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "bread"
+          ],
+          "ids": [
+            6
+          ],
+          "predicate": "clear"
+        }
+      ],
+      "group": "asynchronous",
+      "human_verified_actions": [],
+      "items": [
+        {
+          "name": "bread",
+          "stack-level": 0,
+          "x": 0,
+          "y": 1
+        },
+        {
+          "name": "bread",
+          "stack-level": 1,
+          "x": 0,
+          "y": 1
+        },
+        {
+          "name": "chicken",
+          "predicates": [
+            "isfryable"
+          ],
+          "stack-level": 0,
+          "x": 1,
+          "y": 3
+        },
+        {
+          "name": "lettuce",
+          "predicates": [
+            "iscuttable"
+          ],
+          "stack-level": 0,
+          "x": 2,
+          "y": 3
+        },
+        {
+          "name": "tomato",
+          "predicates": [
+            "iscuttable"
+          ],
+          "stack-level": 0,
+          "x": 3,
+          "y": 3
+        }
+      ],
+      "meals": [],
+      "optimal_steps": 37,
+      "stations": [
+        {
+          "name": "table",
+          "x": 0,
+          "y": 1
+        },
+        {
+          "name": "board",
+          "x": 2,
+          "y": 1
+        },
+        {
+          "name": "fryer",
+          "x": 3,
+          "y": 1
+        },
+        {
+          "name": "table",
+          "x": 1,
+          "y": 3
+        },
+        {
+          "name": "table",
+          "x": 2,
+          "y": 3
+        },
+        {
+          "name": "table",
+          "x": 3,
+          "y": 3
+        }
+      ],
+      "task_id": "robotouille/asynchronous/2_lettuce_tomato_fried_chicken_sandwich",
+      "testing_seeds": [
+        42,
+        84,
+        126,
+        168,
+        210,
+        252,
+        294,
+        336,
+        378,
+        420
+      ],
+      "verified_plan_status": "needs_human_verification"
+    },
+    {
+      "candidate_action_skeleton": [
+        {
+          "legal_action_templates": [
+            "move_to_bottombun",
+            "pick_up_bottombun",
+            "move_to_table",
+            "place_bottombun_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "bottombun",
+              "table"
+            ],
+            "ids": [
+              1,
+              2
+            ],
+            "predicate": "item_on"
+          },
+          "subgoal": "place bottombun at table"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_patty",
+            "pick_up_patty",
+            "move_to_stove",
+            "place_patty_on_stove",
+            "cook_patty",
+            "wait_until_patty_cooked"
+          ],
+          "requires_async_wait": true,
+          "source_goal": {
+            "args": [
+              "patty"
+            ],
+            "ids": [
+              3
+            ],
+            "predicate": "iscooked"
+          },
+          "subgoal": "cook patty"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_patty",
+            "pick_up_patty",
+            "move_to_table",
+            "place_patty_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "patty",
+              "table"
+            ],
+            "ids": [
+              3,
+              2
+            ],
+            "predicate": "item_at"
+          },
+          "subgoal": "place patty at table"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_tomato",
+            "pick_up_tomato",
+            "move_to_board",
+            "place_tomato_on_board",
+            "cut_tomato",
+            "cut_tomato",
+            "cut_tomato"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "tomato"
+            ],
+            "ids": [
+              4
+            ],
+            "predicate": "iscut"
+          },
+          "subgoal": "cut tomato"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_tomato",
+            "pick_up_tomato",
+            "move_to_table",
+            "place_tomato_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "tomato",
+              "table"
+            ],
+            "ids": [
+              4,
+              2
+            ],
+            "predicate": "item_at"
+          },
+          "subgoal": "place tomato at table"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_topbun",
+            "pick_up_topbun",
+            "move_to_table",
+            "place_topbun_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "topbun",
+              "table"
+            ],
+            "ids": [
+              5,
+              2
+            ],
+            "predicate": "item_at"
+          },
+          "subgoal": "place topbun at table"
+        },
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "topbun"
+            ],
+            "ids": [
+              5
+            ],
+            "predicate": "clear"
+          },
+          "subgoal": "satisfy clear(topbun)"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_potato",
+            "pick_up_potato",
+            "move_to_board",
+            "place_potato_on_board",
+            "cut_potato",
+            "cut_potato",
+            "cut_potato"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "potato"
+            ],
+            "ids": [
+              6
+            ],
+            "predicate": "iscut"
+          },
+          "subgoal": "cut potato"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_potato",
+            "pick_up_potato",
+            "move_to_board",
+            "place_potato_on_board",
+            "cut_potato"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "potato"
+            ],
+            "ids": [
+              6
+            ],
+            "predicate": "isfried"
+          },
+          "subgoal": "cut potato before frying"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_potato",
+            "pick_up_potato",
+            "move_to_fryer",
+            "place_potato_on_fryer",
+            "fry_potato",
+            "wait_until_potato_fried"
+          ],
+          "requires_async_wait": true,
+          "source_goal": {
+            "args": [
+              "potato"
+            ],
+            "ids": [
+              6
+            ],
+            "predicate": "isfried"
+          },
+          "subgoal": "fry potato"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_potato",
+            "pick_up_potato",
+            "move_to_table",
+            "place_potato_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "potato",
+              "table"
+            ],
+            "ids": [
+              6,
+              7
+            ],
+            "predicate": "item_on"
+          },
+          "subgoal": "place potato at table"
+        }
+      ],
+      "candidate_state_graph": {
+        "DONE": [],
+        "START": [
+          {
+            "action": "move_to_bottombun",
+            "condition": "Begin candidate subgoal: place bottombun at table",
+            "next_state": "SUBGOAL_1"
+          }
+        ],
+        "SUBGOAL_1": [
+          {
+            "action": "move_to_bottombun",
+            "condition": "Candidate legal action for place bottombun at table",
+            "next_state": "SUBGOAL_1"
+          },
+          {
+            "action": "pick_up_bottombun",
+            "condition": "Candidate legal action for place bottombun at table",
+            "next_state": "SUBGOAL_1"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place bottombun at table",
+            "next_state": "SUBGOAL_1"
+          },
+          {
+            "action": "place_bottombun_on_table",
+            "condition": "Candidate legal action for place bottombun at table",
+            "next_state": "SUBGOAL_1"
+          },
+          {
+            "action": "move_to_patty",
+            "condition": "Begin candidate subgoal: cook patty",
+            "next_state": "SUBGOAL_2"
+          }
+        ],
+        "SUBGOAL_10": [
+          {
+            "action": "move_to_potato",
+            "condition": "Candidate legal action for fry potato",
+            "next_state": "SUBGOAL_10"
+          },
+          {
+            "action": "pick_up_potato",
+            "condition": "Candidate legal action for fry potato",
+            "next_state": "SUBGOAL_10"
+          },
+          {
+            "action": "move_to_fryer",
+            "condition": "Candidate legal action for fry potato",
+            "next_state": "SUBGOAL_10"
+          },
+          {
+            "action": "place_potato_on_fryer",
+            "condition": "Candidate legal action for fry potato",
+            "next_state": "SUBGOAL_10"
+          },
+          {
+            "action": "fry_potato",
+            "condition": "Candidate legal action for fry potato",
+            "next_state": "SUBGOAL_10"
+          },
+          {
+            "action": "wait_until_potato_fried",
+            "condition": "Candidate legal action for fry potato",
+            "next_state": "SUBGOAL_10"
+          },
+          {
+            "action": "continue_independent_subtask_while_waiting",
+            "condition": "Async branch: preserve cooking/frying state while doing useful work.",
+            "next_state": "SUBGOAL_10"
+          },
+          {
+            "action": "move_to_potato",
+            "condition": "Begin candidate subgoal: place potato at table",
+            "next_state": "SUBGOAL_11"
+          }
+        ],
+        "SUBGOAL_11": [
+          {
+            "action": "move_to_potato",
+            "condition": "Candidate legal action for place potato at table",
+            "next_state": "SUBGOAL_11"
+          },
+          {
+            "action": "pick_up_potato",
+            "condition": "Candidate legal action for place potato at table",
+            "next_state": "SUBGOAL_11"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place potato at table",
+            "next_state": "SUBGOAL_11"
+          },
+          {
+            "action": "place_potato_on_table",
+            "condition": "Candidate legal action for place potato at table",
+            "next_state": "SUBGOAL_11"
+          },
+          {
+            "action": "verify_goal_complete",
+            "condition": "All candidate subgoals have been satisfied.",
+            "next_state": "DONE"
+          }
+        ],
+        "SUBGOAL_2": [
+          {
+            "action": "move_to_patty",
+            "condition": "Candidate legal action for cook patty",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "pick_up_patty",
+            "condition": "Candidate legal action for cook patty",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "move_to_stove",
+            "condition": "Candidate legal action for cook patty",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "place_patty_on_stove",
+            "condition": "Candidate legal action for cook patty",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "cook_patty",
+            "condition": "Candidate legal action for cook patty",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "wait_until_patty_cooked",
+            "condition": "Candidate legal action for cook patty",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "continue_independent_subtask_while_waiting",
+            "condition": "Async branch: preserve cooking/frying state while doing useful work.",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "move_to_patty",
+            "condition": "Begin candidate subgoal: place patty at table",
+            "next_state": "SUBGOAL_3"
+          }
+        ],
+        "SUBGOAL_3": [
+          {
+            "action": "move_to_patty",
+            "condition": "Candidate legal action for place patty at table",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "pick_up_patty",
+            "condition": "Candidate legal action for place patty at table",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place patty at table",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "place_patty_on_table",
+            "condition": "Candidate legal action for place patty at table",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "move_to_tomato",
+            "condition": "Begin candidate subgoal: cut tomato",
+            "next_state": "SUBGOAL_4"
+          }
+        ],
+        "SUBGOAL_4": [
+          {
+            "action": "move_to_tomato",
+            "condition": "Candidate legal action for cut tomato",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "pick_up_tomato",
+            "condition": "Candidate legal action for cut tomato",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "move_to_board",
+            "condition": "Candidate legal action for cut tomato",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "place_tomato_on_board",
+            "condition": "Candidate legal action for cut tomato",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "cut_tomato",
+            "condition": "Candidate legal action for cut tomato",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "cut_tomato",
+            "condition": "Candidate legal action for cut tomato",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "cut_tomato",
+            "condition": "Candidate legal action for cut tomato",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "move_to_tomato",
+            "condition": "Begin candidate subgoal: place tomato at table",
+            "next_state": "SUBGOAL_5"
+          }
+        ],
+        "SUBGOAL_5": [
+          {
+            "action": "move_to_tomato",
+            "condition": "Candidate legal action for place tomato at table",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "pick_up_tomato",
+            "condition": "Candidate legal action for place tomato at table",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place tomato at table",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "place_tomato_on_table",
+            "condition": "Candidate legal action for place tomato at table",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "move_to_topbun",
+            "condition": "Begin candidate subgoal: place topbun at table",
+            "next_state": "SUBGOAL_6"
+          }
+        ],
+        "SUBGOAL_6": [
+          {
+            "action": "move_to_topbun",
+            "condition": "Candidate legal action for place topbun at table",
+            "next_state": "SUBGOAL_6"
+          },
+          {
+            "action": "pick_up_topbun",
+            "condition": "Candidate legal action for place topbun at table",
+            "next_state": "SUBGOAL_6"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place topbun at table",
+            "next_state": "SUBGOAL_6"
+          },
+          {
+            "action": "place_topbun_on_table",
+            "condition": "Candidate legal action for place topbun at table",
+            "next_state": "SUBGOAL_6"
+          }
+        ],
+        "SUBGOAL_7": [
+          {
+            "action": "move_to_potato",
+            "condition": "Begin candidate subgoal: cut potato",
+            "next_state": "SUBGOAL_8"
+          }
+        ],
+        "SUBGOAL_8": [
+          {
+            "action": "move_to_potato",
+            "condition": "Candidate legal action for cut potato",
+            "next_state": "SUBGOAL_8"
+          },
+          {
+            "action": "pick_up_potato",
+            "condition": "Candidate legal action for cut potato",
+            "next_state": "SUBGOAL_8"
+          },
+          {
+            "action": "move_to_board",
+            "condition": "Candidate legal action for cut potato",
+            "next_state": "SUBGOAL_8"
+          },
+          {
+            "action": "place_potato_on_board",
+            "condition": "Candidate legal action for cut potato",
+            "next_state": "SUBGOAL_8"
+          },
+          {
+            "action": "cut_potato",
+            "condition": "Candidate legal action for cut potato",
+            "next_state": "SUBGOAL_8"
+          },
+          {
+            "action": "cut_potato",
+            "condition": "Candidate legal action for cut potato",
+            "next_state": "SUBGOAL_8"
+          },
+          {
+            "action": "cut_potato",
+            "condition": "Candidate legal action for cut potato",
+            "next_state": "SUBGOAL_8"
+          },
+          {
+            "action": "move_to_potato",
+            "condition": "Begin candidate subgoal: cut potato before frying",
+            "next_state": "SUBGOAL_9"
+          }
+        ],
+        "SUBGOAL_9": [
+          {
+            "action": "move_to_potato",
+            "condition": "Candidate legal action for cut potato before frying",
+            "next_state": "SUBGOAL_9"
+          },
+          {
+            "action": "pick_up_potato",
+            "condition": "Candidate legal action for cut potato before frying",
+            "next_state": "SUBGOAL_9"
+          },
+          {
+            "action": "move_to_board",
+            "condition": "Candidate legal action for cut potato before frying",
+            "next_state": "SUBGOAL_9"
+          },
+          {
+            "action": "place_potato_on_board",
+            "condition": "Candidate legal action for cut potato before frying",
+            "next_state": "SUBGOAL_9"
+          },
+          {
+            "action": "cut_potato",
+            "condition": "Candidate legal action for cut potato before frying",
+            "next_state": "SUBGOAL_9"
+          },
+          {
+            "action": "move_to_potato",
+            "condition": "Begin candidate subgoal: fry potato",
+            "next_state": "SUBGOAL_10"
+          }
+        ]
+      },
+      "config": {
+        "cook_time": {
+          "default": 3
+        },
+        "num_cuts": {
+          "default": 3
+        }
+      },
+      "containers": [],
+      "dataset": "robotouille",
+      "domain_actions": [
+        "move",
+        "pick-up-item",
+        "place-item",
+        "pick-up-container",
+        "place-container",
+        "cook",
+        "cut",
+        "fry",
+        "fill-pot",
+        "boil-water",
+        "add-to",
+        "fill-bowl",
+        "stack",
+        "unstack",
+        "wait"
+      ],
+      "environment_name": "asynchronous/3_tomato_burger_and_fries",
+      "environment_path": "Robotouille/environments/env_generator/examples/asynchronous/3_tomato_burger_and_fries.json",
+      "fsm_mode": "robotouille_human_verified_task_graph",
+      "goal_description": "Prepare a tomato burger and fries on separate tables",
+      "goal_predicates": [
+        {
+          "args": [
+            "bottombun",
+            "table"
+          ],
+          "ids": [
+            1,
+            2
+          ],
+          "predicate": "item_on"
+        },
+        {
+          "args": [
+            "patty"
+          ],
+          "ids": [
+            3
+          ],
+          "predicate": "iscooked"
+        },
+        {
+          "args": [
+            "patty",
+            "table"
+          ],
+          "ids": [
+            3,
+            2
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "tomato"
+          ],
+          "ids": [
+            4
+          ],
+          "predicate": "iscut"
+        },
+        {
+          "args": [
+            "tomato",
+            "table"
+          ],
+          "ids": [
+            4,
+            2
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "topbun",
+            "table"
+          ],
+          "ids": [
+            5,
+            2
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "topbun"
+          ],
+          "ids": [
+            5
+          ],
+          "predicate": "clear"
+        },
+        {
+          "args": [
+            "potato"
+          ],
+          "ids": [
+            6
+          ],
+          "predicate": "iscut"
+        },
+        {
+          "args": [
+            "potato"
+          ],
+          "ids": [
+            6
+          ],
+          "predicate": "isfried"
+        },
+        {
+          "args": [
+            "potato",
+            "table"
+          ],
+          "ids": [
+            6,
+            7
+          ],
+          "predicate": "item_on"
+        }
+      ],
+      "group": "asynchronous",
+      "human_verified_actions": [],
+      "items": [
+        {
+          "name": "bottombun",
+          "stack-level": 0,
+          "x": 0,
+          "y": 1
+        },
+        {
+          "name": "topbun",
+          "stack-level": 1,
+          "x": 0,
+          "y": 1
+        },
+        {
+          "name": "potato",
+          "predicates": [
+            "iscuttable",
+            "isfryableifcut"
+          ],
+          "stack-level": 0,
+          "x": 2,
+          "y": 3
+        },
+        {
+          "name": "tomato",
+          "predicates": [
+            "iscuttable"
+          ],
+          "stack-level": 0,
+          "x": 4,
+          "y": 1
+        },
+        {
+          "name": "patty",
+          "predicates": [
+            "iscookable"
+          ],
+          "stack-level": 0,
+          "x": 3,
+          "y": 3
+        }
+      ],
+      "meals": [],
+      "optimal_steps": 42,
+      "stations": [
+        {
+          "name": "table",
+          "x": 0,
+          "y": 1
+        },
+        {
+          "name": "table",
+          "x": 2,
+          "y": 3
+        },
+        {
+          "name": "stove",
+          "x": 1,
+          "y": 1
+        },
+        {
+          "name": "board",
+          "x": 2,
+          "y": 1
+        },
+        {
+          "name": "table",
+          "x": 3,
+          "y": 3
+        },
+        {
+          "name": "fryer",
+          "x": 3,
+          "y": 1
+        },
+        {
+          "name": "table",
+          "x": 4,
+          "y": 1
+        }
+      ],
+      "task_id": "robotouille/asynchronous/3_tomato_burger_and_fries",
+      "testing_seeds": [
+        42,
+        84,
+        126,
+        168,
+        210,
+        252,
+        294,
+        336,
+        378,
+        420
+      ],
+      "verified_plan_status": "needs_human_verification"
+    },
+    {
+      "candidate_action_skeleton": [
+        {
+          "legal_action_templates": [
+            "move_to_bottombun",
+            "pick_up_bottombun",
+            "move_to_table",
+            "place_bottombun_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "bottombun",
+              "table"
+            ],
+            "ids": [
+              1,
+              2
+            ],
+            "predicate": "item_on"
+          },
+          "subgoal": "place bottombun at table"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_patty",
+            "pick_up_patty",
+            "move_to_stove",
+            "place_patty_on_stove",
+            "cook_patty",
+            "wait_until_patty_cooked"
+          ],
+          "requires_async_wait": true,
+          "source_goal": {
+            "args": [
+              "patty"
+            ],
+            "ids": [
+              3
+            ],
+            "predicate": "iscooked"
+          },
+          "subgoal": "cook patty"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_patty",
+            "pick_up_patty",
+            "move_to_table",
+            "place_patty_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "patty",
+              "table"
+            ],
+            "ids": [
+              3,
+              2
+            ],
+            "predicate": "item_at"
+          },
+          "subgoal": "place patty at table"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_onion",
+            "pick_up_onion",
+            "move_to_board",
+            "place_onion_on_board",
+            "cut_onion",
+            "cut_onion",
+            "cut_onion"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "onion"
+            ],
+            "ids": [
+              4
+            ],
+            "predicate": "iscut"
+          },
+          "subgoal": "cut onion"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_onion",
+            "pick_up_onion",
+            "move_to_table",
+            "place_onion_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "onion",
+              "table"
+            ],
+            "ids": [
+              4,
+              2
+            ],
+            "predicate": "item_at"
+          },
+          "subgoal": "place onion at table"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_cheese",
+            "pick_up_cheese",
+            "move_to_table",
+            "place_cheese_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "cheese",
+              "table"
+            ],
+            "ids": [
+              5,
+              2
+            ],
+            "predicate": "item_at"
+          },
+          "subgoal": "place cheese at table"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_topbun",
+            "pick_up_topbun",
+            "move_to_table",
+            "place_topbun_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "topbun",
+              "table"
+            ],
+            "ids": [
+              6,
+              2
+            ],
+            "predicate": "item_at"
+          },
+          "subgoal": "place topbun at table"
+        },
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "topbun"
+            ],
+            "ids": [
+              6
+            ],
+            "predicate": "clear"
+          },
+          "subgoal": "satisfy clear(topbun)"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_onion",
+            "pick_up_onion",
+            "move_to_board",
+            "place_onion_on_board",
+            "cut_onion"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "onion"
+            ],
+            "ids": [
+              7
+            ],
+            "predicate": "isfried"
+          },
+          "subgoal": "cut onion before frying"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_onion",
+            "pick_up_onion",
+            "move_to_fryer",
+            "place_onion_on_fryer",
+            "fry_onion",
+            "wait_until_onion_fried"
+          ],
+          "requires_async_wait": true,
+          "source_goal": {
+            "args": [
+              "onion"
+            ],
+            "ids": [
+              7
+            ],
+            "predicate": "isfried"
+          },
+          "subgoal": "fry onion"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_onion",
+            "pick_up_onion",
+            "move_to_table",
+            "place_onion_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "onion",
+              "table"
+            ],
+            "ids": [
+              7,
+              8
+            ],
+            "predicate": "item_on"
+          },
+          "subgoal": "place onion at table"
+        }
+      ],
+      "candidate_state_graph": {
+        "DONE": [],
+        "START": [
+          {
+            "action": "move_to_bottombun",
+            "condition": "Begin candidate subgoal: place bottombun at table",
+            "next_state": "SUBGOAL_1"
+          }
+        ],
+        "SUBGOAL_1": [
+          {
+            "action": "move_to_bottombun",
+            "condition": "Candidate legal action for place bottombun at table",
+            "next_state": "SUBGOAL_1"
+          },
+          {
+            "action": "pick_up_bottombun",
+            "condition": "Candidate legal action for place bottombun at table",
+            "next_state": "SUBGOAL_1"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place bottombun at table",
+            "next_state": "SUBGOAL_1"
+          },
+          {
+            "action": "place_bottombun_on_table",
+            "condition": "Candidate legal action for place bottombun at table",
+            "next_state": "SUBGOAL_1"
+          },
+          {
+            "action": "move_to_patty",
+            "condition": "Begin candidate subgoal: cook patty",
+            "next_state": "SUBGOAL_2"
+          }
+        ],
+        "SUBGOAL_10": [
+          {
+            "action": "move_to_onion",
+            "condition": "Candidate legal action for fry onion",
+            "next_state": "SUBGOAL_10"
+          },
+          {
+            "action": "pick_up_onion",
+            "condition": "Candidate legal action for fry onion",
+            "next_state": "SUBGOAL_10"
+          },
+          {
+            "action": "move_to_fryer",
+            "condition": "Candidate legal action for fry onion",
+            "next_state": "SUBGOAL_10"
+          },
+          {
+            "action": "place_onion_on_fryer",
+            "condition": "Candidate legal action for fry onion",
+            "next_state": "SUBGOAL_10"
+          },
+          {
+            "action": "fry_onion",
+            "condition": "Candidate legal action for fry onion",
+            "next_state": "SUBGOAL_10"
+          },
+          {
+            "action": "wait_until_onion_fried",
+            "condition": "Candidate legal action for fry onion",
+            "next_state": "SUBGOAL_10"
+          },
+          {
+            "action": "continue_independent_subtask_while_waiting",
+            "condition": "Async branch: preserve cooking/frying state while doing useful work.",
+            "next_state": "SUBGOAL_10"
+          },
+          {
+            "action": "move_to_onion",
+            "condition": "Begin candidate subgoal: place onion at table",
+            "next_state": "SUBGOAL_11"
+          }
+        ],
+        "SUBGOAL_11": [
+          {
+            "action": "move_to_onion",
+            "condition": "Candidate legal action for place onion at table",
+            "next_state": "SUBGOAL_11"
+          },
+          {
+            "action": "pick_up_onion",
+            "condition": "Candidate legal action for place onion at table",
+            "next_state": "SUBGOAL_11"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place onion at table",
+            "next_state": "SUBGOAL_11"
+          },
+          {
+            "action": "place_onion_on_table",
+            "condition": "Candidate legal action for place onion at table",
+            "next_state": "SUBGOAL_11"
+          },
+          {
+            "action": "verify_goal_complete",
+            "condition": "All candidate subgoals have been satisfied.",
+            "next_state": "DONE"
+          }
+        ],
+        "SUBGOAL_2": [
+          {
+            "action": "move_to_patty",
+            "condition": "Candidate legal action for cook patty",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "pick_up_patty",
+            "condition": "Candidate legal action for cook patty",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "move_to_stove",
+            "condition": "Candidate legal action for cook patty",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "place_patty_on_stove",
+            "condition": "Candidate legal action for cook patty",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "cook_patty",
+            "condition": "Candidate legal action for cook patty",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "wait_until_patty_cooked",
+            "condition": "Candidate legal action for cook patty",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "continue_independent_subtask_while_waiting",
+            "condition": "Async branch: preserve cooking/frying state while doing useful work.",
+            "next_state": "SUBGOAL_2"
+          },
+          {
+            "action": "move_to_patty",
+            "condition": "Begin candidate subgoal: place patty at table",
+            "next_state": "SUBGOAL_3"
+          }
+        ],
+        "SUBGOAL_3": [
+          {
+            "action": "move_to_patty",
+            "condition": "Candidate legal action for place patty at table",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "pick_up_patty",
+            "condition": "Candidate legal action for place patty at table",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place patty at table",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "place_patty_on_table",
+            "condition": "Candidate legal action for place patty at table",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "move_to_onion",
+            "condition": "Begin candidate subgoal: cut onion",
+            "next_state": "SUBGOAL_4"
+          }
+        ],
+        "SUBGOAL_4": [
+          {
+            "action": "move_to_onion",
+            "condition": "Candidate legal action for cut onion",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "pick_up_onion",
+            "condition": "Candidate legal action for cut onion",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "move_to_board",
+            "condition": "Candidate legal action for cut onion",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "place_onion_on_board",
+            "condition": "Candidate legal action for cut onion",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "cut_onion",
+            "condition": "Candidate legal action for cut onion",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "cut_onion",
+            "condition": "Candidate legal action for cut onion",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "cut_onion",
+            "condition": "Candidate legal action for cut onion",
+            "next_state": "SUBGOAL_4"
+          },
+          {
+            "action": "move_to_onion",
+            "condition": "Begin candidate subgoal: place onion at table",
+            "next_state": "SUBGOAL_5"
+          }
+        ],
+        "SUBGOAL_5": [
+          {
+            "action": "move_to_onion",
+            "condition": "Candidate legal action for place onion at table",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "pick_up_onion",
+            "condition": "Candidate legal action for place onion at table",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place onion at table",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "place_onion_on_table",
+            "condition": "Candidate legal action for place onion at table",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "move_to_cheese",
+            "condition": "Begin candidate subgoal: place cheese at table",
+            "next_state": "SUBGOAL_6"
+          }
+        ],
+        "SUBGOAL_6": [
+          {
+            "action": "move_to_cheese",
+            "condition": "Candidate legal action for place cheese at table",
+            "next_state": "SUBGOAL_6"
+          },
+          {
+            "action": "pick_up_cheese",
+            "condition": "Candidate legal action for place cheese at table",
+            "next_state": "SUBGOAL_6"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place cheese at table",
+            "next_state": "SUBGOAL_6"
+          },
+          {
+            "action": "place_cheese_on_table",
+            "condition": "Candidate legal action for place cheese at table",
+            "next_state": "SUBGOAL_6"
+          },
+          {
+            "action": "move_to_topbun",
+            "condition": "Begin candidate subgoal: place topbun at table",
+            "next_state": "SUBGOAL_7"
+          }
+        ],
+        "SUBGOAL_7": [
+          {
+            "action": "move_to_topbun",
+            "condition": "Candidate legal action for place topbun at table",
+            "next_state": "SUBGOAL_7"
+          },
+          {
+            "action": "pick_up_topbun",
+            "condition": "Candidate legal action for place topbun at table",
+            "next_state": "SUBGOAL_7"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place topbun at table",
+            "next_state": "SUBGOAL_7"
+          },
+          {
+            "action": "place_topbun_on_table",
+            "condition": "Candidate legal action for place topbun at table",
+            "next_state": "SUBGOAL_7"
+          }
+        ],
+        "SUBGOAL_8": [
+          {
+            "action": "move_to_onion",
+            "condition": "Begin candidate subgoal: cut onion before frying",
+            "next_state": "SUBGOAL_9"
+          }
+        ],
+        "SUBGOAL_9": [
+          {
+            "action": "move_to_onion",
+            "condition": "Candidate legal action for cut onion before frying",
+            "next_state": "SUBGOAL_9"
+          },
+          {
+            "action": "pick_up_onion",
+            "condition": "Candidate legal action for cut onion before frying",
+            "next_state": "SUBGOAL_9"
+          },
+          {
+            "action": "move_to_board",
+            "condition": "Candidate legal action for cut onion before frying",
+            "next_state": "SUBGOAL_9"
+          },
+          {
+            "action": "place_onion_on_board",
+            "condition": "Candidate legal action for cut onion before frying",
+            "next_state": "SUBGOAL_9"
+          },
+          {
+            "action": "cut_onion",
+            "condition": "Candidate legal action for cut onion before frying",
+            "next_state": "SUBGOAL_9"
+          },
+          {
+            "action": "move_to_onion",
+            "condition": "Begin candidate subgoal: fry onion",
+            "next_state": "SUBGOAL_10"
+          }
+        ]
+      },
+      "config": {
+        "cook_time": {
+          "default": 3
+        },
+        "num_cuts": {
+          "default": 3
+        }
+      },
+      "containers": [],
+      "dataset": "robotouille",
+      "domain_actions": [
+        "move",
+        "pick-up-item",
+        "place-item",
+        "pick-up-container",
+        "place-container",
+        "cook",
+        "cut",
+        "fry",
+        "fill-pot",
+        "boil-water",
+        "add-to",
+        "fill-bowl",
+        "stack",
+        "unstack",
+        "wait"
+      ],
+      "environment_name": "asynchronous/4_onion_cheese_burger_and_fried_onion",
+      "environment_path": "Robotouille/environments/env_generator/examples/asynchronous/4_onion_cheese_burger_and_fried_onion.json",
+      "fsm_mode": "robotouille_human_verified_task_graph",
+      "goal_description": "Prepare an onion cheese burger and fried onion rings on separate tables",
+      "goal_predicates": [
+        {
+          "args": [
+            "bottombun",
+            "table"
+          ],
+          "ids": [
+            1,
+            2
+          ],
+          "predicate": "item_on"
+        },
+        {
+          "args": [
+            "patty"
+          ],
+          "ids": [
+            3
+          ],
+          "predicate": "iscooked"
+        },
+        {
+          "args": [
+            "patty",
+            "table"
+          ],
+          "ids": [
+            3,
+            2
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "onion"
+          ],
+          "ids": [
+            4
+          ],
+          "predicate": "iscut"
+        },
+        {
+          "args": [
+            "onion",
+            "table"
+          ],
+          "ids": [
+            4,
+            2
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "cheese",
+            "table"
+          ],
+          "ids": [
+            5,
+            2
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "topbun",
+            "table"
+          ],
+          "ids": [
+            6,
+            2
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "topbun"
+          ],
+          "ids": [
+            6
+          ],
+          "predicate": "clear"
+        },
+        {
+          "args": [
+            "onion"
+          ],
+          "ids": [
+            7
+          ],
+          "predicate": "iscut"
+        },
+        {
+          "args": [
+            "onion"
+          ],
+          "ids": [
+            7
+          ],
+          "predicate": "isfried"
+        },
+        {
+          "args": [
+            "onion",
+            "table"
+          ],
+          "ids": [
+            7,
+            8
+          ],
+          "predicate": "item_on"
+        }
+      ],
+      "group": "asynchronous",
+      "human_verified_actions": [],
+      "items": [
+        {
+          "name": "bottombun",
+          "stack-level": 0,
+          "x": 0,
+          "y": 1
+        },
+        {
+          "name": "topbun",
+          "stack-level": 1,
+          "x": 0,
+          "y": 1
+        },
+        {
+          "name": "onion",
+          "predicates": [
+            "iscuttable",
+            "isfryableifcut"
+          ],
+          "stack-level": 0,
+          "x": 2,
+          "y": 3
+        },
+        {
+          "name": "onion",
+          "predicates": [
+            "iscuttable",
+            "isfryableifcut"
+          ],
+          "stack-level": 0,
+          "x": 4,
+          "y": 1
+        },
+        {
+          "name": "patty",
+          "predicates": [
+            "iscookable"
+          ],
+          "stack-level": 0,
+          "x": 3,
+          "y": 3
+        },
+        {
+          "name": "cheese",
+          "stack-level": 0,
+          "x": 4,
+          "y": 3
+        }
+      ],
+      "meals": [],
+      "optimal_steps": 46,
+      "stations": [
+        {
+          "name": "table",
+          "x": 0,
+          "y": 1
+        },
+        {
+          "name": "table",
+          "x": 2,
+          "y": 3
+        },
+        {
+          "name": "stove",
+          "x": 1,
+          "y": 1
+        },
+        {
+          "name": "board",
+          "x": 2,
+          "y": 1
+        },
+        {
+          "name": "table",
+          "x": 3,
+          "y": 3
+        },
+        {
+          "name": "fryer",
+          "x": 3,
+          "y": 1
+        },
+        {
+          "name": "table",
+          "x": 4,
+          "y": 1
+        },
+        {
+          "name": "table",
+          "x": 4,
+          "y": 3
+        }
+      ],
+      "task_id": "robotouille/asynchronous/4_onion_cheese_burger_and_fried_onion",
+      "testing_seeds": [
+        42,
+        84,
+        126,
+        168,
+        210,
+        252,
+        294,
+        336,
+        378,
+        420
+      ],
+      "verified_plan_status": "needs_human_verification"
+    },
+    {
+      "candidate_action_skeleton": [
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "water",
+              "bowl"
+            ],
+            "ids": [
+              1,
+              2
+            ],
+            "predicate": "in"
+          },
+          "subgoal": "satisfy in(water, bowl)"
+        },
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "potato",
+              "water"
+            ],
+            "ids": [
+              3,
+              1
+            ],
+            "predicate": "addedto"
+          },
+          "subgoal": "satisfy addedto(potato, water)"
+        },
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "water"
+            ],
+            "ids": [
+              1
+            ],
+            "predicate": "isboiling"
+          },
+          "subgoal": "satisfy isboiling(water)"
+        },
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "bowl",
+              "table"
+            ],
+            "ids": [
+              2,
+              4
+            ],
+            "predicate": "container_at"
+          },
+          "subgoal": "satisfy container_at(bowl, table)"
+        }
+      ],
+      "candidate_state_graph": {
+        "DONE": [],
+        "START": [],
+        "SUBGOAL_1": [],
+        "SUBGOAL_2": [],
+        "SUBGOAL_3": [],
+        "SUBGOAL_4": [
+          {
+            "action": "verify_goal_complete",
+            "condition": "All candidate subgoals have been satisfied.",
+            "next_state": "DONE"
+          }
+        ]
+      },
+      "config": {
+        "cook_time": {
+          "default": 3
+        },
+        "num_cuts": {
+          "default": 3
+        }
+      },
+      "containers": [
+        {
+          "name": "pot",
+          "x": 2,
+          "y": 1
+        },
+        {
+          "name": "bowl",
+          "x": 0,
+          "y": 3
+        }
+      ],
+      "dataset": "robotouille",
+      "domain_actions": [
+        "move",
+        "pick-up-item",
+        "place-item",
+        "pick-up-container",
+        "place-container",
+        "cook",
+        "cut",
+        "fry",
+        "fill-pot",
+        "boil-water",
+        "add-to",
+        "fill-bowl",
+        "stack",
+        "unstack",
+        "wait"
+      ],
+      "environment_name": "asynchronous/5_potato_soup",
+      "environment_path": "Robotouille/environments/env_generator/examples/asynchronous/5_potato_soup.json",
+      "fsm_mode": "robotouille_human_verified_task_graph",
+      "goal_description": "Make potato soup with a whole potato and serve into a bowl on a table.",
+      "goal_predicates": [
+        {
+          "args": [
+            "water",
+            "bowl"
+          ],
+          "ids": [
+            1,
+            2
+          ],
+          "predicate": "in"
+        },
+        {
+          "args": [
+            "potato",
+            "water"
+          ],
+          "ids": [
+            3,
+            1
+          ],
+          "predicate": "addedto"
+        },
+        {
+          "args": [
+            "water"
+          ],
+          "ids": [
+            1
+          ],
+          "predicate": "isboiling"
+        },
+        {
+          "args": [
+            "bowl",
+            "table"
+          ],
+          "ids": [
+            2,
+            4
+          ],
+          "predicate": "container_at"
+        }
+      ],
+      "group": "asynchronous",
+      "human_verified_actions": [],
+      "items": [
+        {
+          "name": "potato",
+          "predicates": [
+            "iscuttable"
+          ],
+          "stack-level": 0,
+          "x": 0,
+          "y": 1
+        }
+      ],
+      "meals": [],
+      "optimal_steps": 19,
+      "stations": [
+        {
+          "name": "table",
+          "x": 0,
+          "y": 1
+        },
+        {
+          "name": "stove",
+          "x": 1,
+          "y": 1
+        },
+        {
+          "name": "table",
+          "x": 2,
+          "y": 1
+        },
+        {
+          "name": "board",
+          "x": 3,
+          "y": 1
+        },
+        {
+          "name": "sink",
+          "x": 4,
+          "y": 1
+        },
+        {
+          "name": "table",
+          "x": 0,
+          "y": 3
+        }
+      ],
+      "task_id": "robotouille/asynchronous/5_potato_soup",
+      "testing_seeds": [
+        42,
+        84,
+        126,
+        168,
+        210,
+        252,
+        294,
+        336,
+        378,
+        420
+      ],
+      "verified_plan_status": "needs_human_verification"
+    },
+    {
+      "candidate_action_skeleton": [
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "water",
+              "bowl"
+            ],
+            "ids": [
+              1,
+              2
+            ],
+            "predicate": "in"
+          },
+          "subgoal": "satisfy in(water, bowl)"
+        },
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "water"
+            ],
+            "ids": [
+              1
+            ],
+            "predicate": "isboiling"
+          },
+          "subgoal": "satisfy isboiling(water)"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_onion",
+            "pick_up_onion",
+            "move_to_board",
+            "place_onion_on_board",
+            "cut_onion",
+            "cut_onion",
+            "cut_onion"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "onion"
+            ],
+            "ids": [
+              3
+            ],
+            "predicate": "iscut"
+          },
+          "subgoal": "cut onion"
+        },
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "onion",
+              "water"
+            ],
+            "ids": [
+              3,
+              1
+            ],
+            "predicate": "addedto"
+          },
+          "subgoal": "satisfy addedto(onion, water)"
+        },
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "bowl",
+              "table"
+            ],
+            "ids": [
+              2,
+              6
+            ],
+            "predicate": "container_at"
+          },
+          "subgoal": "satisfy container_at(bowl, table)"
+        }
+      ],
+      "candidate_state_graph": {
+        "DONE": [],
+        "START": [],
+        "SUBGOAL_1": [],
+        "SUBGOAL_2": [
+          {
+            "action": "move_to_onion",
+            "condition": "Begin candidate subgoal: cut onion",
+            "next_state": "SUBGOAL_3"
+          }
+        ],
+        "SUBGOAL_3": [
+          {
+            "action": "move_to_onion",
+            "condition": "Candidate legal action for cut onion",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "pick_up_onion",
+            "condition": "Candidate legal action for cut onion",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "move_to_board",
+            "condition": "Candidate legal action for cut onion",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "place_onion_on_board",
+            "condition": "Candidate legal action for cut onion",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "cut_onion",
+            "condition": "Candidate legal action for cut onion",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "cut_onion",
+            "condition": "Candidate legal action for cut onion",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "cut_onion",
+            "condition": "Candidate legal action for cut onion",
+            "next_state": "SUBGOAL_3"
+          }
+        ],
+        "SUBGOAL_4": [],
+        "SUBGOAL_5": [
+          {
+            "action": "verify_goal_complete",
+            "condition": "All candidate subgoals have been satisfied.",
+            "next_state": "DONE"
+          }
+        ]
+      },
+      "config": {
+        "cook_time": {
+          "default": 3
+        },
+        "num_cuts": {
+          "default": 3
+        }
+      },
+      "containers": [
+        {
+          "name": "pot",
+          "x": 2,
+          "y": 1
+        },
+        {
+          "name": "bowl",
+          "x": 0,
+          "y": 1
+        }
+      ],
+      "dataset": "robotouille",
+      "domain_actions": [
+        "move",
+        "pick-up-item",
+        "place-item",
+        "pick-up-container",
+        "place-container",
+        "cook",
+        "cut",
+        "fry",
+        "fill-pot",
+        "boil-water",
+        "add-to",
+        "fill-bowl",
+        "stack",
+        "unstack",
+        "wait"
+      ],
+      "environment_name": "asynchronous/6_onion_soup",
+      "environment_path": "Robotouille/environments/env_generator/examples/asynchronous/6_onion_soup.json",
+      "fsm_mode": "robotouille_human_verified_task_graph",
+      "goal_description": "Make onion soup with 3 cut onions and serve into a bowl on a table.",
+      "goal_predicates": [
+        {
+          "args": [
+            "water",
+            "bowl"
+          ],
+          "ids": [
+            1,
+            2
+          ],
+          "predicate": "in"
+        },
+        {
+          "args": [
+            "water"
+          ],
+          "ids": [
+            1
+          ],
+          "predicate": "isboiling"
+        },
+        {
+          "args": [
+            "onion"
+          ],
+          "ids": [
+            3
+          ],
+          "predicate": "iscut"
+        },
+        {
+          "args": [
+            "onion",
+            "water"
+          ],
+          "ids": [
+            3,
+            1
+          ],
+          "predicate": "addedto"
+        },
+        {
+          "args": [
+            "onion"
+          ],
+          "ids": [
+            4
+          ],
+          "predicate": "iscut"
+        },
+        {
+          "args": [
+            "onion",
+            "water"
+          ],
+          "ids": [
+            4,
+            1
+          ],
+          "predicate": "addedto"
+        },
+        {
+          "args": [
+            "onion"
+          ],
+          "ids": [
+            5
+          ],
+          "predicate": "iscut"
+        },
+        {
+          "args": [
+            "onion",
+            "water"
+          ],
+          "ids": [
+            5,
+            1
+          ],
+          "predicate": "addedto"
+        },
+        {
+          "args": [
+            "bowl",
+            "table"
+          ],
+          "ids": [
+            2,
+            6
+          ],
+          "predicate": "container_at"
+        }
+      ],
+      "group": "asynchronous",
+      "human_verified_actions": [],
+      "items": [
+        {
+          "name": "onion",
+          "predicates": [
+            "iscuttable"
+          ],
+          "stack-level": 0,
+          "x": 0,
+          "y": 3
+        },
+        {
+          "name": "onion",
+          "predicates": [
+            "iscuttable"
+          ],
+          "stack-level": 0,
+          "x": 1,
+          "y": 3
+        },
+        {
+          "name": "onion",
+          "predicates": [
+            "iscuttable"
+          ],
+          "stack-level": 0,
+          "x": 2,
+          "y": 3
+        }
+      ],
+      "meals": [],
+      "optimal_steps": 42,
+      "stations": [
+        {
+          "name": "table",
+          "x": 0,
+          "y": 1
+        },
+        {
+          "name": "stove",
+          "x": 1,
+          "y": 1
+        },
+        {
+          "name": "table",
+          "x": 2,
+          "y": 1
+        },
+        {
+          "name": "board",
+          "x": 3,
+          "y": 1
+        },
+        {
+          "name": "sink",
+          "x": 4,
+          "y": 1
+        },
+        {
+          "name": "table",
+          "x": 0,
+          "y": 3
+        },
+        {
+          "name": "table",
+          "x": 1,
+          "y": 3
+        },
+        {
+          "name": "table",
+          "x": 2,
+          "y": 3
+        }
+      ],
+      "task_id": "robotouille/asynchronous/6_onion_soup",
+      "testing_seeds": [
+        42,
+        84,
+        126,
+        168,
+        210,
+        252,
+        294,
+        336,
+        378,
+        420
+      ],
+      "verified_plan_status": "needs_human_verification"
+    },
+    {
+      "candidate_action_skeleton": [
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "water",
+              "bowl"
+            ],
+            "ids": [
+              1,
+              2
+            ],
+            "predicate": "in"
+          },
+          "subgoal": "satisfy in(water, bowl)"
+        },
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "water"
+            ],
+            "ids": [
+              1
+            ],
+            "predicate": "isboiling"
+          },
+          "subgoal": "satisfy isboiling(water)"
+        },
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "tomato",
+              "water"
+            ],
+            "ids": [
+              3,
+              1
+            ],
+            "predicate": "addedto"
+          },
+          "subgoal": "satisfy addedto(tomato, water)"
+        },
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "bowl",
+              "table"
+            ],
+            "ids": [
+              2,
+              4
+            ],
+            "predicate": "container_at"
+          },
+          "subgoal": "satisfy container_at(bowl, table)"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_bread",
+            "pick_up_bread",
+            "move_to_table",
+            "place_bread_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "bread",
+              "table"
+            ],
+            "ids": [
+              5,
+              6
+            ],
+            "predicate": "item_on"
+          },
+          "subgoal": "place bread at table"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_chicken",
+            "pick_up_chicken",
+            "move_to_stove",
+            "place_chicken_on_stove",
+            "cook_chicken",
+            "wait_until_chicken_cooked"
+          ],
+          "requires_async_wait": true,
+          "source_goal": {
+            "args": [
+              "chicken"
+            ],
+            "ids": [
+              7
+            ],
+            "predicate": "iscooked"
+          },
+          "subgoal": "cook chicken"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_chicken",
+            "pick_up_chicken",
+            "move_to_table",
+            "place_chicken_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "chicken",
+              "table"
+            ],
+            "ids": [
+              7,
+              6
+            ],
+            "predicate": "item_at"
+          },
+          "subgoal": "place chicken at table"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_lettuce",
+            "pick_up_lettuce",
+            "move_to_board",
+            "place_lettuce_on_board",
+            "cut_lettuce",
+            "cut_lettuce",
+            "cut_lettuce"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "lettuce"
+            ],
+            "ids": [
+              8
+            ],
+            "predicate": "iscut"
+          },
+          "subgoal": "cut lettuce"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_lettuce",
+            "pick_up_lettuce",
+            "move_to_table",
+            "place_lettuce_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "lettuce",
+              "table"
+            ],
+            "ids": [
+              8,
+              6
+            ],
+            "predicate": "item_at"
+          },
+          "subgoal": "place lettuce at table"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_bread",
+            "pick_up_bread",
+            "move_to_table",
+            "place_bread_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "bread",
+              "table"
+            ],
+            "ids": [
+              9,
+              6
+            ],
+            "predicate": "item_at"
+          },
+          "subgoal": "place bread at table"
+        },
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "bread"
+            ],
+            "ids": [
+              9
+            ],
+            "predicate": "clear"
+          },
+          "subgoal": "satisfy clear(bread)"
+        }
+      ],
+      "candidate_state_graph": {
+        "DONE": [],
+        "START": [],
+        "SUBGOAL_1": [],
+        "SUBGOAL_10": [
+          {
+            "action": "move_to_bread",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_10"
+          },
+          {
+            "action": "pick_up_bread",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_10"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_10"
+          },
+          {
+            "action": "place_bread_on_table",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_10"
+          }
+        ],
+        "SUBGOAL_11": [
+          {
+            "action": "verify_goal_complete",
+            "condition": "All candidate subgoals have been satisfied.",
+            "next_state": "DONE"
+          }
+        ],
+        "SUBGOAL_2": [],
+        "SUBGOAL_3": [],
+        "SUBGOAL_4": [
+          {
+            "action": "move_to_bread",
+            "condition": "Begin candidate subgoal: place bread at table",
+            "next_state": "SUBGOAL_5"
+          }
+        ],
+        "SUBGOAL_5": [
+          {
+            "action": "move_to_bread",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "pick_up_bread",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "place_bread_on_table",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "move_to_chicken",
+            "condition": "Begin candidate subgoal: cook chicken",
+            "next_state": "SUBGOAL_6"
+          }
+        ],
+        "SUBGOAL_6": [
+          {
+            "action": "move_to_chicken",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_6"
+          },
+          {
+            "action": "pick_up_chicken",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_6"
+          },
+          {
+            "action": "move_to_stove",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_6"
+          },
+          {
+            "action": "place_chicken_on_stove",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_6"
+          },
+          {
+            "action": "cook_chicken",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_6"
+          },
+          {
+            "action": "wait_until_chicken_cooked",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_6"
+          },
+          {
+            "action": "continue_independent_subtask_while_waiting",
+            "condition": "Async branch: preserve cooking/frying state while doing useful work.",
+            "next_state": "SUBGOAL_6"
+          },
+          {
+            "action": "move_to_chicken",
+            "condition": "Begin candidate subgoal: place chicken at table",
+            "next_state": "SUBGOAL_7"
+          }
+        ],
+        "SUBGOAL_7": [
+          {
+            "action": "move_to_chicken",
+            "condition": "Candidate legal action for place chicken at table",
+            "next_state": "SUBGOAL_7"
+          },
+          {
+            "action": "pick_up_chicken",
+            "condition": "Candidate legal action for place chicken at table",
+            "next_state": "SUBGOAL_7"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place chicken at table",
+            "next_state": "SUBGOAL_7"
+          },
+          {
+            "action": "place_chicken_on_table",
+            "condition": "Candidate legal action for place chicken at table",
+            "next_state": "SUBGOAL_7"
+          },
+          {
+            "action": "move_to_lettuce",
+            "condition": "Begin candidate subgoal: cut lettuce",
+            "next_state": "SUBGOAL_8"
+          }
+        ],
+        "SUBGOAL_8": [
+          {
+            "action": "move_to_lettuce",
+            "condition": "Candidate legal action for cut lettuce",
+            "next_state": "SUBGOAL_8"
+          },
+          {
+            "action": "pick_up_lettuce",
+            "condition": "Candidate legal action for cut lettuce",
+            "next_state": "SUBGOAL_8"
+          },
+          {
+            "action": "move_to_board",
+            "condition": "Candidate legal action for cut lettuce",
+            "next_state": "SUBGOAL_8"
+          },
+          {
+            "action": "place_lettuce_on_board",
+            "condition": "Candidate legal action for cut lettuce",
+            "next_state": "SUBGOAL_8"
+          },
+          {
+            "action": "cut_lettuce",
+            "condition": "Candidate legal action for cut lettuce",
+            "next_state": "SUBGOAL_8"
+          },
+          {
+            "action": "cut_lettuce",
+            "condition": "Candidate legal action for cut lettuce",
+            "next_state": "SUBGOAL_8"
+          },
+          {
+            "action": "cut_lettuce",
+            "condition": "Candidate legal action for cut lettuce",
+            "next_state": "SUBGOAL_8"
+          },
+          {
+            "action": "move_to_lettuce",
+            "condition": "Begin candidate subgoal: place lettuce at table",
+            "next_state": "SUBGOAL_9"
+          }
+        ],
+        "SUBGOAL_9": [
+          {
+            "action": "move_to_lettuce",
+            "condition": "Candidate legal action for place lettuce at table",
+            "next_state": "SUBGOAL_9"
+          },
+          {
+            "action": "pick_up_lettuce",
+            "condition": "Candidate legal action for place lettuce at table",
+            "next_state": "SUBGOAL_9"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place lettuce at table",
+            "next_state": "SUBGOAL_9"
+          },
+          {
+            "action": "place_lettuce_on_table",
+            "condition": "Candidate legal action for place lettuce at table",
+            "next_state": "SUBGOAL_9"
+          },
+          {
+            "action": "move_to_bread",
+            "condition": "Begin candidate subgoal: place bread at table",
+            "next_state": "SUBGOAL_10"
+          }
+        ]
+      },
+      "config": {
+        "cook_time": {
+          "default": 3
+        },
+        "num_cuts": {
+          "default": 3
+        }
+      },
+      "containers": [
+        {
+          "name": "pot",
+          "x": 2,
+          "y": 1
+        },
+        {
+          "name": "bowl",
+          "x": 0,
+          "y": 1
+        }
+      ],
+      "dataset": "robotouille",
+      "domain_actions": [
+        "move",
+        "pick-up-item",
+        "place-item",
+        "pick-up-container",
+        "place-container",
+        "cook",
+        "cut",
+        "fry",
+        "fill-pot",
+        "boil-water",
+        "add-to",
+        "fill-bowl",
+        "stack",
+        "unstack",
+        "wait"
+      ],
+      "environment_name": "asynchronous/7_tomato_soup_and_lettuce_chicken_sandwich",
+      "environment_path": "Robotouille/environments/env_generator/examples/asynchronous/7_tomato_soup_and_lettuce_chicken_sandwich.json",
+      "fsm_mode": "robotouille_human_verified_task_graph",
+      "goal_description": "Make tomato soup with a whole tomato served into a bowl on a table and a lettuce chicken sandwich on another table.",
+      "goal_predicates": [
+        {
+          "args": [
+            "water",
+            "bowl"
+          ],
+          "ids": [
+            1,
+            2
+          ],
+          "predicate": "in"
+        },
+        {
+          "args": [
+            "water"
+          ],
+          "ids": [
+            1
+          ],
+          "predicate": "isboiling"
+        },
+        {
+          "args": [
+            "tomato",
+            "water"
+          ],
+          "ids": [
+            3,
+            1
+          ],
+          "predicate": "addedto"
+        },
+        {
+          "args": [
+            "bowl",
+            "table"
+          ],
+          "ids": [
+            2,
+            4
+          ],
+          "predicate": "container_at"
+        },
+        {
+          "args": [
+            "bread",
+            "table"
+          ],
+          "ids": [
+            5,
+            6
+          ],
+          "predicate": "item_on"
+        },
+        {
+          "args": [
+            "chicken"
+          ],
+          "ids": [
+            7
+          ],
+          "predicate": "iscooked"
+        },
+        {
+          "args": [
+            "chicken",
+            "table"
+          ],
+          "ids": [
+            7,
+            6
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "lettuce"
+          ],
+          "ids": [
+            8
+          ],
+          "predicate": "iscut"
+        },
+        {
+          "args": [
+            "lettuce",
+            "table"
+          ],
+          "ids": [
+            8,
+            6
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "bread",
+            "table"
+          ],
+          "ids": [
+            9,
+            6
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "bread"
+          ],
+          "ids": [
+            9
+          ],
+          "predicate": "clear"
+        }
+      ],
+      "group": "asynchronous",
+      "human_verified_actions": [],
+      "items": [
+        {
+          "name": "tomato",
+          "predicates": [
+            "iscuttable"
+          ],
+          "stack-level": 0,
+          "x": 0,
+          "y": 3
+        },
+        {
+          "name": "lettuce",
+          "predicates": [
+            "iscuttable"
+          ],
+          "stack-level": 0,
+          "x": 1,
+          "y": 3
+        },
+        {
+          "name": "chicken",
+          "predicates": [
+            "iscookable"
+          ],
+          "stack-level": 0,
+          "x": 2,
+          "y": 3
+        },
+        {
+          "name": "bread",
+          "stack-level": 0,
+          "x": 3,
+          "y": 3
+        },
+        {
+          "name": "bread",
+          "stack-level": 1,
+          "x": 3,
+          "y": 3
+        }
+      ],
+      "meals": [],
+      "optimal_steps": 46,
+      "stations": [
+        {
+          "name": "table",
+          "x": 0,
+          "y": 1
+        },
+        {
+          "name": "stove",
+          "x": 1,
+          "y": 1
+        },
+        {
+          "name": "table",
+          "x": 2,
+          "y": 1
+        },
+        {
+          "name": "board",
+          "x": 3,
+          "y": 1
+        },
+        {
+          "name": "sink",
+          "x": 4,
+          "y": 1
+        },
+        {
+          "name": "table",
+          "x": 0,
+          "y": 3
+        },
+        {
+          "name": "table",
+          "x": 1,
+          "y": 3
+        },
+        {
+          "name": "table",
+          "x": 2,
+          "y": 3
+        },
+        {
+          "name": "table",
+          "x": 3,
+          "y": 3
+        }
+      ],
+      "task_id": "robotouille/asynchronous/7_tomato_soup_and_lettuce_chicken_sandwich",
+      "testing_seeds": [
+        42,
+        84,
+        126,
+        168,
+        210,
+        252,
+        294,
+        336,
+        378,
+        420
+      ],
+      "verified_plan_status": "needs_human_verification"
+    },
+    {
+      "candidate_action_skeleton": [
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "water",
+              "bowl"
+            ],
+            "ids": [
+              1,
+              2
+            ],
+            "predicate": "in"
+          },
+          "subgoal": "satisfy in(water, bowl)"
+        },
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "water"
+            ],
+            "ids": [
+              1
+            ],
+            "predicate": "isboiling"
+          },
+          "subgoal": "satisfy isboiling(water)"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_tomato",
+            "pick_up_tomato",
+            "move_to_board",
+            "place_tomato_on_board",
+            "cut_tomato",
+            "cut_tomato",
+            "cut_tomato"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "tomato"
+            ],
+            "ids": [
+              3
+            ],
+            "predicate": "iscut"
+          },
+          "subgoal": "cut tomato"
+        },
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "tomato",
+              "water"
+            ],
+            "ids": [
+              3,
+              1
+            ],
+            "predicate": "addedto"
+          },
+          "subgoal": "satisfy addedto(tomato, water)"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_onion",
+            "pick_up_onion",
+            "move_to_board",
+            "place_onion_on_board",
+            "cut_onion",
+            "cut_onion",
+            "cut_onion"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "onion"
+            ],
+            "ids": [
+              4
+            ],
+            "predicate": "iscut"
+          },
+          "subgoal": "cut onion"
+        },
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "onion",
+              "water"
+            ],
+            "ids": [
+              4,
+              1
+            ],
+            "predicate": "addedto"
+          },
+          "subgoal": "satisfy addedto(onion, water)"
+        },
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "bowl",
+              "table"
+            ],
+            "ids": [
+              2,
+              5
+            ],
+            "predicate": "container_at"
+          },
+          "subgoal": "satisfy container_at(bowl, table)"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_bread",
+            "pick_up_bread",
+            "move_to_table",
+            "place_bread_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "bread",
+              "table"
+            ],
+            "ids": [
+              6,
+              7
+            ],
+            "predicate": "item_on"
+          },
+          "subgoal": "place bread at table"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_chicken",
+            "pick_up_chicken",
+            "move_to_stove",
+            "place_chicken_on_stove",
+            "cook_chicken",
+            "wait_until_chicken_cooked"
+          ],
+          "requires_async_wait": true,
+          "source_goal": {
+            "args": [
+              "chicken"
+            ],
+            "ids": [
+              8
+            ],
+            "predicate": "iscooked"
+          },
+          "subgoal": "cook chicken"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_chicken",
+            "pick_up_chicken",
+            "move_to_table",
+            "place_chicken_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "chicken",
+              "table"
+            ],
+            "ids": [
+              8,
+              7
+            ],
+            "predicate": "item_at"
+          },
+          "subgoal": "place chicken at table"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_bread",
+            "pick_up_bread",
+            "move_to_table",
+            "place_bread_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "bread",
+              "table"
+            ],
+            "ids": [
+              9,
+              7
+            ],
+            "predicate": "item_at"
+          },
+          "subgoal": "place bread at table"
+        },
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "bread"
+            ],
+            "ids": [
+              9
+            ],
+            "predicate": "clear"
+          },
+          "subgoal": "satisfy clear(bread)"
+        }
+      ],
+      "candidate_state_graph": {
+        "DONE": [],
+        "START": [],
+        "SUBGOAL_1": [],
+        "SUBGOAL_10": [
+          {
+            "action": "move_to_chicken",
+            "condition": "Candidate legal action for place chicken at table",
+            "next_state": "SUBGOAL_10"
+          },
+          {
+            "action": "pick_up_chicken",
+            "condition": "Candidate legal action for place chicken at table",
+            "next_state": "SUBGOAL_10"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place chicken at table",
+            "next_state": "SUBGOAL_10"
+          },
+          {
+            "action": "place_chicken_on_table",
+            "condition": "Candidate legal action for place chicken at table",
+            "next_state": "SUBGOAL_10"
+          },
+          {
+            "action": "move_to_bread",
+            "condition": "Begin candidate subgoal: place bread at table",
+            "next_state": "SUBGOAL_11"
+          }
+        ],
+        "SUBGOAL_11": [
+          {
+            "action": "move_to_bread",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_11"
+          },
+          {
+            "action": "pick_up_bread",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_11"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_11"
+          },
+          {
+            "action": "place_bread_on_table",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_11"
+          }
+        ],
+        "SUBGOAL_12": [
+          {
+            "action": "verify_goal_complete",
+            "condition": "All candidate subgoals have been satisfied.",
+            "next_state": "DONE"
+          }
+        ],
+        "SUBGOAL_2": [
+          {
+            "action": "move_to_tomato",
+            "condition": "Begin candidate subgoal: cut tomato",
+            "next_state": "SUBGOAL_3"
+          }
+        ],
+        "SUBGOAL_3": [
+          {
+            "action": "move_to_tomato",
+            "condition": "Candidate legal action for cut tomato",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "pick_up_tomato",
+            "condition": "Candidate legal action for cut tomato",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "move_to_board",
+            "condition": "Candidate legal action for cut tomato",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "place_tomato_on_board",
+            "condition": "Candidate legal action for cut tomato",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "cut_tomato",
+            "condition": "Candidate legal action for cut tomato",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "cut_tomato",
+            "condition": "Candidate legal action for cut tomato",
+            "next_state": "SUBGOAL_3"
+          },
+          {
+            "action": "cut_tomato",
+            "condition": "Candidate legal action for cut tomato",
+            "next_state": "SUBGOAL_3"
+          }
+        ],
+        "SUBGOAL_4": [
+          {
+            "action": "move_to_onion",
+            "condition": "Begin candidate subgoal: cut onion",
+            "next_state": "SUBGOAL_5"
+          }
+        ],
+        "SUBGOAL_5": [
+          {
+            "action": "move_to_onion",
+            "condition": "Candidate legal action for cut onion",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "pick_up_onion",
+            "condition": "Candidate legal action for cut onion",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "move_to_board",
+            "condition": "Candidate legal action for cut onion",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "place_onion_on_board",
+            "condition": "Candidate legal action for cut onion",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "cut_onion",
+            "condition": "Candidate legal action for cut onion",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "cut_onion",
+            "condition": "Candidate legal action for cut onion",
+            "next_state": "SUBGOAL_5"
+          },
+          {
+            "action": "cut_onion",
+            "condition": "Candidate legal action for cut onion",
+            "next_state": "SUBGOAL_5"
+          }
+        ],
+        "SUBGOAL_6": [],
+        "SUBGOAL_7": [
+          {
+            "action": "move_to_bread",
+            "condition": "Begin candidate subgoal: place bread at table",
+            "next_state": "SUBGOAL_8"
+          }
+        ],
+        "SUBGOAL_8": [
+          {
+            "action": "move_to_bread",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_8"
+          },
+          {
+            "action": "pick_up_bread",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_8"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_8"
+          },
+          {
+            "action": "place_bread_on_table",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_8"
+          },
+          {
+            "action": "move_to_chicken",
+            "condition": "Begin candidate subgoal: cook chicken",
+            "next_state": "SUBGOAL_9"
+          }
+        ],
+        "SUBGOAL_9": [
+          {
+            "action": "move_to_chicken",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_9"
+          },
+          {
+            "action": "pick_up_chicken",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_9"
+          },
+          {
+            "action": "move_to_stove",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_9"
+          },
+          {
+            "action": "place_chicken_on_stove",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_9"
+          },
+          {
+            "action": "cook_chicken",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_9"
+          },
+          {
+            "action": "wait_until_chicken_cooked",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_9"
+          },
+          {
+            "action": "continue_independent_subtask_while_waiting",
+            "condition": "Async branch: preserve cooking/frying state while doing useful work.",
+            "next_state": "SUBGOAL_9"
+          },
+          {
+            "action": "move_to_chicken",
+            "condition": "Begin candidate subgoal: place chicken at table",
+            "next_state": "SUBGOAL_10"
+          }
+        ]
+      },
+      "config": {
+        "cook_time": {
+          "default": 3
+        },
+        "num_cuts": {
+          "default": 3
+        }
+      },
+      "containers": [
+        {
+          "name": "pot",
+          "x": 2,
+          "y": 1
+        },
+        {
+          "name": "bowl",
+          "x": 0,
+          "y": 1
+        }
+      ],
+      "dataset": "robotouille",
+      "domain_actions": [
+        "move",
+        "pick-up-item",
+        "place-item",
+        "pick-up-container",
+        "place-container",
+        "cook",
+        "cut",
+        "fry",
+        "fill-pot",
+        "boil-water",
+        "add-to",
+        "fill-bowl",
+        "stack",
+        "unstack",
+        "wait"
+      ],
+      "environment_name": "asynchronous/8_onion_tomato_soup_and_two_chicken_sandwich",
+      "environment_path": "Robotouille/environments/env_generator/examples/asynchronous/8_onion_tomato_soup_and_two_chicken_sandwich.json",
+      "fsm_mode": "robotouille_human_verified_task_graph",
+      "goal_description": "Make soup with a cut tomato and cut onion served into a bowl on a table and two chicken sandwiches on other tables.",
+      "goal_predicates": [
+        {
+          "args": [
+            "water",
+            "bowl"
+          ],
+          "ids": [
+            1,
+            2
+          ],
+          "predicate": "in"
+        },
+        {
+          "args": [
+            "water"
+          ],
+          "ids": [
+            1
+          ],
+          "predicate": "isboiling"
+        },
+        {
+          "args": [
+            "tomato"
+          ],
+          "ids": [
+            3
+          ],
+          "predicate": "iscut"
+        },
+        {
+          "args": [
+            "tomato",
+            "water"
+          ],
+          "ids": [
+            3,
+            1
+          ],
+          "predicate": "addedto"
+        },
+        {
+          "args": [
+            "onion"
+          ],
+          "ids": [
+            4
+          ],
+          "predicate": "iscut"
+        },
+        {
+          "args": [
+            "onion",
+            "water"
+          ],
+          "ids": [
+            4,
+            1
+          ],
+          "predicate": "addedto"
+        },
+        {
+          "args": [
+            "bowl",
+            "table"
+          ],
+          "ids": [
+            2,
+            5
+          ],
+          "predicate": "container_at"
+        },
+        {
+          "args": [
+            "bread",
+            "table"
+          ],
+          "ids": [
+            6,
+            7
+          ],
+          "predicate": "item_on"
+        },
+        {
+          "args": [
+            "chicken"
+          ],
+          "ids": [
+            8
+          ],
+          "predicate": "iscooked"
+        },
+        {
+          "args": [
+            "chicken",
+            "table"
+          ],
+          "ids": [
+            8,
+            7
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "bread",
+            "table"
+          ],
+          "ids": [
+            9,
+            7
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "bread"
+          ],
+          "ids": [
+            9
+          ],
+          "predicate": "clear"
+        },
+        {
+          "args": [
+            "bread",
+            "table"
+          ],
+          "ids": [
+            10,
+            11
+          ],
+          "predicate": "item_on"
+        },
+        {
+          "args": [
+            "chicken"
+          ],
+          "ids": [
+            12
+          ],
+          "predicate": "iscooked"
+        },
+        {
+          "args": [
+            "chicken",
+            "table"
+          ],
+          "ids": [
+            12,
+            11
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "bread",
+            "table"
+          ],
+          "ids": [
+            13,
+            11
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "bread"
+          ],
+          "ids": [
+            13
+          ],
+          "predicate": "clear"
+        }
+      ],
+      "group": "asynchronous",
+      "human_verified_actions": [],
+      "items": [
+        {
+          "name": "tomato",
+          "predicates": [
+            "iscuttable"
+          ],
+          "stack-level": 0,
+          "x": 0,
+          "y": 3
+        },
+        {
+          "name": "onion",
+          "predicates": [
+            "iscuttable"
+          ],
+          "stack-level": 0,
+          "x": 1,
+          "y": 3
+        },
+        {
+          "name": "chicken",
+          "predicates": [
+            "iscookable"
+          ],
+          "stack-level": 0,
+          "x": 2,
+          "y": 3
+        },
+        {
+          "name": "chicken",
+          "predicates": [
+            "iscookable"
+          ],
+          "stack-level": 0,
+          "x": 3,
+          "y": 3
+        },
+        {
+          "name": "bread",
+          "stack-level": 0,
+          "x": 4,
+          "y": 3
+        },
+        {
+          "name": "bread",
+          "stack-level": 1,
+          "x": 4,
+          "y": 3
+        },
+        {
+          "name": "bread",
+          "stack-level": 0,
+          "x": 5,
+          "y": 3
+        },
+        {
+          "name": "bread",
+          "stack-level": 1,
+          "x": 5,
+          "y": 3
+        }
+      ],
+      "meals": [],
+      "optimal_steps": 68,
+      "stations": [
+        {
+          "name": "table",
+          "x": 0,
+          "y": 1
+        },
+        {
+          "name": "stove",
+          "x": 1,
+          "y": 1
+        },
+        {
+          "name": "table",
+          "x": 2,
+          "y": 1
+        },
+        {
+          "name": "board",
+          "x": 3,
+          "y": 1
+        },
+        {
+          "name": "sink",
+          "x": 4,
+          "y": 1
+        },
+        {
+          "name": "table",
+          "x": 0,
+          "y": 3
+        },
+        {
+          "name": "table",
+          "x": 1,
+          "y": 3
+        },
+        {
+          "name": "table",
+          "x": 2,
+          "y": 3
+        },
+        {
+          "name": "table",
+          "x": 3,
+          "y": 3
+        },
+        {
+          "name": "table",
+          "x": 4,
+          "y": 3
+        },
+        {
+          "name": "table",
+          "x": 5,
+          "y": 3
+        }
+      ],
+      "task_id": "robotouille/asynchronous/8_onion_tomato_soup_and_two_chicken_sandwich",
+      "testing_seeds": [
+        42,
+        84,
+        126,
+        168,
+        210,
+        252,
+        294,
+        336,
+        378,
+        420
+      ],
+      "verified_plan_status": "needs_human_verification"
+    },
+    {
+      "candidate_action_skeleton": [
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "water",
+              "bowl"
+            ],
+            "ids": [
+              1,
+              2
+            ],
+            "predicate": "in"
+          },
+          "subgoal": "satisfy in(water, bowl)"
+        },
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "water"
+            ],
+            "ids": [
+              1
+            ],
+            "predicate": "isboiling"
+          },
+          "subgoal": "satisfy isboiling(water)"
+        },
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "onion",
+              "water"
+            ],
+            "ids": [
+              3,
+              1
+            ],
+            "predicate": "addedto"
+          },
+          "subgoal": "satisfy addedto(onion, water)"
+        },
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "potato",
+              "water"
+            ],
+            "ids": [
+              4,
+              1
+            ],
+            "predicate": "addedto"
+          },
+          "subgoal": "satisfy addedto(potato, water)"
+        },
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "bowl",
+              "table"
+            ],
+            "ids": [
+              2,
+              5
+            ],
+            "predicate": "container_at"
+          },
+          "subgoal": "satisfy container_at(bowl, table)"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_bottombun",
+            "pick_up_bottombun",
+            "move_to_table",
+            "place_bottombun_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "bottombun",
+              "table"
+            ],
+            "ids": [
+              6,
+              7
+            ],
+            "predicate": "item_on"
+          },
+          "subgoal": "place bottombun at table"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_lettuce",
+            "pick_up_lettuce",
+            "move_to_board",
+            "place_lettuce_on_board",
+            "cut_lettuce",
+            "cut_lettuce",
+            "cut_lettuce"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "lettuce"
+            ],
+            "ids": [
+              8
+            ],
+            "predicate": "iscut"
+          },
+          "subgoal": "cut lettuce"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_lettuce",
+            "pick_up_lettuce",
+            "move_to_table",
+            "place_lettuce_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "lettuce",
+              "table"
+            ],
+            "ids": [
+              8,
+              7
+            ],
+            "predicate": "item_at"
+          },
+          "subgoal": "place lettuce at table"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_onion",
+            "pick_up_onion",
+            "move_to_board",
+            "place_onion_on_board",
+            "cut_onion",
+            "cut_onion",
+            "cut_onion"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "onion"
+            ],
+            "ids": [
+              9
+            ],
+            "predicate": "iscut"
+          },
+          "subgoal": "cut onion"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_onion",
+            "pick_up_onion",
+            "move_to_board",
+            "place_onion_on_board",
+            "cut_onion"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "onion"
+            ],
+            "ids": [
+              9
+            ],
+            "predicate": "isfried"
+          },
+          "subgoal": "cut onion before frying"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_onion",
+            "pick_up_onion",
+            "move_to_fryer",
+            "place_onion_on_fryer",
+            "fry_onion",
+            "wait_until_onion_fried"
+          ],
+          "requires_async_wait": true,
+          "source_goal": {
+            "args": [
+              "onion"
+            ],
+            "ids": [
+              9
+            ],
+            "predicate": "isfried"
+          },
+          "subgoal": "fry onion"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_onion",
+            "pick_up_onion",
+            "move_to_table",
+            "place_onion_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "onion",
+              "table"
+            ],
+            "ids": [
+              9,
+              7
+            ],
+            "predicate": "item_at"
+          },
+          "subgoal": "place onion at table"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_topbun",
+            "pick_up_topbun",
+            "move_to_table",
+            "place_topbun_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "topbun",
+              "table"
+            ],
+            "ids": [
+              10,
+              7
+            ],
+            "predicate": "item_at"
+          },
+          "subgoal": "place topbun at table"
+        },
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "topbun"
+            ],
+            "ids": [
+              10
+            ],
+            "predicate": "clear"
+          },
+          "subgoal": "satisfy clear(topbun)"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_bread",
+            "pick_up_bread",
+            "move_to_table",
+            "place_bread_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "bread",
+              "table"
+            ],
+            "ids": [
+              11,
+              12
+            ],
+            "predicate": "item_on"
+          },
+          "subgoal": "place bread at table"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_chicken",
+            "pick_up_chicken",
+            "move_to_stove",
+            "place_chicken_on_stove",
+            "cook_chicken",
+            "wait_until_chicken_cooked"
+          ],
+          "requires_async_wait": true,
+          "source_goal": {
+            "args": [
+              "chicken"
+            ],
+            "ids": [
+              13
+            ],
+            "predicate": "iscooked"
+          },
+          "subgoal": "cook chicken"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_chicken",
+            "pick_up_chicken",
+            "move_to_table",
+            "place_chicken_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "chicken",
+              "table"
+            ],
+            "ids": [
+              13,
+              12
+            ],
+            "predicate": "item_at"
+          },
+          "subgoal": "place chicken at table"
+        },
+        {
+          "legal_action_templates": [
+            "move_to_bread",
+            "pick_up_bread",
+            "move_to_table",
+            "place_bread_on_table"
+          ],
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "bread",
+              "table"
+            ],
+            "ids": [
+              15,
+              12
+            ],
+            "predicate": "item_at"
+          },
+          "subgoal": "place bread at table"
+        },
+        {
+          "legal_action_templates": [],
+          "note": "No heuristic action skeleton; fill manually.",
+          "requires_async_wait": false,
+          "source_goal": {
+            "args": [
+              "bread"
+            ],
+            "ids": [
+              15
+            ],
+            "predicate": "clear"
+          },
+          "subgoal": "satisfy clear(bread)"
+        }
+      ],
+      "candidate_state_graph": {
+        "DONE": [],
+        "START": [],
+        "SUBGOAL_1": [],
+        "SUBGOAL_10": [
+          {
+            "action": "move_to_onion",
+            "condition": "Candidate legal action for cut onion before frying",
+            "next_state": "SUBGOAL_10"
+          },
+          {
+            "action": "pick_up_onion",
+            "condition": "Candidate legal action for cut onion before frying",
+            "next_state": "SUBGOAL_10"
+          },
+          {
+            "action": "move_to_board",
+            "condition": "Candidate legal action for cut onion before frying",
+            "next_state": "SUBGOAL_10"
+          },
+          {
+            "action": "place_onion_on_board",
+            "condition": "Candidate legal action for cut onion before frying",
+            "next_state": "SUBGOAL_10"
+          },
+          {
+            "action": "cut_onion",
+            "condition": "Candidate legal action for cut onion before frying",
+            "next_state": "SUBGOAL_10"
+          },
+          {
+            "action": "move_to_onion",
+            "condition": "Begin candidate subgoal: fry onion",
+            "next_state": "SUBGOAL_11"
+          }
+        ],
+        "SUBGOAL_11": [
+          {
+            "action": "move_to_onion",
+            "condition": "Candidate legal action for fry onion",
+            "next_state": "SUBGOAL_11"
+          },
+          {
+            "action": "pick_up_onion",
+            "condition": "Candidate legal action for fry onion",
+            "next_state": "SUBGOAL_11"
+          },
+          {
+            "action": "move_to_fryer",
+            "condition": "Candidate legal action for fry onion",
+            "next_state": "SUBGOAL_11"
+          },
+          {
+            "action": "place_onion_on_fryer",
+            "condition": "Candidate legal action for fry onion",
+            "next_state": "SUBGOAL_11"
+          },
+          {
+            "action": "fry_onion",
+            "condition": "Candidate legal action for fry onion",
+            "next_state": "SUBGOAL_11"
+          },
+          {
+            "action": "wait_until_onion_fried",
+            "condition": "Candidate legal action for fry onion",
+            "next_state": "SUBGOAL_11"
+          },
+          {
+            "action": "continue_independent_subtask_while_waiting",
+            "condition": "Async branch: preserve cooking/frying state while doing useful work.",
+            "next_state": "SUBGOAL_11"
+          },
+          {
+            "action": "move_to_onion",
+            "condition": "Begin candidate subgoal: place onion at table",
+            "next_state": "SUBGOAL_12"
+          }
+        ],
+        "SUBGOAL_12": [
+          {
+            "action": "move_to_onion",
+            "condition": "Candidate legal action for place onion at table",
+            "next_state": "SUBGOAL_12"
+          },
+          {
+            "action": "pick_up_onion",
+            "condition": "Candidate legal action for place onion at table",
+            "next_state": "SUBGOAL_12"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place onion at table",
+            "next_state": "SUBGOAL_12"
+          },
+          {
+            "action": "place_onion_on_table",
+            "condition": "Candidate legal action for place onion at table",
+            "next_state": "SUBGOAL_12"
+          },
+          {
+            "action": "move_to_topbun",
+            "condition": "Begin candidate subgoal: place topbun at table",
+            "next_state": "SUBGOAL_13"
+          }
+        ],
+        "SUBGOAL_13": [
+          {
+            "action": "move_to_topbun",
+            "condition": "Candidate legal action for place topbun at table",
+            "next_state": "SUBGOAL_13"
+          },
+          {
+            "action": "pick_up_topbun",
+            "condition": "Candidate legal action for place topbun at table",
+            "next_state": "SUBGOAL_13"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place topbun at table",
+            "next_state": "SUBGOAL_13"
+          },
+          {
+            "action": "place_topbun_on_table",
+            "condition": "Candidate legal action for place topbun at table",
+            "next_state": "SUBGOAL_13"
+          }
+        ],
+        "SUBGOAL_14": [
+          {
+            "action": "move_to_bread",
+            "condition": "Begin candidate subgoal: place bread at table",
+            "next_state": "SUBGOAL_15"
+          }
+        ],
+        "SUBGOAL_15": [
+          {
+            "action": "move_to_bread",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_15"
+          },
+          {
+            "action": "pick_up_bread",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_15"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_15"
+          },
+          {
+            "action": "place_bread_on_table",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_15"
+          },
+          {
+            "action": "move_to_chicken",
+            "condition": "Begin candidate subgoal: cook chicken",
+            "next_state": "SUBGOAL_16"
+          }
+        ],
+        "SUBGOAL_16": [
+          {
+            "action": "move_to_chicken",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_16"
+          },
+          {
+            "action": "pick_up_chicken",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_16"
+          },
+          {
+            "action": "move_to_stove",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_16"
+          },
+          {
+            "action": "place_chicken_on_stove",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_16"
+          },
+          {
+            "action": "cook_chicken",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_16"
+          },
+          {
+            "action": "wait_until_chicken_cooked",
+            "condition": "Candidate legal action for cook chicken",
+            "next_state": "SUBGOAL_16"
+          },
+          {
+            "action": "continue_independent_subtask_while_waiting",
+            "condition": "Async branch: preserve cooking/frying state while doing useful work.",
+            "next_state": "SUBGOAL_16"
+          },
+          {
+            "action": "move_to_chicken",
+            "condition": "Begin candidate subgoal: place chicken at table",
+            "next_state": "SUBGOAL_17"
+          }
+        ],
+        "SUBGOAL_17": [
+          {
+            "action": "move_to_chicken",
+            "condition": "Candidate legal action for place chicken at table",
+            "next_state": "SUBGOAL_17"
+          },
+          {
+            "action": "pick_up_chicken",
+            "condition": "Candidate legal action for place chicken at table",
+            "next_state": "SUBGOAL_17"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place chicken at table",
+            "next_state": "SUBGOAL_17"
+          },
+          {
+            "action": "place_chicken_on_table",
+            "condition": "Candidate legal action for place chicken at table",
+            "next_state": "SUBGOAL_17"
+          },
+          {
+            "action": "move_to_bread",
+            "condition": "Begin candidate subgoal: place bread at table",
+            "next_state": "SUBGOAL_18"
+          }
+        ],
+        "SUBGOAL_18": [
+          {
+            "action": "move_to_bread",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_18"
+          },
+          {
+            "action": "pick_up_bread",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_18"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_18"
+          },
+          {
+            "action": "place_bread_on_table",
+            "condition": "Candidate legal action for place bread at table",
+            "next_state": "SUBGOAL_18"
+          }
+        ],
+        "SUBGOAL_19": [
+          {
+            "action": "verify_goal_complete",
+            "condition": "All candidate subgoals have been satisfied.",
+            "next_state": "DONE"
+          }
+        ],
+        "SUBGOAL_2": [],
+        "SUBGOAL_3": [],
+        "SUBGOAL_4": [],
+        "SUBGOAL_5": [
+          {
+            "action": "move_to_bottombun",
+            "condition": "Begin candidate subgoal: place bottombun at table",
+            "next_state": "SUBGOAL_6"
+          }
+        ],
+        "SUBGOAL_6": [
+          {
+            "action": "move_to_bottombun",
+            "condition": "Candidate legal action for place bottombun at table",
+            "next_state": "SUBGOAL_6"
+          },
+          {
+            "action": "pick_up_bottombun",
+            "condition": "Candidate legal action for place bottombun at table",
+            "next_state": "SUBGOAL_6"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place bottombun at table",
+            "next_state": "SUBGOAL_6"
+          },
+          {
+            "action": "place_bottombun_on_table",
+            "condition": "Candidate legal action for place bottombun at table",
+            "next_state": "SUBGOAL_6"
+          },
+          {
+            "action": "move_to_lettuce",
+            "condition": "Begin candidate subgoal: cut lettuce",
+            "next_state": "SUBGOAL_7"
+          }
+        ],
+        "SUBGOAL_7": [
+          {
+            "action": "move_to_lettuce",
+            "condition": "Candidate legal action for cut lettuce",
+            "next_state": "SUBGOAL_7"
+          },
+          {
+            "action": "pick_up_lettuce",
+            "condition": "Candidate legal action for cut lettuce",
+            "next_state": "SUBGOAL_7"
+          },
+          {
+            "action": "move_to_board",
+            "condition": "Candidate legal action for cut lettuce",
+            "next_state": "SUBGOAL_7"
+          },
+          {
+            "action": "place_lettuce_on_board",
+            "condition": "Candidate legal action for cut lettuce",
+            "next_state": "SUBGOAL_7"
+          },
+          {
+            "action": "cut_lettuce",
+            "condition": "Candidate legal action for cut lettuce",
+            "next_state": "SUBGOAL_7"
+          },
+          {
+            "action": "cut_lettuce",
+            "condition": "Candidate legal action for cut lettuce",
+            "next_state": "SUBGOAL_7"
+          },
+          {
+            "action": "cut_lettuce",
+            "condition": "Candidate legal action for cut lettuce",
+            "next_state": "SUBGOAL_7"
+          },
+          {
+            "action": "move_to_lettuce",
+            "condition": "Begin candidate subgoal: place lettuce at table",
+            "next_state": "SUBGOAL_8"
+          }
+        ],
+        "SUBGOAL_8": [
+          {
+            "action": "move_to_lettuce",
+            "condition": "Candidate legal action for place lettuce at table",
+            "next_state": "SUBGOAL_8"
+          },
+          {
+            "action": "pick_up_lettuce",
+            "condition": "Candidate legal action for place lettuce at table",
+            "next_state": "SUBGOAL_8"
+          },
+          {
+            "action": "move_to_table",
+            "condition": "Candidate legal action for place lettuce at table",
+            "next_state": "SUBGOAL_8"
+          },
+          {
+            "action": "place_lettuce_on_table",
+            "condition": "Candidate legal action for place lettuce at table",
+            "next_state": "SUBGOAL_8"
+          },
+          {
+            "action": "move_to_onion",
+            "condition": "Begin candidate subgoal: cut onion",
+            "next_state": "SUBGOAL_9"
+          }
+        ],
+        "SUBGOAL_9": [
+          {
+            "action": "move_to_onion",
+            "condition": "Candidate legal action for cut onion",
+            "next_state": "SUBGOAL_9"
+          },
+          {
+            "action": "pick_up_onion",
+            "condition": "Candidate legal action for cut onion",
+            "next_state": "SUBGOAL_9"
+          },
+          {
+            "action": "move_to_board",
+            "condition": "Candidate legal action for cut onion",
+            "next_state": "SUBGOAL_9"
+          },
+          {
+            "action": "place_onion_on_board",
+            "condition": "Candidate legal action for cut onion",
+            "next_state": "SUBGOAL_9"
+          },
+          {
+            "action": "cut_onion",
+            "condition": "Candidate legal action for cut onion",
+            "next_state": "SUBGOAL_9"
+          },
+          {
+            "action": "cut_onion",
+            "condition": "Candidate legal action for cut onion",
+            "next_state": "SUBGOAL_9"
+          },
+          {
+            "action": "cut_onion",
+            "condition": "Candidate legal action for cut onion",
+            "next_state": "SUBGOAL_9"
+          },
+          {
+            "action": "move_to_onion",
+            "condition": "Begin candidate subgoal: cut onion before frying",
+            "next_state": "SUBGOAL_10"
+          }
+        ]
+      },
+      "config": {
+        "cook_time": {
+          "default": 3
+        },
+        "num_cuts": {
+          "default": 3
+        }
+      },
+      "containers": [
+        {
+          "name": "pot",
+          "x": 2,
+          "y": 1
+        },
+        {
+          "name": "bowl",
+          "x": 3,
+          "y": 5
+        }
+      ],
+      "dataset": "robotouille",
+      "domain_actions": [
+        "move",
+        "pick-up-item",
+        "place-item",
+        "pick-up-container",
+        "place-container",
+        "cook",
+        "cut",
+        "fry",
+        "fill-pot",
+        "boil-water",
+        "add-to",
+        "fill-bowl",
+        "stack",
+        "unstack",
+        "wait"
+      ],
+      "environment_name": "asynchronous/9_onion_potato_soup_and_fried_onion_ring_lettuce_burger_and_onion_cheese_sandwich",
+      "environment_path": "Robotouille/environments/env_generator/examples/asynchronous/9_onion_potato_soup_and_fried_onion_ring_lettuce_burger_and_onion_cheese_sandwich.json",
+      "fsm_mode": "robotouille_human_verified_task_graph",
+      "goal_description": "Make soup with a whole onion and potato served into a bowl, a burger with lettuce and fried onion rings, and an onion chicken sandwich all on separate tables.",
+      "goal_predicates": [
+        {
+          "args": [
+            "water",
+            "bowl"
+          ],
+          "ids": [
+            1,
+            2
+          ],
+          "predicate": "in"
+        },
+        {
+          "args": [
+            "water"
+          ],
+          "ids": [
+            1
+          ],
+          "predicate": "isboiling"
+        },
+        {
+          "args": [
+            "onion",
+            "water"
+          ],
+          "ids": [
+            3,
+            1
+          ],
+          "predicate": "addedto"
+        },
+        {
+          "args": [
+            "potato",
+            "water"
+          ],
+          "ids": [
+            4,
+            1
+          ],
+          "predicate": "addedto"
+        },
+        {
+          "args": [
+            "bowl",
+            "table"
+          ],
+          "ids": [
+            2,
+            5
+          ],
+          "predicate": "container_at"
+        },
+        {
+          "args": [
+            "bottombun",
+            "table"
+          ],
+          "ids": [
+            6,
+            7
+          ],
+          "predicate": "item_on"
+        },
+        {
+          "args": [
+            "lettuce"
+          ],
+          "ids": [
+            8
+          ],
+          "predicate": "iscut"
+        },
+        {
+          "args": [
+            "lettuce",
+            "table"
+          ],
+          "ids": [
+            8,
+            7
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "onion"
+          ],
+          "ids": [
+            9
+          ],
+          "predicate": "iscut"
+        },
+        {
+          "args": [
+            "onion"
+          ],
+          "ids": [
+            9
+          ],
+          "predicate": "isfried"
+        },
+        {
+          "args": [
+            "onion",
+            "table"
+          ],
+          "ids": [
+            9,
+            7
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "topbun",
+            "table"
+          ],
+          "ids": [
+            10,
+            7
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "topbun"
+          ],
+          "ids": [
+            10
+          ],
+          "predicate": "clear"
+        },
+        {
+          "args": [
+            "bread",
+            "table"
+          ],
+          "ids": [
+            11,
+            12
+          ],
+          "predicate": "item_on"
+        },
+        {
+          "args": [
+            "chicken"
+          ],
+          "ids": [
+            13
+          ],
+          "predicate": "iscooked"
+        },
+        {
+          "args": [
+            "chicken",
+            "table"
+          ],
+          "ids": [
+            13,
+            12
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "onion"
+          ],
+          "ids": [
+            14
+          ],
+          "predicate": "iscut"
+        },
+        {
+          "args": [
+            "onion",
+            "table"
+          ],
+          "ids": [
+            14,
+            12
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "bread",
+            "table"
+          ],
+          "ids": [
+            15,
+            12
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "bread"
+          ],
+          "ids": [
+            15
+          ],
+          "predicate": "clear"
+        }
+      ],
+      "group": "asynchronous",
+      "human_verified_actions": [],
+      "items": [
+        {
+          "name": "onion",
+          "predicates": [
+            "iscuttable",
+            "isfryableifcut"
+          ],
+          "stack-level": 0,
+          "x": 0,
+          "y": 3
+        },
+        {
+          "name": "potato",
+          "predicates": [
+            "iscuttable",
+            "isfryableifcut"
+          ],
+          "stack-level": 0,
+          "x": 1,
+          "y": 3
+        },
+        {
+          "name": "onion",
+          "predicates": [
+            "iscuttable",
+            "isfryableifcut"
+          ],
+          "stack-level": 0,
+          "x": 2,
+          "y": 3
+        },
+        {
+          "name": "lettuce",
+          "predicates": [
+            "iscuttable"
+          ],
+          "stack-level": 0,
+          "x": 3,
+          "y": 3
+        },
+        {
+          "name": "bottombun",
+          "stack-level": 0,
+          "x": 4,
+          "y": 3
+        },
+        {
+          "name": "topbun",
+          "stack-level": 1,
+          "x": 4,
+          "y": 3
+        },
+        {
+          "name": "bread",
+          "stack-level": 0,
+          "x": 0,
+          "y": 5
+        },
+        {
+          "name": "bread",
+          "stack-level": 1,
+          "x": 0,
+          "y": 5
+        },
+        {
+          "name": "onion",
+          "predicates": [
+            "iscuttable",
+            "isfryableifcut"
+          ],
+          "stack-level": 0,
+          "x": 1,
+          "y": 5
+        },
+        {
+          "name": "chicken",
+          "predicates": [
+            "iscookable"
+          ],
+          "stack-level": 0,
+          "x": 2,
+          "y": 5
+        }
+      ],
+      "meals": [],
+      "optimal_steps": 82,
+      "stations": [
+        {
+          "name": "fryer",
+          "x": 0,
+          "y": 1
+        },
+        {
+          "name": "stove",
+          "x": 1,
+          "y": 1
+        },
+        {
+          "name": "table",
+          "x": 2,
+          "y": 1
+        },
+        {
+          "name": "board",
+          "x": 3,
+          "y": 1
+        },
+        {
+          "name": "sink",
+          "x": 4,
+          "y": 1
+        },
+        {
+          "name": "table",
+          "x": 0,
+          "y": 3
+        },
+        {
+          "name": "table",
+          "x": 1,
+          "y": 3
+        },
+        {
+          "name": "table",
+          "x": 2,
+          "y": 3
+        },
+        {
+          "name": "table",
+          "x": 3,
+          "y": 3
+        },
+        {
+          "name": "table",
+          "x": 4,
+          "y": 3
+        },
+        {
+          "name": "table",
+          "x": 0,
+          "y": 5
+        },
+        {
+          "name": "table",
+          "x": 1,
+          "y": 5
+        },
+        {
+          "name": "table",
+          "x": 2,
+          "y": 5
+        },
+        {
+          "name": "table",
+          "x": 3,
+          "y": 5
+        }
+      ],
+      "task_id": "robotouille/asynchronous/9_onion_potato_soup_and_fried_onion_ring_lettuce_burger_and_onion_cheese_sandwich",
+      "testing_seeds": [
+        42,
+        84,
+        126,
+        168,
+        210,
+        252,
+        294,
+        336,
+        378,
+        420
+      ],
+      "verified_plan_status": "needs_human_verification"
+    }
+  ],
+  "testing_seeds": [
+    42,
+    84,
+    126,
+    168,
+    210,
+    252,
+    294,
+    336,
+    378,
+    420
+  ]
+}
