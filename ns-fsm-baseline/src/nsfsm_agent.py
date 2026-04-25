@@ -247,19 +247,12 @@ class NSFSMAgent:
                 return decision, proposal
 
             self._record_blocked_action(proposal, blocked_reason)
-            decision = self._planner_verified_fallback(
+            decision = self._planner_fsm_fallback(
                 state=state,
                 blocked_reason=blocked_reason,
                 record_block=True,
                 source="forced_choice",
             )
-            if decision is None:
-                decision = self._planner_fsm_fallback(
-                    state=state,
-                    blocked_reason=blocked_reason,
-                    record_block=True,
-                    source="forced_choice",
-                )
             return (decision, proposal)
 
         last_proposal: dict[str, Any] = {}
@@ -285,19 +278,12 @@ class NSFSMAgent:
             last_blocked_reason = blocked_reason
             self._record_blocked_action(proposal, blocked_reason)
 
-        planner_decision = self._planner_verified_fallback(
+        planner_decision = self._planner_fsm_fallback(
             state=state,
             blocked_reason=last_blocked_reason,
             record_block=True,
             source="forced_choice",
         )
-        if planner_decision is None:
-            planner_decision = self._planner_fsm_fallback(
-                state=state,
-                blocked_reason=last_blocked_reason,
-                record_block=True,
-                source="forced_choice",
-            )
         if planner_decision is not None:
             planner_decision["forced_after_llm_retries"] = True
         return planner_decision, last_proposal
@@ -373,24 +359,6 @@ class NSFSMAgent:
             self.adapter,
             transition_check,
         )
-        if normalized_action and self._requires_verified_runtime_action(normalized_action):
-            rule_check = dict(rule_check)
-            rule_check.update(
-                {
-                    "legal": False,
-                    "reason_type": "not_in_verified_intersection",
-                    "message": (
-                        f"Action '{normalized_action}' is not in "
-                        "T(current_state) ∩ simulator executable actions."
-                    ),
-                    "matched_action": normalized_action,
-                    "metadata": {
-                        "fsm_candidate_actions": list(legal_actions),
-                        "executable_actions": list(self.current_executable_actions),
-                        "verified_actions": list(self.current_verified_actions),
-                    },
-                }
-            )
 
         if rule_check["legal"] and transition_check.get("valid"):
             return {
@@ -627,15 +595,15 @@ class NSFSMAgent:
                 "legal": True,
                 "reason_type": "forced_fsm_choice",
                 "message": (
-                    "No verified runtime fallback was available; selected a valid "
-                    "FSM transition to keep the episode running."
+                    "Repeated proposals failed post-hoc FSM verification; "
+                    "selected a valid FSM transition to keep the episode running."
                 ),
                 "matched_action": action,
                 "metadata": {
-                    "verified_actions": list(self.current_verified_actions),
                     "fsm_candidate_actions": [
                         str(option.get("action")) for option in transition_options
                     ],
+                    "executable_actions": list(self.current_executable_actions),
                 },
             },
             "transition_check": transition_check,
@@ -643,7 +611,6 @@ class NSFSMAgent:
 
     def _normalization_candidates(self, legal_actions: list[str]) -> list[str]:
         candidates = list(legal_actions)
-        candidates.extend(self.current_executable_actions)
         candidates.extend(str(action) for action in self.task_spec.get("available_tools", []))
         return list(dict.fromkeys(candidate for candidate in candidates if candidate))
 
@@ -699,11 +666,6 @@ class NSFSMAgent:
                 if next_state:
                     return next_state
         return None
-
-    def _requires_verified_runtime_action(self, normalized_action: str) -> bool:
-        if self.current_verified_actions:
-            return normalized_action not in self.current_verified_actions
-        return str(self.task_spec.get("dataset", "")) in {"minecraft", "robotouille"}
 
     def _adapter_success(self, state: Mapping[str, Any]) -> bool:
         try:

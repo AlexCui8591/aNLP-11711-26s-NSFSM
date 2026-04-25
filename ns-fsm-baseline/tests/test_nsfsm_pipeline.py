@@ -302,7 +302,7 @@ class NSFSMTests(unittest.TestCase):
         self.assertTrue(metadata["fallback_used"], metadata)
         self.assertEqual(metadata["status"], "fallback_to_last_good_ground_truth")
 
-    def test_agent_generates_before_posthoc_executable_verification(self):
+    def test_agent_accepts_fsm_action_before_adapter_execution_check(self):
         class PosthocAdapter:
             dataset_name = "posthoc"
 
@@ -344,7 +344,7 @@ class NSFSMTests(unittest.TestCase):
             "initial_state": {},
             "goal_condition": {"done": True},
             "available_tools": ["unsafe", "safe"],
-            "max_steps": 3,
+            "max_steps": 1,
             "success_criteria": ["done"],
             "metadata": {},
         }
@@ -365,18 +365,36 @@ class NSFSMTests(unittest.TestCase):
         }
         adapter = PosthocAdapter()
         fsm = FSMBuilder().from_design(design, spec, adapter)
-        result = NSFSMAgent(spec, adapter, fsm, planner_only=True).run_episode()
-        self.assertTrue(result["success"], result)
+        result = NSFSMAgent(
+            spec,
+            adapter,
+            fsm,
+            llm=SequenceLLM(
+                [
+                    json.dumps(
+                        {
+                            "thought": "unsafe is still in the current FSM state",
+                            "action": "unsafe",
+                            "next_state": "DONE",
+                        }
+                    )
+                ]
+            ),
+            max_llm_retries=1,
+        ).run_episode()
+        self.assertFalse(result["success"], result)
+        self.assertEqual(result["termination"], "max_steps")
         self.assertEqual(result["trajectory"][0]["proposal"]["action"], "unsafe")
-        self.assertEqual(result["trajectory"][0]["action"], "safe")
-        self.assertEqual(result["trajectory"][0]["decision_source"], "forced_choice")
-        self.assertTrue(result["trajectory"][0]["forced_choice"])
-        self.assertEqual(result["blocked_action_count"], 1)
-        self.assertEqual(result["fallback_action_count"], 1)
+        self.assertEqual(result["trajectory"][0]["action"], "unsafe")
+        self.assertEqual(result["trajectory"][0]["decision_source"], "llm")
+        self.assertFalse(result["trajectory"][0]["forced_choice"])
+        self.assertFalse(result["trajectory"][0]["success"])
+        self.assertEqual(result["blocked_action_count"], 0)
+        self.assertEqual(result["fallback_action_count"], 0)
 
         retry_llm = SequenceLLM(
             [
-                json.dumps({"thought": "try the FSM-only option", "action": "unsafe", "next_state": "DONE"}),
+                json.dumps({"thought": "first action is outside the FSM", "action": "outside_fsm", "next_state": "DONE"}),
                 json.dumps({"thought": "use the verified option", "action": "safe", "next_state": "DONE"}),
             ]
         )
@@ -393,16 +411,16 @@ class NSFSMTests(unittest.TestCase):
 
         invalid_twice_llm = SequenceLLM(
             [
-                json.dumps({"thought": "first invalid option", "action": "unsafe", "next_state": "DONE"}),
-                json.dumps({"thought": "still invalid", "action": "unsafe", "next_state": "DONE"}),
+                json.dumps({"thought": "first invalid option", "action": "outside_fsm", "next_state": "DONE"}),
+                json.dumps({"thought": "still invalid", "action": "still_outside_fsm", "next_state": "DONE"}),
             ]
         )
         adapter = PosthocAdapter()
         fsm = FSMBuilder().from_design(design, spec, adapter)
         result = NSFSMAgent(spec, adapter, fsm, llm=invalid_twice_llm, max_llm_retries=1).run_episode()
-        self.assertTrue(result["success"], result)
-        self.assertEqual(result["trajectory"][0]["proposal"]["action"], "unsafe")
-        self.assertEqual(result["trajectory"][0]["action"], "safe")
+        self.assertFalse(result["success"], result)
+        self.assertEqual(result["trajectory"][0]["proposal"]["action"], "still_outside_fsm")
+        self.assertEqual(result["trajectory"][0]["action"], "unsafe")
         self.assertEqual(result["trajectory"][0]["decision_source"], "forced_choice")
         self.assertTrue(result["trajectory"][0]["forced_choice"])
         self.assertEqual(result["blocked_action_count"], 2)

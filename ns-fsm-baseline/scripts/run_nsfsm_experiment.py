@@ -302,7 +302,7 @@ def build_runtime_fsm(
         metadata.update(
             {
                 "source": "minecraft_grounded_rules",
-                "rule": "branching_dependency_dag_with_runtime_executable_filter",
+                "rule": "branching_dependency_dag_with_fsm_membership_retry",
                 "required_action_count": len(sequence),
                 "llm_fsm_error": None,
             }
@@ -316,7 +316,7 @@ def build_runtime_fsm(
         metadata.update(
             {
                 "source": "robotouille_ground_truth_rules",
-                "rule": "stateful_ground_truth_with_runtime_executable_filter",
+                "rule": "stateful_ground_truth_with_fsm_membership_retry",
                 "required_action_count": len(task_spec.get("available_tools") or []),
                 "llm_fsm_error": None,
                 "ground_truth_generation": (

@@ -4,13 +4,13 @@
 The output is intentionally task-level and benchmark-stable:
 - each state represents the next *kind* of work that should be done
 - each state carries FSM-side allowed action templates
-- runtime executable actions should still be intersected with simulator-valid
-  grounded actions
+- runtime proposals are verified against the current FSM state's transition set
+- simulator executable actions remain prompt-side context only
 
 This follows the user's desired decomposition:
     FSM state -> what should be done next
     Environment -> what is executable right now
-    Final legal actions = intersection
+    Runtime verifier -> is the proposal in T(current_state)?
 """
 
 from __future__ import annotations

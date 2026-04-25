@@ -295,11 +295,16 @@ NSFSM_SYSTEM_PROMPT = """You are an NS-FSM controlled agent.
 
 You must obey the externally verified workflow FSM.
 First propose exactly one action and one intended next FSM state.
-Your proposal will be checked after generation against the FSM transitions and
-the simulator's current executable actions.
-If your action is outside the current FSM candidates, or is not executable now,
-the verifier will block it.
-Copy action strings exactly from the canonical FSM/verified action lists.
+Your proposal will be checked after generation against the FSM transitions.
+The primary acceptance rule is whether the action is in T(current_state) and
+the proposed next state is compatible with that transition.
+Simulator executable actions are only situational context; they are not the
+hard pre-filter for acceptance.
+If your action is outside the current FSM candidates, the verifier will block
+it and ask for a new proposal. After repeated failures, the runtime may force
+one valid FSM transition to keep the episode moving.
+Copy action strings exactly from the canonical FSM transition list whenever
+possible.
 Do not output simulator prose such as "Move robot1 from table1 to table2".
 Do not invent tools, actions, or next states.
 
@@ -351,15 +356,15 @@ Validated FSM summary:
 == SIMULATOR EXECUTABLE ACTIONS ==
 {executable_actions}
 
-== VERIFIED FALLBACK ACTION LIST: T(current_state) ∩ simulator executable ==
+== RUNTIME DIAGNOSTIC ACTIONS ALSO CURRENTLY EXECUTABLE ==
 {verified_actions}
 
-The simulator executable actions are only situational awareness and may be
-natural-language prose. Do not copy them unless the same exact string appears in
-the canonical FSM or verified fallback list. Generate your proposal first; the
-verifier will check whether it is in both T(current_state) and the executable
-action set. The verified fallback action list is used by the runtime only if
-repeated proposals fail post-hoc verification.
+The simulator executable actions are situational awareness only and may be
+natural-language prose. Do not copy them unless they clearly correspond to one
+of the canonical FSM transition actions. Generate your proposal first; the
+verifier will check whether it belongs to T(current_state). If blocked, propose
+a different action from T(current_state). After repeated blocked proposals, the
+runtime may pick one FSM transition automatically.
 
 Choose exactly one action and the intended next FSM state.
 Thought: """
@@ -427,7 +432,7 @@ def format_verification_error(error: dict) -> str:
     violations = transition.get("violations") or []
     if violations:
         lines.append(f"  transition_violations: {violations}")
-    lines.append("  Propose a different action that should pass post-hoc FSM and simulator verification.")
+    lines.append("  Propose a different action that is in T(current_state) and compatible with the FSM transition.")
     return "\n".join(lines)
 
 

@@ -592,7 +592,7 @@ class RobotouilleAdapter(DatasetAdapter):
             ],
             "risk_notes": [
                 "Human-verified/stateful Robotouille ground truth compiled into RuntimeFSM form.",
-                "Async branch states use runtime executable filtering plus branch return logic.",
+                "Async branch states use FSM-membership retry plus branch return logic.",
             ],
         }
         return {

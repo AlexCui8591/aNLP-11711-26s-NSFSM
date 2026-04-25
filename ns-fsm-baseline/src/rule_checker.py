@@ -24,7 +24,7 @@ class LegalityResult:
 
 
 class RuleChecker:
-    """Check workflow, dataset, and budget constraints before execution."""
+    """Check workflow and budget constraints before execution."""
 
     def check(
         self,
@@ -64,20 +64,6 @@ class RuleChecker:
                 metadata={"legal_actions": legal_names},
             ).to_dict()
 
-        if adapter is not None and spec:
-            adapter_actions = self._adapter_actions(adapter, spec, state)
-            if adapter_actions and proposed_action not in adapter_actions:
-                return LegalityResult(
-                    legal=False,
-                    reason_type="dataset_rule_violation",
-                    message=(
-                        f"Action '{proposed_action}' is not currently executable "
-                        "according to the dataset adapter."
-                    ),
-                    matched_action=proposed_action,
-                    metadata={"adapter_actions": adapter_actions[:50]},
-                ).to_dict()
-
         if transition_check is not None and not transition_check.get("valid", False):
             return LegalityResult(
                 legal=False,
@@ -105,14 +91,3 @@ class RuleChecker:
             if name:
                 names.append(name)
         return list(dict.fromkeys(names))
-
-    @staticmethod
-    def _adapter_actions(
-        adapter: Any,
-        task_spec: Mapping[str, Any],
-        state: Mapping[str, Any],
-    ) -> list[str]:
-        try:
-            return [str(action) for action in adapter.get_available_tools(task_spec, state)]
-        except Exception:
-            return []

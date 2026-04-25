@@ -37,7 +37,8 @@ class SymbolicPlanningFSM(FSMTemplate):
                 success_signals=spec.get("success_criteria", []),
                 risk_note=(
                     "Minecraft grounded FSM generated as a branching dependency DAG. "
-                    "Runtime legal actions are intersected with MC-TextWorld executable actions."
+                    "Runtime proposals are validated against FSM transitions; "
+                    "MC-TextWorld executable actions are prompt-side context only."
                 ),
             )
         return _linear_design(
@@ -99,10 +100,9 @@ def _branching_dependency_design(
 ) -> dict[str, Any]:
     """Build a compact branching FSM over grounded dependency actions.
 
-    The FSM statically permits every dependency action from START/IN_PROGRESS,
-    while the runtime intersects this list with the current MC-TextWorld
-    executable-action set. This gives each state multiple safe possible paths
-    without allowing actions outside the verified dependency closure.
+    The FSM statically permits every dependency action from START/IN_PROGRESS.
+    At runtime the model sees the current executable-action set as context, but
+    post-hoc acceptance is determined by FSM membership and transition validity.
     """
 
     actions = list(dict.fromkeys(str(action) for action in actions if str(action)))
@@ -129,8 +129,8 @@ def _branching_dependency_design(
         "terminal_states": ["DONE"],
         "transitions_by_state": transitions,
         "fallback_policy": {
-            "on_invalid_action": "retry_with_current_executable_dependency_action",
-            "on_dead_end": "fail_fast_no_executable_dependency_action",
+            "on_invalid_action": "retry_with_current_fsm_transition",
+            "on_dead_end": "force_valid_fsm_transition",
         },
         "success_signals": success_signals,
         "risk_notes": [risk_note],
@@ -146,8 +146,7 @@ def _branching_options(actions: list[str], final_action: str) -> list[dict[str, 
                 "action": action,
                 "next_state": next_state,
                 "condition": (
-                    "Action is in the grounded dependency closure and is "
-                    "currently executable in MC-TextWorld."
+                    "Action is in the grounded dependency closure for the current FSM state."
                 ),
             }
         )
