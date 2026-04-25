@@ -2,10 +2,10 @@
 #SBATCH --job-name=nsfsm-32b-g67
 #SBATCH --partition=GPU-shared
 #SBATCH --nodes=1
-#SBATCH --gpus=h100:1
+#SBATCH --gpus=h100-80:1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=96G
+#SBATCH --cpus-per-task=5
+#SBATCH --mem=62000M
 #SBATCH --time=24:00:00
 #SBATCH --account=cis250260p
 #SBATCH --array=0-2
