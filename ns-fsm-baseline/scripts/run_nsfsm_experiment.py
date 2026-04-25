@@ -316,7 +316,7 @@ def build_runtime_fsm(
         metadata.update(
             {
                 "source": "robotouille_ground_truth_rules",
-                "rule": "stateful_ground_truth_with_fsm_membership_retry",
+                "rule": "stateful_ground_truth_with_primitive_runtime_binding",
                 "required_action_count": len(task_spec.get("available_tools") or []),
                 "llm_fsm_error": None,
                 "ground_truth_generation": (

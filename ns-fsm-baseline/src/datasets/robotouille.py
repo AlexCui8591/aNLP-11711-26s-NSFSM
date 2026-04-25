@@ -1,8 +1,10 @@
 """Robotouille benchmark adapter for the NS-FSM pipeline.
 
 This adapter consumes the human-verified/stateful Robotouille ground-truth FSM
-JSON, runs the official Robotouille simulator, and exposes current executable
-actions as canonical NS-FSM action names.
+JSON, runs the official Robotouille simulator, and treats the FSM as a
+high-level workflow/subgoal controller. Normal environment steps execute the
+currently valid Robotouille primitive actions rather than sending canonical FSM
+transition names directly to the simulator.
 """
 
 from __future__ import annotations
@@ -223,10 +225,36 @@ class RobotouilleAdapter(DatasetAdapter):
                 done = True
             return StepResult(self.get_observation(), done, info)
 
-        match = self._current_matches.get(action_name)
+        match, primitive_description = self._primitive_match_from_action(action, action_name)
+        matched_transition_actions: list[dict[str, str]] = []
+        if match is not None:
+            matched_transition_actions = self._matching_transition_actions_for_runtime_match(match)
+            info["robotouille_runtime_action"] = primitive_description or action_name
+        else:
+            match = self._current_matches.get(action_name)
+            if match is not None:
+                matched_transition_actions = [
+                    {
+                        "action": action_name,
+                        "next_state": self._next_state_for_semantic_action(action_name) or "",
+                    }
+                ]
+
         if match is None:
             self._refresh_valid_actions()
-            match = self._current_matches.get(action_name)
+            match, primitive_description = self._primitive_match_from_action(action, action_name)
+            if match is not None:
+                matched_transition_actions = self._matching_transition_actions_for_runtime_match(match)
+                info["robotouille_runtime_action"] = primitive_description or action_name
+            else:
+                match = self._current_matches.get(action_name)
+                if match is not None:
+                    matched_transition_actions = [
+                        {
+                            "action": action_name,
+                            "next_state": self._next_state_for_semantic_action(action_name) or "",
+                        }
+                    ]
         if match is None:
             info["success"] = False
             info["message"] = self._last_match_reason.get(
@@ -239,9 +267,14 @@ class RobotouilleAdapter(DatasetAdapter):
         self.state["observation"] = obs
         self.state["step_count"] = int(self.state.get("step_count", 0)) + 1
         self.state["goal_satisfied"] = bool(self.env.current_state.is_goal_reached())
-        next_state = self._post_action_fsm_next_state(action_name)
+        next_state, fsm_action = self._post_runtime_action_fsm_transition(
+            action_name,
+            matched_transition_actions,
+        )
         if next_state:
             info["fsm_next_state"] = next_state
+            if fsm_action:
+                info["fsm_transition_action"] = fsm_action
             self.current_fsm_state = next_state
         self.state["fsm_state"] = self.current_fsm_state
         self._refresh_valid_actions()
@@ -334,6 +367,50 @@ class RobotouilleAdapter(DatasetAdapter):
             if canonical in self._current_matches:
                 tools.append(canonical)
         return list(dict.fromkeys(tools))
+
+    def get_runtime_actions(
+        self,
+        task_spec: TaskSpec | Mapping[str, Any],
+        state: Mapping[str, Any],
+    ) -> list[str]:
+        """Return actions the model may output for the next Robotouille step.
+
+        In ordinary workflow states these are Robotouille simulator primitives
+        such as move/pick-up/unstack/stack/cut/cook. FSM-only control states
+        still expose explicit control actions such as branch switches or final
+        goal verification.
+        """
+
+        spec = task_spec_to_dict(task_spec)
+        self.task_spec = spec
+        self.current_fsm_state = str(self.current_fsm_state or state.get("fsm_state") or "")
+        if self.env is None:
+            return list(spec.get("available_tools", []))
+
+        self._refresh_valid_actions()
+        state_map = spec.get("metadata", {}).get("compiled_state_map", {})
+        current = state_map.get(self.current_fsm_state, {})
+        if not current or current.get("kind") == "terminal":
+            return []
+        if current.get("kind") in {"verify", "async-branch"}:
+            return self.get_available_tools(spec, state)
+
+        skip_action = f"skip_completed::{self.current_fsm_state}"
+        has_skip_transition = any(
+            option.get("action") == skip_action
+            for option in spec.get("metadata", {})
+            .get("compiled_fsm_design", {})
+            .get("transitions_by_state", {})
+            .get(self.current_fsm_state, [])
+        )
+        if has_skip_transition and (
+            self.current_fsm_state in self.completed_root_clusters
+            or self._state_completion_satisfied(current)
+        ):
+            self.completed_root_clusters.add(self.current_fsm_state)
+            return [skip_action]
+
+        return list(dict.fromkeys(self.current_valid_action_strings))
 
     def normalize_action(
         self,
@@ -592,7 +669,8 @@ class RobotouilleAdapter(DatasetAdapter):
             ],
             "risk_notes": [
                 "Human-verified/stateful Robotouille ground truth compiled into RuntimeFSM form.",
-                "Async branch states use FSM-membership retry plus branch return logic.",
+                "Robotouille runtime executes simulator primitives while FSM states constrain high-level subgoals.",
+                "Async branch states use explicit FSM control actions plus branch return logic.",
             ],
         }
         return {
@@ -853,6 +931,19 @@ class RobotouilleAdapter(DatasetAdapter):
         self,
         action_spec: Mapping[str, Any],
     ) -> tuple[Any, dict[str, Any]] | None:
+        for match, _desc in zip(
+            self.current_valid_actions,
+            self.current_valid_action_strings,
+        ):
+            if self._action_spec_matches_runtime_match(action_spec, match):
+                return match
+        return None
+
+    def _action_spec_matches_runtime_match(
+        self,
+        action_spec: Mapping[str, Any],
+        runtime_match: tuple[Any, dict[str, Any]],
+    ) -> bool:
         template = str(action_spec.get("template", "")).strip()
         desired_item = self._alias_to_runtime_name(str(action_spec.get("item", "")).strip())
         desired_container = str(action_spec.get("container", "")).strip()
@@ -860,50 +951,46 @@ class RobotouilleAdapter(DatasetAdapter):
         desired_source_container = str(action_spec.get("source_container", "")).strip()
         desired_target_container = str(action_spec.get("target_container", "")).strip()
 
-        for (action, param_arg_dict), _desc in zip(
-            self.current_valid_actions,
-            self.current_valid_action_strings,
+        action, param_arg_dict = runtime_match
+        values = {key: getattr(obj, "name", "") for key, obj in param_arg_dict.items()}
+        object_types = {key: getattr(obj, "object_type", "") for key, obj in param_arg_dict.items()}
+        if not self._template_matches_runtime_action(
+            template,
+            str(getattr(action, "name", "")),
+            values,
+            desired_item,
+            desired_target,
         ):
-            values = {key: getattr(obj, "name", "") for key, obj in param_arg_dict.items()}
-            object_types = {key: getattr(obj, "object_type", "") for key, obj in param_arg_dict.items()}
-            if not self._template_matches_runtime_action(
-                template,
-                str(getattr(action, "name", "")),
-                values,
-                desired_item,
-                desired_target,
-            ):
-                continue
+            return False
 
-            if desired_item:
-                main_item = values.get("i1") or values.get("c1") or values.get("m1")
-                if main_item and main_item != desired_item:
-                    continue
-                if not main_item and desired_item not in values.values():
-                    continue
-            if desired_container and not any(
-                name.startswith(desired_container) for name in values.values()
-            ):
-                continue
-            if desired_source_container and not any(
-                name.startswith(desired_source_container) for name in values.values()
-            ):
-                continue
-            if desired_target_container and not any(
-                name.startswith(desired_target_container) for name in values.values()
-            ):
-                continue
-            desired_table_mode = str(action_spec.get("table_mode", "")).strip()
-            if desired_target and not self._target_matches(
-                desired_target,
-                values,
-                object_types,
-                desired_item,
-                desired_table_mode,
-            ):
-                continue
-            return action, param_arg_dict
-        return None
+        if desired_item:
+            main_item = values.get("i1") or values.get("c1") or values.get("m1")
+            if main_item and main_item != desired_item:
+                return False
+            if not main_item and desired_item not in values.values():
+                return False
+        if desired_container and not any(
+            name.startswith(desired_container) for name in values.values()
+        ):
+            return False
+        if desired_source_container and not any(
+            name.startswith(desired_source_container) for name in values.values()
+        ):
+            return False
+        if desired_target_container and not any(
+            name.startswith(desired_target_container) for name in values.values()
+        ):
+            return False
+        desired_table_mode = str(action_spec.get("table_mode", "")).strip()
+        if desired_target and not self._target_matches(
+            desired_target,
+            values,
+            object_types,
+            desired_item,
+            desired_table_mode,
+        ):
+            return False
+        return True
 
     @staticmethod
     def _template_matches_runtime_action(
@@ -922,6 +1009,8 @@ class RobotouilleAdapter(DatasetAdapter):
                 "serving table while holding bowl",
             }:
                 return False
+            return not desired_item or desired_item in values.values()
+        if desired_template == "pick-up-item" and runtime_template == "pick-up":
             return not desired_item or desired_item in values.values()
         if desired_template == "pick-up-item" and runtime_template == "unstack":
             return not desired_item or desired_item in values.values()
@@ -1038,13 +1127,23 @@ class RobotouilleAdapter(DatasetAdapter):
         lowered = {name.lower(): name for name in names}
         candidates = [raw_name]
 
+        for candidate in dict.fromkeys(self._clean_model_text(item) for item in candidates):
+            if candidate in names:
+                return candidate
+            match = lowered.get(candidate.lower())
+            if match:
+                return match
+
         if include_runtime_action_descriptions:
             runtime_aliases = self._runtime_action_description_aliases()
             for candidate in list(candidates):
-                if candidate in runtime_aliases:
+                if candidate in runtime_aliases and runtime_aliases[candidate] in names:
                     return runtime_aliases[candidate]
                 lowered_candidate = candidate.lower()
-                if lowered_candidate in runtime_aliases:
+                if (
+                    lowered_candidate in runtime_aliases
+                    and runtime_aliases[lowered_candidate] in names
+                ):
                     return runtime_aliases[lowered_candidate]
 
         alias_replaced = self._replace_runtime_aliases(raw_name)
@@ -1100,6 +1199,77 @@ class RobotouilleAdapter(DatasetAdapter):
                     aliases[description] = canonical
                     aliases[description.lower()] = canonical
         return aliases
+
+    def _primitive_match_from_action(
+        self,
+        action: str | Mapping[str, Any],
+        action_name: str,
+    ) -> tuple[tuple[Any, dict[str, Any]] | None, str | None]:
+        payload = dict(action.get("payload") or {}) if isinstance(action, Mapping) else {}
+        raw_index = payload.get("robotouille_action_index")
+        if raw_index is not None:
+            try:
+                idx = int(raw_index)
+            except (TypeError, ValueError):
+                idx = -1
+            if 0 <= idx < len(self.current_valid_actions):
+                description = (
+                    self.current_valid_action_strings[idx]
+                    if idx < len(self.current_valid_action_strings)
+                    else action_name
+                )
+                return self.current_valid_actions[idx], description
+
+        cleaned = self._clean_model_text(action_name)
+        lowered = cleaned.lower()
+        for idx, description in enumerate(self.current_valid_action_strings):
+            candidate = self._clean_model_text(description)
+            if cleaned == candidate or lowered == candidate.lower():
+                return self.current_valid_actions[idx], description
+        return None, None
+
+    def _matching_transition_actions_for_runtime_match(
+        self,
+        runtime_match: tuple[Any, dict[str, Any]],
+    ) -> list[dict[str, str]]:
+        if self.task_spec is None:
+            return []
+        state_map = self.task_spec.get("metadata", {}).get("compiled_state_map", {})
+        current = state_map.get(self.current_fsm_state or "", {})
+        matches: list[dict[str, str]] = []
+        for transition in self._state_transition_specs(current):
+            action = transition.get("action", {})
+            if not isinstance(action, Mapping):
+                continue
+            if not self._action_spec_matches_runtime_match(action, runtime_match):
+                continue
+            matches.append(
+                {
+                    "action": canonical_action_name(action),
+                    "next_state": str(transition.get("next_state", "")).strip(),
+                    "guard": str(transition.get("guard", "")).strip(),
+                }
+            )
+        return matches
+
+    def _matching_completion_action_for_runtime_match(
+        self,
+        current: Mapping[str, Any],
+        action_name: str,
+    ) -> str | None:
+        primitive_match, _description = self._primitive_match_from_action(action_name, action_name)
+        for action in current.get("fsm_allowed_actions", []):
+            if not isinstance(action, Mapping):
+                continue
+            canonical = canonical_action_name(action)
+            if primitive_match is not None and self._action_spec_matches_runtime_match(
+                action,
+                primitive_match,
+            ):
+                return canonical
+            if canonical == action_name:
+                return canonical
+        return None
 
     def _semantic_action_variants(self, action_name: str) -> list[str]:
         if "|" not in action_name:
@@ -1239,36 +1409,38 @@ class RobotouilleAdapter(DatasetAdapter):
                 return True
         return False
 
-    def _post_action_fsm_next_state(self, action_name: str) -> str | None:
+    def _post_runtime_action_fsm_transition(
+        self,
+        action_name: str,
+        matched_transition_actions: list[dict[str, str]],
+    ) -> tuple[str | None, str | None]:
         if self.task_spec is None:
-            return None
+            return None, None
         state_map = self.task_spec.get("metadata", {}).get("compiled_state_map", {})
         state_to_root = self.task_spec.get("metadata", {}).get("state_to_root_cluster", {})
         root_end_states = self.task_spec.get("metadata", {}).get("root_cluster_end_states", {})
         current = state_map.get(self.current_fsm_state or "", {})
         if not current:
-            return None
+            return None, None
 
         if current.get("kind") == "async-branch":
             if self._async_branch_done(current):
-                return current.get("branch_exit_target") or self.current_fsm_state
-            return self.current_fsm_state
+                return current.get("branch_exit_target") or self.current_fsm_state, action_name
+            return self.current_fsm_state, action_name
 
-        for transition in self._state_transition_specs(current):
-            action = transition.get("action", {})
-            if not isinstance(action, Mapping):
-                continue
-            if canonical_action_name(action) != action_name:
-                continue
+        for transition in matched_transition_actions:
             if not self._guard_satisfied(str(transition.get("guard", "")).strip()):
                 continue
             target = str(transition.get("next_state", "")).strip()
             if target:
-                return target
+                return target, str(transition.get("action", "")).strip() or action_name
+
+        if not self._state_completion_satisfied(current):
+            return None, None
 
         target = str(current.get("next_state_on_completion", "")).strip()
         if target:
-            return target
+            return target, self._matching_completion_action_for_runtime_match(current, action_name)
 
         root_start = state_to_root.get(self.current_fsm_state or "")
         if root_start and root_end_states.get(root_start) == self.current_fsm_state:
@@ -1276,7 +1448,24 @@ class RobotouilleAdapter(DatasetAdapter):
 
         return_branch = str(current.get("return_branch_state", "")).strip()
         if return_branch:
-            return return_branch
+            return return_branch, self._matching_completion_action_for_runtime_match(
+                current,
+                action_name,
+            )
+        return None, None
+
+    def _next_state_for_semantic_action(self, action_name: str) -> str | None:
+        if self.task_spec is None:
+            return None
+        transitions = (
+            self.task_spec.get("metadata", {})
+            .get("compiled_fsm_design", {})
+            .get("transitions_by_state", {})
+            .get(self.current_fsm_state or "", [])
+        )
+        for transition in transitions:
+            if str(transition.get("action")) == action_name:
+                return str(transition.get("next_state", "")).strip() or None
         return None
 
     def _subgoal_available_from_branch(self, target_state: str) -> bool:

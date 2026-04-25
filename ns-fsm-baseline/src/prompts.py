@@ -295,17 +295,18 @@ NSFSM_SYSTEM_PROMPT = """You are an NS-FSM controlled agent.
 
 You must obey the externally verified workflow FSM.
 First propose exactly one action and one intended next FSM state.
-Your proposal will be checked after generation against the FSM transitions.
-The primary acceptance rule is whether the action is in T(current_state) and
-the proposed next state is compatible with that transition.
-Simulator executable actions are only situational context; they are not the
-hard pre-filter for acceptance.
-If your action is outside the current FSM candidates, the verifier will block
-it and ask for a new proposal. After repeated failures, the runtime may force
-one valid FSM transition to keep the episode moving.
-Copy action strings exactly from the canonical FSM transition list whenever
+Your proposal will be checked after generation against the current allowed
+runtime action list and the workflow FSM.
+For most datasets the output action is a canonical FSM transition action.
+For Robotouille, the FSM state is a high-level subgoal and the output action
+must be one currently executable simulator primitive, such as move/pick-up/
+unstack/stack/cut/cook. Do not output a high-level Robotouille FSM action
+unless it is explicitly listed as an action you may output now.
+If your action is outside the current allowed action list, the verifier will
+block it and ask for a new proposal. After repeated failures, Robotouille uses
+a simulator-valid primitive fallback, not a forced high-level FSM action.
+Copy action strings exactly from the current allowed action list whenever
 possible.
-Do not output simulator prose such as "Move robot1 from table1 to table2".
 Do not invent tools, actions, or next states.
 
 Output format:
@@ -347,24 +348,24 @@ Validated FSM summary:
 == COMPRESSED MEMORY ==
 {compressed_memory}
 
-== FSM CANDIDATE ACTIONS ==
+== ACTIONS YOU MAY OUTPUT NOW ==
 {legal_actions}
 
-== FSM TRANSITIONS: T(current_state) ==
+== FSM TRANSITIONS / HIGH-LEVEL SUBGOALS: T(current_state) ==
 {transition_options}
 
 == SIMULATOR EXECUTABLE ACTIONS ==
 {executable_actions}
 
-== RUNTIME DIAGNOSTIC ACTIONS ALSO CURRENTLY EXECUTABLE ==
+== VERIFIED RUNTIME ACTIONS ==
 {verified_actions}
 
-The simulator executable actions are situational awareness only and may be
-natural-language prose. Do not copy them unless they clearly correspond to one
-of the canonical FSM transition actions. Generate your proposal first; the
-verifier will check whether it belongs to T(current_state). If blocked, propose
-a different action from T(current_state). After repeated blocked proposals, the
-runtime may pick one FSM transition automatically.
+Choose from ACTIONS YOU MAY OUTPUT NOW exactly. For Robotouille, those actions
+are simulator primitive actions while the FSM transitions describe the current
+high-level phase/subgoal; do not send semantic FSM actions such as
+pick-up-item|item=... unless they appear in ACTIONS YOU MAY OUTPUT NOW. If
+blocked, propose a different currently listed action. Robotouille recovery must
+stay in the simulator primitive action space.
 
 Choose exactly one action and the intended next FSM state.
 Thought: """

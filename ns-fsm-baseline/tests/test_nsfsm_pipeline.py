@@ -498,7 +498,112 @@ class NSFSMTests(unittest.TestCase):
             )
         )
 
-    def test_robotouille_forced_fsm_fallback_keeps_episode_running(self):
+    def test_robotouille_primitive_pickup_macro_does_not_advance_on_unstack(self):
+        class Obj:
+            def __init__(self, name, object_type="item"):
+                self.name = name
+                self.object_type = object_type
+
+        class Pred:
+            def __init__(self, name, params):
+                self.name = name
+                self.params = params
+
+        class FakeState:
+            def __init__(self, valid_actions, valid_strings, predicates=None):
+                self.valid_actions = valid_actions
+                self.valid_strings = valid_strings
+                self.predicates = predicates or {}
+
+            def get_valid_actions_and_str(self):
+                return self.valid_actions, self.valid_strings
+
+            def is_goal_reached(self):
+                return False
+
+        unstack = (
+            Obj("unstack", "action"),
+            {
+                "i1": Obj("chicken1"),
+                "i2": Obj("lettuce1"),
+                "s1": Obj("table1", "station"),
+            },
+        )
+        pickup = (
+            Obj("pick-up", "action"),
+            {
+                "i1": Obj("chicken1"),
+                "s1": Obj("table1", "station"),
+            },
+        )
+
+        class FakeEnv:
+            def __init__(self):
+                self.current_state = FakeState(
+                    [unstack],
+                    ["unstack(robot1,chicken1,lettuce1,table1)"],
+                )
+                self.calls = 0
+
+            def step(self, actions):
+                self.calls += 1
+                if self.calls == 1:
+                    self.current_state = FakeState(
+                        [pickup],
+                        ["pick-up(robot1,chicken1,table1)"],
+                    )
+                else:
+                    has_chicken = Pred("has_item", [Obj("robot1", "robot"), Obj("chicken1")])
+                    self.current_state = FakeState(
+                        [],
+                        [],
+                        {has_chicken: True},
+                    )
+                return "obs", 0.0, False, {}
+
+        adapter = RobotouilleAdapter()
+        adapter.env = FakeEnv()
+        adapter.task_spec = {
+            "metadata": {
+                "compiled_state_map": {
+                    "PICK": {
+                        "kind": "pick-up-item",
+                        "completion_condition": ["robot has chicken__3"],
+                        "fsm_allowed_actions": [
+                            {"template": "pick-up-item", "item": "chicken__3"}
+                        ],
+                        "next_state_on_completion": "NEXT",
+                    },
+                    "NEXT": {"kind": "terminal"},
+                },
+                "compiled_fsm_design": {
+                    "transitions_by_state": {
+                        "PICK": [
+                            {
+                                "action": "pick-up-item|item=chicken__3",
+                                "next_state": "NEXT",
+                            }
+                        ]
+                    }
+                },
+                "state_to_root_cluster": {},
+                "root_cluster_end_states": {},
+            }
+        }
+        adapter._alias_map = {"chicken__3": "chicken1"}
+        adapter.current_fsm_state = "PICK"
+        adapter.state = {"step_count": 0, "goal_satisfied": False, "fsm_state": "PICK"}
+        adapter._refresh_valid_actions()
+
+        first = adapter.step("unstack(robot1,chicken1,lettuce1,table1)")
+        self.assertNotIn("fsm_next_state", first.info)
+        self.assertEqual(adapter.current_fsm_state, "PICK")
+
+        second = adapter.step("pick-up(robot1,chicken1,table1)")
+        self.assertEqual(second.info["fsm_next_state"], "NEXT")
+        self.assertEqual(second.info["fsm_transition_action"], "pick-up-item|item=chicken__3")
+
+    def test_robotouille_runtime_fallback_uses_primitive_not_fsm_action(self):
         class NoIntersectionAdapter:
             dataset_name = "robotouille"
 
@@ -512,6 +617,9 @@ class NSFSMTests(unittest.TestCase):
             def get_available_tools(self, task_spec, state):
                 return []
 
+            def get_runtime_actions(self, task_spec, state):
+                return ["move(robot1,table1,table2)"]
+
             def normalize_action(self, raw_action, legal_actions):
                 action = raw_action.get("action") if isinstance(raw_action, dict) else raw_action
                 names = [item.get("action") if isinstance(item, dict) else item for item in legal_actions]
@@ -519,7 +627,7 @@ class NSFSMTests(unittest.TestCase):
 
             def step(self, action):
                 action_name = action.get("action") if isinstance(action, dict) else action
-                self.state = {"step_count": 1, "done": action_name == "safe"}
+                self.state = {"step_count": 1, "done": action_name == "move(robot1,table1,table2)"}
                 return type(
                     "StepResult",
                     (),
@@ -552,7 +660,7 @@ class NSFSMTests(unittest.TestCase):
                 "START": [{"action": "safe", "next_state": "DONE", "condition": "unit"}],
                 "DONE": [],
             },
-            "fallback_policy": {"on_invalid_action": "force_fsm_transition"},
+            "fallback_policy": {"on_invalid_action": "runtime_primitive_fallback"},
             "success_signals": ["done"],
             "risk_notes": ["unit test"],
         }
@@ -563,9 +671,13 @@ class NSFSMTests(unittest.TestCase):
         )
         result = NSFSMAgent(spec, adapter, fsm, llm=llm, max_llm_retries=0).run_episode()
         self.assertTrue(result["success"], result)
-        self.assertEqual(result["trajectory"][0]["action"], "safe")
-        self.assertEqual(result["trajectory"][0]["decision_source"], "forced_choice")
-        self.assertEqual(result["trajectory"][0]["rule_check"]["reason_type"], "forced_fsm_choice")
+        self.assertEqual(result["trajectory"][0]["action"], "move(robot1,table1,table2)")
+        self.assertEqual(result["trajectory"][0]["decision_source"], "runtime_fallback")
+        self.assertFalse(result["trajectory"][0]["forced_choice"])
+        self.assertEqual(
+            result["trajectory"][0]["rule_check"]["reason_type"],
+            "runtime_primitive_fallback",
+        )
 
     def test_runner_smoke_and_analysis(self):
         tag = "unit_smoke_nsfsm"

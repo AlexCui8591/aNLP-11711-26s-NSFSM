@@ -121,17 +121,34 @@ class NSFSMAgent:
             fsm_update = {"updated": False, "current_state": self.fsm.current_state}
             if adapter_success:
                 preferred_next_state = info.get("fsm_next_state") or decision.get("next_state")
-                fsm_update = self.fsm.update(
-                    decision["action"],
-                    preferred_next_state,
-                    info,
-                )
+                update_action = info.get("fsm_transition_action") or decision["action"]
+                runtime_binding = str(decision.get("transition_check", {}).get("runtime_binding", ""))
+                if not (
+                    runtime_binding == "robotouille_primitive"
+                    and not info.get("fsm_next_state")
+                ):
+                    fsm_update = self.fsm.update(
+                        update_action,
+                        preferred_next_state,
+                        info,
+                    )
+                if (
+                    not fsm_update.get("updated")
+                    and self._uses_robotouille_runtime_binding()
+                    and info.get("fsm_next_state")
+                ):
+                    fsm_update = self._sync_fsm_state_from_runtime(
+                        str(info["fsm_next_state"]),
+                        decision["action"],
+                        info,
+                    )
 
             record = {
                 "step": step_idx + 1,
                 "fsm_state_before": previous_fsm_state,
                 "fsm_state_after": self.fsm.current_state,
                 "action": decision["action"],
+                "fsm_action": info.get("fsm_transition_action"),
                 "next_state": decision.get("next_state"),
                 "decision_source": decision.get("source", "unknown"),
                 "forced_choice": bool(decision.get("forced_choice", False)),
@@ -247,12 +264,22 @@ class NSFSMAgent:
                 return decision, proposal
 
             self._record_blocked_action(proposal, blocked_reason)
-            decision = self._planner_fsm_fallback(
-                state=state,
-                blocked_reason=blocked_reason,
-                record_block=True,
-                source="forced_choice",
-            )
+            if self._uses_robotouille_runtime_binding():
+                decision = self._planner_runtime_fallback(
+                    state=state,
+                    legal_actions=legal_actions,
+                    transition_options=transition_options,
+                    blocked_reason=blocked_reason,
+                    record_block=True,
+                    source="runtime_fallback",
+                )
+            else:
+                decision = self._planner_fsm_fallback(
+                    state=state,
+                    blocked_reason=blocked_reason,
+                    record_block=True,
+                    source="forced_choice",
+                )
             return (decision, proposal)
 
         last_proposal: dict[str, Any] = {}
@@ -278,12 +305,22 @@ class NSFSMAgent:
             last_blocked_reason = blocked_reason
             self._record_blocked_action(proposal, blocked_reason)
 
-        planner_decision = self._planner_fsm_fallback(
-            state=state,
-            blocked_reason=last_blocked_reason,
-            record_block=True,
-            source="forced_choice",
-        )
+        if self._uses_robotouille_runtime_binding():
+            planner_decision = self._planner_runtime_fallback(
+                state=state,
+                legal_actions=legal_actions,
+                transition_options=transition_options,
+                blocked_reason=last_blocked_reason,
+                record_block=True,
+                source="runtime_fallback",
+            )
+        else:
+            planner_decision = self._planner_fsm_fallback(
+                state=state,
+                blocked_reason=last_blocked_reason,
+                record_block=True,
+                source="forced_choice",
+            )
         if planner_decision is not None:
             planner_decision["forced_after_llm_retries"] = True
         return planner_decision, last_proposal
@@ -298,6 +335,16 @@ class NSFSMAgent:
             except Exception:
                 pass
         static_options = self.fsm.get_valid_transitions()
+
+        if self._uses_robotouille_runtime_binding():
+            try:
+                runtime_actions = list(self.adapter.get_runtime_actions(self.task_spec, state))
+            except Exception:
+                runtime_actions = []
+            self.current_executable_actions = list(runtime_actions)
+            self.current_verified_transition_options = list(static_options)
+            self.current_verified_actions = list(runtime_actions)
+            return static_options, runtime_actions
 
         try:
             executable = set(self.adapter.get_available_tools(self.task_spec, state))
@@ -341,6 +388,15 @@ class NSFSMAgent:
                 self._normalization_candidates(legal_actions),
             )
 
+        if self._uses_robotouille_runtime_binding():
+            return self._try_robotouille_runtime_decision(
+                proposal=proposal,
+                state=state,
+                legal_actions=legal_actions,
+                transition_options=transition_options,
+                normalized_action=normalized_action,
+            )
+
         proposed_next = self._normalize_next_state(proposal.get("next_state"))
         transition_check = (
             self._verify_transition_with_next_fallback(
@@ -378,6 +434,79 @@ class NSFSMAgent:
         }
         return None, blocked_reason
 
+    def _try_robotouille_runtime_decision(
+        self,
+        proposal: Mapping[str, Any],
+        state: Mapping[str, Any],
+        legal_actions: list[str],
+        transition_options: list[dict[str, Any]],
+        normalized_action: str | None,
+    ) -> tuple[dict[str, Any] | None, dict[str, Any]]:
+        proposed_next = self._normalize_next_state(proposal.get("next_state"))
+        if normalized_action and self._is_fsm_transition_action(
+            normalized_action,
+            transition_options,
+        ):
+            transition_check = self._verify_transition_with_next_fallback(
+                normalized_action,
+                proposed_next,
+                transition_options,
+            )
+            next_state = transition_check.get("inferred_next_state") or proposed_next
+        elif normalized_action:
+            transition_check = {
+                "valid": True,
+                "runtime_binding": "robotouille_primitive",
+                "fsm_state": self.fsm.current_state,
+                "message": (
+                    "Robotouille primitive action verified against the simulator's "
+                    "current executable action set; FSM remains the high-level subgoal."
+                ),
+            }
+            next_state = self.fsm.current_state
+        else:
+            transition_check = {
+                "valid": False,
+                "runtime_binding": "robotouille_primitive",
+                "violations": [{"type": "parse_error"}],
+            }
+            next_state = proposed_next
+
+        rule_check = self.rule_checker.check(
+            normalized_action,
+            legal_actions,
+            state,
+            self.task_spec,
+            self.adapter,
+            transition_check,
+        )
+        if (
+            not rule_check.get("legal")
+            and rule_check.get("reason_type") == "not_in_legal_actions"
+        ):
+            rule_check["message"] = (
+                "Action is not one of the current Robotouille primitive actions."
+            )
+            rule_check.setdefault("metadata", {})["runtime_action_space"] = "robotouille"
+
+        if rule_check["legal"] and transition_check.get("valid"):
+            return {
+                "action": normalized_action,
+                "next_state": next_state,
+                "payload": proposal.get("payload", {}),
+                "source": proposal.get("source", "llm"),
+                "blocked": False,
+                "rule_check": rule_check,
+                "transition_check": transition_check,
+            }, {}
+
+        blocked_reason = {
+            "proposal": dict(proposal),
+            "rule_check": rule_check,
+            "transition_check": transition_check,
+        }
+        return None, blocked_reason
+
     def _planner_proposal(
         self,
         state: Mapping[str, Any],
@@ -390,7 +519,7 @@ class NSFSMAgent:
             state,
             legal_actions,
             self.trajectory,
-            transition_options,
+            None if self._uses_robotouille_runtime_binding() else transition_options,
             blocked_reason,
         )
         if fallback is None:
@@ -524,6 +653,95 @@ class NSFSMAgent:
             decision["forced_choice"] = source == "forced_choice"
         return decision
 
+    def _planner_runtime_fallback(
+        self,
+        state: Mapping[str, Any],
+        legal_actions: list[str],
+        transition_options: list[dict[str, Any]],
+        blocked_reason: Mapping[str, Any],
+        record_block: bool,
+        source: str = "runtime_fallback",
+    ) -> dict[str, Any] | None:
+        if not legal_actions:
+            return None
+
+        fallback = self.planner.next_action(
+            self.task_spec,
+            state,
+            legal_actions,
+            self.trajectory,
+            None,
+            blocked_reason,
+        )
+        proposed = fallback.get("action") if fallback else legal_actions[0]
+        action = self.adapter.normalize_action(proposed, legal_actions) or str(proposed or "")
+        if action not in set(legal_actions):
+            action = legal_actions[0]
+        if not action:
+            return None
+
+        if self._is_fsm_transition_action(action, transition_options):
+            transition_check = self._verify_transition_with_next_fallback(
+                action,
+                fallback.get("next_state") if fallback else None,
+                transition_options,
+            )
+            next_state = transition_check.get("inferred_next_state") or (
+                fallback.get("next_state") if fallback else None
+            )
+        else:
+            transition_check = {
+                "valid": True,
+                "runtime_binding": "robotouille_primitive",
+                "fsm_state": self.fsm.current_state,
+                "fallback": True,
+            }
+            next_state = self.fsm.current_state
+
+        rule_check = self.rule_checker.check(
+            action,
+            legal_actions,
+            state,
+            self.task_spec,
+            self.adapter,
+            transition_check,
+        )
+        if not rule_check["legal"] or not transition_check.get("valid"):
+            return None
+
+        reason = (
+            fallback.get("reason", "runtime primitive fallback")
+            if fallback
+            else "runtime primitive fallback"
+        )
+        self.fallback_actions.append(
+            {
+                "step": len(self.trajectory) + 1,
+                "state": self.fsm.current_state,
+                "action": action,
+                "next_state": next_state,
+                "success": True,
+                "message": reason,
+                "reason": fallback or {"reason": reason},
+            }
+        )
+        self.fsm.record_fallback_action(action, next_state, reason)
+        rule_check["reason_type"] = (
+            "runtime_primitive_fallback"
+            if transition_check.get("runtime_binding") == "robotouille_primitive"
+            else rule_check.get("reason_type", "ok")
+        )
+        return {
+            "action": action,
+            "next_state": next_state,
+            "payload": {},
+            "source": source,
+            "forced_choice": False,
+            "blocked": record_block,
+            "rule_check": rule_check,
+            "transition_check": transition_check,
+        }
+
     def _planner_fsm_fallback(
         self,
         state: Mapping[str, Any],
@@ -613,6 +831,51 @@ class NSFSMAgent:
         candidates = list(legal_actions)
         candidates.extend(str(action) for action in self.task_spec.get("available_tools", []))
         return list(dict.fromkeys(candidate for candidate in candidates if candidate))
+
+    def _uses_robotouille_runtime_binding(self) -> bool:
+        return (
+            self.task_spec.get("dataset") == "robotouille"
+            and hasattr(self.adapter, "get_runtime_actions")
+        )
+
+    @staticmethod
+    def _is_fsm_transition_action(
+        action: str | None,
+        transition_options: list[dict[str, Any]],
+    ) -> bool:
+        if not action:
+            return False
+        return any(str(option.get("action")) == action for option in transition_options)
+
+    def _sync_fsm_state_from_runtime(
+        self,
+        next_state: str,
+        runtime_action: str,
+        info: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        if next_state not in {state.name for state in self.fsm.states}:
+            return {
+                "updated": False,
+                "current_state": self.fsm.current_state,
+                "reason": "runtime_next_state_not_in_fsm",
+            }
+        previous = self.fsm.current_state
+        self.fsm.current_state = next_state
+        self.fsm.visited_states.append(next_state)
+        self.fsm.action_history.append(
+            {
+                "source_state": previous,
+                "action": runtime_action,
+                "next_state": next_state,
+                "info": dict(info),
+                "runtime_sync": True,
+            }
+        )
+        return {
+            "updated": True,
+            "current_state": self.fsm.current_state,
+            "runtime_sync": True,
+        }
 
     def _normalize_next_state(self, proposed_next: Any) -> str | None:
         if proposed_next is None:
