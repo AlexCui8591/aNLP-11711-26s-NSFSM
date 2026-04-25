@@ -27,6 +27,7 @@ sys.path.insert(0, str(SRC))
 
 from fsm import RuntimeFSM
 from fsm_validator import FSMDesignValidator
+from datasets.robotouille import RobotouilleAdapter
 
 
 DEFAULT_GROUND_TRUTH = ROOT / "config" / "robotouille_ground_truth_asynchronous_fsm.json"
@@ -44,7 +45,7 @@ def main() -> int:
     validate_state_list_schema(task)
     print("[2/4] Ground-truth state_list schema looks complete.")
 
-    task_spec, design = compile_to_fsm_design(task)
+    task_spec, design, adapter = compile_to_fsm_design(task)
     print("[3/4] Compiled task into current FSMDesign schema.")
     print(f"      Initial state: {design['initial_state']}")
     print(f"      Terminal states: {design['terminal_states']}")
@@ -54,7 +55,7 @@ def main() -> int:
     result = validator.validate(
         design,
         task_spec=task_spec,
-        adapter=None,
+        adapter=adapter,
         allow_fallback=False,
     )
     print("[4/4] FSMDesignValidator result:")
@@ -69,7 +70,7 @@ def main() -> int:
             print(f"        - {item}")
         return 1
 
-    runtime_fsm = RuntimeFSM(result["fsm_design"], task_spec=task_spec, adapter=None)
+    runtime_fsm = RuntimeFSM(result["fsm_design"], task_spec=task_spec, adapter=adapter)
     initial_actions = runtime_fsm.get_valid_actions()
     print("\nRuntimeFSM smoke:")
     print(f"  current_state={runtime_fsm.current_state}")
@@ -79,8 +80,8 @@ def main() -> int:
 
     print(
         "\nPASS: ground-truth file is compatible with the current formal NS-FSM layer.\n"
-        "NOTE: this does not yet execute Robotouille in the simulator. For that, the\n"
-        "repo still needs a RobotouilleAdapter plus runtime executable-action filtering."
+        "NOTE: this validates the adapter-compiled FSM and formal layer; it does not\n"
+        "reset or step the external Robotouille simulator."
     )
     return 0
 
@@ -125,92 +126,13 @@ def validate_state_list_schema(task: Mapping[str, Any]) -> None:
             raise SystemExit(f"State {state.get('name')} has non-list completion_condition.")
 
 
-def compile_to_fsm_design(task: Mapping[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
-    states = task["state_list"]
-    state_names = [str(state["name"]) for state in states]
-    terminal_states = [
-        str(state["name"])
-        for state in states
-        if state.get("kind") == "terminal" or str(state.get("name")) == "DONE"
-    ]
-    if not terminal_states:
-        terminal_states = [state_names[-1]]
-
-    transitions_by_state: dict[str, list[dict[str, str]]] = {}
-    action_names: list[str] = []
-
-    for idx, state in enumerate(states):
-        name = str(state["name"])
-        if name in terminal_states:
-            transitions_by_state[name] = []
-            continue
-
-        next_state = str(
-            state.get("next_state_on_completion")
-            or _next_state_name(states, idx)
-            or terminal_states[0]
-        )
-        options: list[dict[str, str]] = []
-        for action in state.get("fsm_allowed_actions", []):
-            action_name = canonical_action_name(action)
-            action_names.append(action_name)
-            # Current RuntimeFSM advances state immediately on a valid action.
-            # For smoke-testing the formal layer, we conservatively self-loop the
-            # state-local actions and add a synthetic completion edge below.
-            options.append(
-                {
-                    "action": action_name,
-                    "next_state": name,
-                    "condition": "Ground-truth allowed action template for this phase.",
-                }
-            )
-
-        complete_action = f"complete::{name}"
-        action_names.append(complete_action)
-        options.append(
-            {
-                "action": complete_action,
-                "next_state": next_state,
-                "condition": "Completion condition for this phase has been satisfied.",
-            }
-        )
-        transitions_by_state[name] = options
-
-    available_tools = sorted(set(action_names))
-    task_spec = {
-        "dataset": "robotouille",
-        "task_id": task["task_id"],
-        "task_type": "robotouille_ground_truth_smoke",
-        "instruction": task.get("goal_description", ""),
-        "initial_state": {
-            "fsm_state": state_names[0],
-            "ground_truth_mode": True,
-        },
-        "goal_condition": {"fsm_state": terminal_states[0]},
-        "available_tools": available_tools,
-        "max_steps": int(task.get("optimal_steps") or 100),
-        "success_criteria": ["Reach DONE in the compiled ground-truth FSM."],
-        "metadata": {
-            "ground_truth_source_task_id": task["task_id"],
-            "testing_seeds": task.get("testing_seeds", []),
-        },
-    }
-    design = {
-        "states": state_names,
-        "initial_state": state_names[0],
-        "terminal_states": terminal_states,
-        "transitions_by_state": transitions_by_state,
-        "fallback_policy": {
-            "on_invalid_action": "retry_with_valid_action",
-            "on_dead_end": "abort_smoke_test",
-        },
-        "success_signals": ["Reached terminal ground-truth FSM state."],
-        "risk_notes": [
-            "This compiled design is for formal smoke-testing only.",
-            "State-local action templates are self-looped; phase advancement uses synthetic complete::<state> actions.",
-        ],
-    }
-    return task_spec, design
+def compile_to_fsm_design(
+    task: Mapping[str, Any],
+) -> tuple[dict[str, Any], dict[str, Any], RobotouilleAdapter]:
+    adapter = RobotouilleAdapter()
+    task_spec = adapter.to_task_spec(task).to_dict()
+    design = adapter.build_grounded_fsm_design(task_spec)
+    return task_spec, design, adapter
 
 
 def _next_state_name(states: list[Mapping[str, Any]], idx: int) -> str | None:

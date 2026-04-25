@@ -294,13 +294,18 @@ def build_reflexion_analysis_prompt(
 NSFSM_SYSTEM_PROMPT = """You are an NS-FSM controlled agent.
 
 You must obey the externally verified workflow FSM.
-Choose exactly one action from the provided legal action list.
-Choose a next FSM state that is listed for that action.
+First propose exactly one action and one intended next FSM state.
+Your proposal will be checked after generation against the FSM transitions and
+the simulator's current executable actions.
+If your action is outside the current FSM candidates, or is not executable now,
+the verifier will block it.
+Copy action strings exactly from the canonical FSM/verified action lists.
+Do not output simulator prose such as "Move robot1 from table1 to table2".
 Do not invent tools, actions, or next states.
 
 Output format:
 Thought: <brief reasoning>
-Action: <one legal action>
+Action: <one proposed action>
 Next State: <one valid next state>
 """
 
@@ -337,13 +342,26 @@ Validated FSM summary:
 == COMPRESSED MEMORY ==
 {compressed_memory}
 
-== LEGAL NEXT ACTIONS ==
+== FSM CANDIDATE ACTIONS ==
 {legal_actions}
 
-== VALID NEXT STATES FOR EACH ACTION: T(current_state) ==
+== FSM TRANSITIONS: T(current_state) ==
 {transition_options}
 
-Choose exactly one legal action and the intended next FSM state.
+== SIMULATOR EXECUTABLE ACTIONS ==
+{executable_actions}
+
+== VERIFIED FALLBACK ACTION LIST: T(current_state) ∩ simulator executable ==
+{verified_actions}
+
+The simulator executable actions are only situational awareness and may be
+natural-language prose. Do not copy them unless the same exact string appears in
+the canonical FSM or verified fallback list. Generate your proposal first; the
+verifier will check whether it is in both T(current_state) and the executable
+action set. The verified fallback action list is used by the runtime only if
+repeated proposals fail post-hoc verification.
+
+Choose exactly one action and the intended next FSM state.
 Thought: """
 
 
@@ -370,6 +388,8 @@ def build_nsfsm_prompt(context_packet: dict) -> tuple:
         transition_options=format_transition_options(
             context_packet.get("transition_options", [])
         ),
+        executable_actions=format_nsfsm_actions(context_packet.get("executable_actions", [])),
+        verified_actions=format_nsfsm_actions(context_packet.get("verified_actions", [])),
     )
     return NSFSM_SYSTEM_PROMPT, user
 
@@ -407,7 +427,7 @@ def format_verification_error(error: dict) -> str:
     violations = transition.get("violations") or []
     if violations:
         lines.append(f"  transition_violations: {violations}")
-    lines.append("  Choose a different action from LEGAL NEXT ACTIONS exactly.")
+    lines.append("  Propose a different action that should pass post-hoc FSM and simulator verification.")
     return "\n".join(lines)
 
 

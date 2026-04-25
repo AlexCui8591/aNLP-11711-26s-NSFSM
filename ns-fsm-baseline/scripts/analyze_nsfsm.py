@@ -72,6 +72,7 @@ def write_summary_by(results: list[Mapping[str, Any]], key: str, path: str) -> N
         total = len(items)
         successes = sum(1 for item in items if item.get("success"))
         steps = sum(int(item.get("total_steps", 0)) for item in items)
+        simulator_steps = sum(simulator_step_count(item) for item in items)
         blocked = sum(int(item.get("blocked_action_count", 0)) for item in items)
         fallback = sum(int(item.get("fallback_action_count", 0)) for item in items)
         rows.append(
@@ -81,11 +82,25 @@ def write_summary_by(results: list[Mapping[str, Any]], key: str, path: str) -> N
                 "successes": successes,
                 "success_rate": successes / total if total else 0,
                 "avg_steps": steps / total if total else 0,
+                "avg_simulator_steps": simulator_steps / total if total else 0,
                 "blocked_action_rate": blocked / steps if steps else 0,
                 "fallback_usage_rate": fallback / steps if steps else 0,
             }
         )
-    write_csv(path, rows, [key, "runs", "successes", "success_rate", "avg_steps", "blocked_action_rate", "fallback_usage_rate"])
+    write_csv(
+        path,
+        rows,
+        [
+            key,
+            "runs",
+            "successes",
+            "success_rate",
+            "avg_steps",
+            "avg_simulator_steps",
+            "blocked_action_rate",
+            "fallback_usage_rate",
+        ],
+    )
 
 
 def write_events(results: list[Mapping[str, Any]], event_type: str, path: str) -> None:
@@ -113,6 +128,7 @@ def write_fsm_validation(results: list[Mapping[str, Any]], path: str) -> None:
     rows = []
     for result in results:
         build = result.get("metadata", {}).get("fsm_build", {})
+        gt_generation = build.get("ground_truth_generation", {})
         rows.append(
             {
                 "dataset": result.get("dataset"),
@@ -120,11 +136,29 @@ def write_fsm_validation(results: list[Mapping[str, Any]], path: str) -> None:
                 "run_id": result.get("run_id", ""),
                 "source": build.get("source", ""),
                 "fallback_used": build.get("fallback_used", ""),
+                "ground_truth_status": gt_generation.get("status", ""),
+                "ground_truth_fallback_used": gt_generation.get("fallback_used", ""),
+                "ground_truth_fallback_source": gt_generation.get("fallback_source", ""),
                 "llm_fsm_error": build.get("llm_fsm_error", ""),
                 "task_hash": build.get("task_hash", ""),
             }
         )
-    write_csv(path, rows, ["dataset", "task_id", "run_id", "source", "fallback_used", "llm_fsm_error", "task_hash"])
+    write_csv(
+        path,
+        rows,
+        [
+            "dataset",
+            "task_id",
+            "run_id",
+            "source",
+            "fallback_used",
+            "ground_truth_status",
+            "ground_truth_fallback_used",
+            "ground_truth_fallback_source",
+            "llm_fsm_error",
+            "task_hash",
+        ],
+    )
 
 
 def write_datalog_violations(results: list[Mapping[str, Any]], path: str) -> None:
@@ -151,6 +185,7 @@ def write_report(results: list[Mapping[str, Any]], path: str) -> None:
     blocked = sum(int(result.get("blocked_action_count", 0)) for result in results)
     fallback = sum(int(result.get("fallback_action_count", 0)) for result in results)
     steps = sum(int(result.get("total_steps", 0)) for result in results)
+    simulator_steps = sum(simulator_step_count(result) for result in results)
     lines = [
         "# NS-FSM Analysis Report",
         "",
@@ -158,6 +193,7 @@ def write_report(results: list[Mapping[str, Any]], path: str) -> None:
         f"- Successes: {successes}",
         f"- Success rate: {successes / total if total else 0:.3f}",
         f"- Average steps: {steps / total if total else 0:.3f}",
+        f"- Average simulator steps: {simulator_steps / total if total else 0:.3f}",
         f"- Blocked action rate: {blocked / steps if steps else 0:.3f}",
         f"- Fallback usage rate: {fallback / steps if steps else 0:.3f}",
         "",
@@ -181,6 +217,10 @@ def write_csv(path: str, rows: list[Mapping[str, Any]], fieldnames: list[str]) -
         writer.writeheader()
         for row in rows:
             writer.writerow({key: row.get(key, "") for key in fieldnames})
+
+
+def simulator_step_count(result: Mapping[str, Any]) -> int:
+    return int(result.get("metadata", {}).get("adapter_summary", {}).get("total_steps", 0))
 
 
 if __name__ == "__main__":

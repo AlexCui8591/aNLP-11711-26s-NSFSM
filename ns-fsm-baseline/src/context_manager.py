@@ -35,6 +35,8 @@ class ContextManager:
         fallback_history: list[dict[str, Any]] | None = None,
         transition_options: list[dict[str, Any]] | None = None,
         legal_actions: list[str] | None = None,
+        executable_actions: list[str] | None = None,
+        verified_actions: list[str] | None = None,
     ) -> dict[str, Any]:
         spec = task_spec_to_dict(task_spec)
         history = history or []
@@ -63,6 +65,8 @@ class ContextManager:
                 if legal_actions is not None
                 else fsm.get_valid_actions()
             ),
+            "executable_actions": list(executable_actions or []),
+            "verified_actions": list(verified_actions or []),
             "fsm_summary": self._fsm_summary(fsm),
             "recent_history": deepcopy(history[-self.recent_k :]),
             "blocked_history": deepcopy(blocked_history[-self.recent_k :]),

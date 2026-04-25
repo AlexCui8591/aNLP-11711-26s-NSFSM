@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 from collections import Counter
 import json
+import math
 import os
 import sys
 from datetime import datetime
@@ -18,7 +19,6 @@ sys.path.insert(0, SRC)
 from datasets.registry import get_adapter, registry_warning
 from fsm_builder import FSMBuilder
 from fsm_designer import LLMFSMDesigner
-from llm_interface import LLMInterface
 from nsfsm_agent import NSFSMAgent
 
 
@@ -26,6 +26,10 @@ def main() -> None:
     args = parse_args()
     if args.use_llm and args.planner_only:
         raise SystemExit("--use-llm cannot be combined with --planner-only.")
+    if args.require_llm and args.planner_only:
+        raise SystemExit("--require-llm cannot be combined with --planner-only.")
+    if args.require_llm and not args.use_llm:
+        raise SystemExit("--require-llm requires --use-llm.")
 
     adapter_kwargs: dict[str, Any] = {}
     if args.dataset == "minecraft":
@@ -51,51 +55,64 @@ def main() -> None:
     output_dir = os.path.join(ROOT, "results", "full", args.tag, adapter.dataset_name, "nsfsm")
     os.makedirs(output_dir, exist_ok=True)
     results = []
+    robotouille_seeds = parse_int_list(args.robotouille_seeds)
+    if args.robotouille_seed is not None and not robotouille_seeds:
+        robotouille_seeds = [args.robotouille_seed]
+    seed_values: list[int | None] = robotouille_seeds or [None]
     for raw_task in raw_tasks:
-        task_spec = adapter.to_task_spec(adapter.load_or_wrap(raw_task)).to_dict()
-        if args.task_type:
-            task_spec["task_type"] = args.task_type
-        for run_idx in range(1, args.runs + 1):
-            output_path = os.path.join(
-                output_dir,
-                f"{safe_name(task_spec['task_id'])}_run{run_idx:02d}.json",
-            )
-            if args.resume and os.path.exists(output_path):
-                with open(output_path, "r", encoding="utf-8") as f:
-                    results.append(json.load(f))
-                continue
-
-            fsm, fsm_metadata = build_runtime_fsm(
-                task_spec=task_spec,
-                adapter=adapter,
-                use_fixed_generic_fsm=args.use_fixed_generic_fsm,
-                use_llm_fsm_design=args.use_llm_fsm_design,
-                llm_config=args.llm_config or None,
-            )
-            result = NSFSMAgent(
-                task_spec=task_spec,
-                adapter=adapter,
-                fsm=fsm,
-                llm=llm,
-                planner_only=args.planner_only,
-                max_llm_retries=args.max_llm_retries,
-                verbose=not args.quiet,
-            ).run_episode()
-            result["run_id"] = run_idx
-            result["metadata"]["fsm_build"] = fsm_metadata
-            if warning:
-                result["metadata"]["dataset_warning"] = warning
-            if not args.save_fsm_design:
-                result["metadata"].get("fsm", {}).pop("transitions", None)
-
-            with open(output_path, "w", encoding="utf-8") as f:
-                json.dump(result, f, indent=2, sort_keys=True)
-            results.append(result)
-            if not args.quiet:
-                print(
-                    f"[run_nsfsm_experiment] {task_spec['task_id']} run={run_idx} "
-                    f"success={result['success']} steps={result['total_steps']}"
+        for seed in seed_values:
+            if args.dataset == "robotouille" and seed is not None:
+                setattr(adapter, "seed_override", seed)
+            task_spec = adapter.to_task_spec(adapter.load_or_wrap(raw_task)).to_dict()
+            if args.task_type:
+                task_spec["task_type"] = args.task_type
+            apply_max_step_multiplier(task_spec, args.max_step_multiplier)
+            seed_suffix = f"_seed{seed}" if seed is not None else ""
+            for run_idx in range(1, args.runs + 1):
+                output_path = os.path.join(
+                    output_dir,
+                    f"{safe_name(task_spec['task_id'])}{seed_suffix}_run{run_idx:02d}.json",
                 )
+                if args.resume and os.path.exists(output_path):
+                    with open(output_path, "r", encoding="utf-8") as f:
+                        results.append(json.load(f))
+                    continue
+
+                fsm, fsm_metadata = build_runtime_fsm(
+                    task_spec=task_spec,
+                    adapter=adapter,
+                    use_fixed_generic_fsm=args.use_fixed_generic_fsm,
+                    use_llm_fsm_design=args.use_llm_fsm_design,
+                    llm_config=args.llm_config or None,
+                )
+                result = NSFSMAgent(
+                    task_spec=task_spec,
+                    adapter=adapter,
+                    fsm=fsm,
+                    llm=llm,
+                    planner_only=args.planner_only,
+                    require_llm=args.require_llm,
+                    max_llm_retries=args.max_llm_retries,
+                    verbose=not args.quiet,
+                ).run_episode()
+                result["run_id"] = run_idx
+                if seed is not None:
+                    result["seed"] = seed
+                result["metadata"]["fsm_build"] = fsm_metadata
+                if warning:
+                    result["metadata"]["dataset_warning"] = warning
+                if not args.save_fsm_design:
+                    result["metadata"].get("fsm", {}).pop("transitions", None)
+
+                with open(output_path, "w", encoding="utf-8") as f:
+                    json.dump(result, f, indent=2, sort_keys=True)
+                results.append(result)
+                if not args.quiet:
+                    print(
+                        f"[run_nsfsm_experiment] {task_spec['task_id']} "
+                        f"seed={seed if seed is not None else 'default'} run={run_idx} "
+                        f"success={result['success']} steps={result['total_steps']}"
+                    )
 
     summary = summarize(results, adapter.dataset_name)
     summary_path = os.path.join(output_dir, f"{adapter.dataset_name}_summary.json")
@@ -146,6 +163,23 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Override the Robotouille evaluation seed for single-task runs.",
     )
+    parser.add_argument(
+        "--robotouille-seeds",
+        default="",
+        help=(
+            "Comma-separated Robotouille evaluation seeds. The official async "
+            "protocol uses 42,84,126,168,210,252,294,336,378,420."
+        ),
+    )
+    parser.add_argument(
+        "--max-step-multiplier",
+        type=float,
+        default=None,
+        help=(
+            "Override max_steps to ceil(optimal_steps * multiplier) when "
+            "optimal_steps is available. Use 1.5 for official Robotouille comparison."
+        ),
+    )
     parser.add_argument("--task-type", default="")
     parser.add_argument("--task-ids", default="", help="Comma-separated task IDs.")
     parser.add_argument("--groups", default="", help="Comma-separated groups when supported.")
@@ -177,6 +211,11 @@ def parse_args() -> argparse.Namespace:
         help="Use LLMInterface for NS-FSM action proposals. Without this, runs use planner fallback.",
     )
     parser.add_argument(
+        "--require-llm",
+        action="store_true",
+        help="Fail instead of falling back to planner when runtime LLM inference is unavailable.",
+    )
+    parser.add_argument(
         "--llm-config",
         default="",
         help="Optional YAML config path for LLMInterface and LLM FSM designer.",
@@ -193,9 +232,27 @@ def build_llm(args: argparse.Namespace) -> Any | None:
     if not args.use_llm:
         return None
     try:
+        from llm_interface import LLMInterface
+
         return LLMInterface(args.llm_config or None)
     except Exception as exc:
         raise SystemExit(f"Failed to initialize LLMInterface: {exc}") from exc
+
+
+def parse_int_list(value: str) -> list[int]:
+    return [int(item.strip()) for item in str(value or "").split(",") if item.strip()]
+
+
+def apply_max_step_multiplier(task_spec: dict[str, Any], multiplier: float | None) -> None:
+    if multiplier is None:
+        return
+    raw_task = task_spec.get("metadata", {}).get("ground_truth_task", {})
+    optimal_steps = raw_task.get("optimal_steps") if isinstance(raw_task, Mapping) else None
+    if optimal_steps is None:
+        optimal_steps = task_spec.get("metadata", {}).get("optimal_steps")
+    if optimal_steps is None:
+        return
+    task_spec["max_steps"] = int(math.ceil(float(optimal_steps) * float(multiplier)))
 
 
 def select_tasks(adapter: Any, args: argparse.Namespace) -> list[dict[str, Any] | str]:
@@ -255,12 +312,18 @@ def build_runtime_fsm(
     if _use_robotouille_grounded_rules(task_spec, adapter, use_llm_fsm_design):
         design = adapter.build_grounded_fsm_design(task_spec)
         fsm = builder.from_design(design, task_spec, adapter, allow_fallback=False)
+        ground_truth_task = task_spec.get("metadata", {}).get("ground_truth_task", {})
         metadata.update(
             {
                 "source": "robotouille_ground_truth_rules",
                 "rule": "stateful_ground_truth_with_runtime_executable_filter",
                 "required_action_count": len(task_spec.get("available_tools") or []),
                 "llm_fsm_error": None,
+                "ground_truth_generation": (
+                    ground_truth_task.get("ground_truth_generation", {})
+                    if isinstance(ground_truth_task, Mapping)
+                    else {}
+                ),
             }
         )
         return fsm, metadata
@@ -368,6 +431,10 @@ def summarize(results: list[Mapping[str, Any]], dataset: str) -> dict[str, Any]:
     total = len(results)
     successes = sum(1 for result in results if result.get("success"))
     total_steps = sum(int(result.get("total_steps", 0)) for result in results)
+    simulator_steps = sum(
+        int(result.get("metadata", {}).get("adapter_summary", {}).get("total_steps", 0))
+        for result in results
+    )
     blocked = sum(int(result.get("blocked_action_count", 0)) for result in results)
     fallback = sum(int(result.get("fallback_action_count", 0)) for result in results)
     goal_stats = _goal_stats(results)
@@ -384,15 +451,20 @@ def summarize(results: list[Mapping[str, Any]], dataset: str) -> dict[str, Any]:
         "successes": successes,
         "success_rate": successes / total if total else 0.0,
         "avg_steps": total_steps / total if total else 0.0,
+        "avg_simulator_steps": simulator_steps / total if total else 0.0,
         "blocked_action_count": blocked,
         "fallback_action_count": fallback,
         "results": [
             {
                 "task_id": result.get("task_id"),
                 "run_id": result.get("run_id"),
+                "seed": result.get("seed"),
                 "success": result.get("success"),
                 "termination": result.get("termination"),
                 "total_steps": result.get("total_steps"),
+                "simulator_steps": result.get("metadata", {})
+                .get("adapter_summary", {})
+                .get("total_steps"),
             }
             for result in results
         ],
@@ -415,6 +487,10 @@ def _goal_stats(results: list[Mapping[str, Any]]) -> list[dict[str, Any]]:
         n_runs = len(items)
         n_success = sum(1 for item in items if item.get("success"))
         step_values = [int(item.get("total_steps", 0)) for item in items]
+        simulator_step_values = [
+            int(item.get("metadata", {}).get("adapter_summary", {}).get("total_steps", 0))
+            for item in items
+        ]
         termination_distribution = Counter(
             str(item.get("termination") or "unknown") for item in items
         )
@@ -429,6 +505,9 @@ def _goal_stats(results: list[Mapping[str, Any]]) -> list[dict[str, Any]]:
                 "n_success": n_success,
                 "success_rate": round(n_success / n_runs, 3) if n_runs else 0.0,
                 "avg_steps": round(sum(step_values) / n_runs, 1) if n_runs else 0.0,
+                "avg_simulator_steps": (
+                    round(sum(simulator_step_values) / n_runs, 1) if n_runs else 0.0
+                ),
                 "blocked_action_count": sum(
                     int(item.get("blocked_action_count", 0)) for item in items
                 ),

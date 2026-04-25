@@ -1,0 +1,19 @@
+# Local HuggingFace/Qwen runtime backend for Robotouille.
+
+llm:
+  model_name: "Qwen/Qwen2.5-7B-Instruct"
+  backend: "hf"
+  temperature: 0.3
+  top_p: 0.95
+  max_retries: 0
+  max_new_tokens: 512
+  torch_dtype: "bfloat16"
+  trust_remote_code: true
+
+env:
+  max_steps_per_episode: 100
+  num_runs: 1
+
+logging:
+  save_trajectories: true
+  verbose: false

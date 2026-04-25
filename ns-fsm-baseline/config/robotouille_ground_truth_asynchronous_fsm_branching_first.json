@@ -1,0 +1,777 @@
+{
+  "criterion": "guarded_state_list_with_per_action_next_states",
+  "generation": {
+    "generator_attempts": 1,
+    "judge_attempts": 1,
+    "judge_events": [
+      {
+        "candidate_event": {
+          "candidate_source": "deterministic_branching",
+          "llm_generator_used": false
+        },
+        "candidate_mode": "branching",
+        "candidate_source": "deterministic_branching",
+        "deterministic_issues": [],
+        "fallback_issues": [],
+        "fallback_reason": "llm_judge_failed",
+        "fallback_selection_events": [
+          {
+            "issues": [],
+            "selected": true,
+            "source": "last_good_ground_truth",
+            "task_id": "robotouille/asynchronous/0_cheese_chicken_sandwich"
+          }
+        ],
+        "fallback_source": "last_good_ground_truth",
+        "fallback_used": true,
+        "judge_attempts": [
+          {
+            "attempt": 1,
+            "error": "<urlopen error [Errno 111] Connection refused>"
+          }
+        ],
+        "llm_errors": [
+          "<urlopen error [Errno 111] Connection refused>"
+        ],
+        "llm_judge_used": true,
+        "llm_verdict": null,
+        "status": "fallback_to_last_good_ground_truth",
+        "validation_issues": []
+      }
+    ],
+    "last_good_ground_truth": "ns-fsm-baseline/config/robotouille_ground_truth_asynchronous_fsm_branching_first.json",
+    "llm_generator_requested": false,
+    "llm_judge_requested": true,
+    "llm_required": false,
+    "mode": "branching",
+    "task_ids": [
+      "robotouille/asynchronous/0_cheese_chicken_sandwich"
+    ]
+  },
+  "runtime_rule": "final_legal_actions = state.guarded_transitions \u2229 simulator.executable_actions",
+  "source": "Robotouille official task JSON transformed into a stateful NS-FSM ground-truth file with guarded branching candidates and judge/fallback validation",
+  "split": "asynchronous",
+  "task_count": 1,
+  "tasks": [
+    {
+      "dataset": "robotouille",
+      "environment_name": "asynchronous/0_cheese_chicken_sandwich",
+      "fsm_generation_mode": "branching",
+      "goal_description": "Prepare a cheese chicken sandwich on a table",
+      "goal_predicates": [
+        {
+          "args": [
+            "bread",
+            "table"
+          ],
+          "ids": [
+            1,
+            2
+          ],
+          "predicate": "item_on"
+        },
+        {
+          "args": [
+            "chicken"
+          ],
+          "ids": [
+            3
+          ],
+          "predicate": "iscooked"
+        },
+        {
+          "args": [
+            "chicken",
+            "table"
+          ],
+          "ids": [
+            3,
+            2
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "cheese",
+            "table"
+          ],
+          "ids": [
+            4,
+            2
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "bread",
+            "table"
+          ],
+          "ids": [
+            5,
+            2
+          ],
+          "predicate": "item_at"
+        },
+        {
+          "args": [
+            "bread"
+          ],
+          "ids": [
+            5
+          ],
+          "predicate": "clear"
+        }
+      ],
+      "ground_truth_generation": {
+        "candidate_event": {
+          "candidate_source": "deterministic_branching",
+          "llm_generator_used": false
+        },
+        "candidate_mode": "branching",
+        "candidate_source": "deterministic_branching",
+        "deterministic_issues": [],
+        "fallback_issues": [],
+        "fallback_reason": "llm_judge_failed",
+        "fallback_selection_events": [
+          {
+            "issues": [],
+            "selected": true,
+            "source": "last_good_ground_truth",
+            "task_id": "robotouille/asynchronous/0_cheese_chicken_sandwich"
+          }
+        ],
+        "fallback_source": "last_good_ground_truth",
+        "fallback_used": true,
+        "judge_attempts": [
+          {
+            "attempt": 1,
+            "error": "<urlopen error [Errno 111] Connection refused>"
+          }
+        ],
+        "llm_errors": [
+          "<urlopen error [Errno 111] Connection refused>"
+        ],
+        "llm_judge_used": true,
+        "llm_verdict": null,
+        "status": "fallback_to_last_good_ground_truth",
+        "validation_issues": []
+      },
+      "group": "asynchronous",
+      "optimal_steps": 21,
+      "state_list": [
+        {
+          "completion_condition": [
+            "stove is ready for chicken__3",
+            "robot is at station containing chicken__3"
+          ],
+          "fsm_allowed_actions": [
+            {
+              "constraint": "Only grounded move actions that make progress toward this target are allowed.",
+              "target": "occupied stove",
+              "template": "move"
+            },
+            {
+              "constraint": "Only grounded move actions that make progress toward this target are allowed.",
+              "target": "station containing chicken__3",
+              "template": "move"
+            }
+          ],
+          "kind": "guarded-cook-entry",
+          "name": "NAVIGATE_TO_chicken__3_FOR_COOK",
+          "notes": [
+            "This state deliberately branches before picking up the cook target.",
+            "If every stove is blocked by another item, clear the stove first."
+          ],
+          "phase_goal": "Prepare an empty stove, then reach chicken__3 so it can be cooked.",
+          "root_cluster": true,
+          "transitions": [
+            {
+              "action": {
+                "constraint": "Only grounded move actions that make progress toward this target are allowed.",
+                "target": "occupied stove",
+                "template": "move"
+              },
+              "condition": "A stove is occupied by an item other than chicken__3.",
+              "guard": "stove_blocked_for:chicken__3",
+              "next_state": "PICK_UP_STOVE_BLOCKER_FOR_chicken__3"
+            },
+            {
+              "action": {
+                "constraint": "Only grounded move actions that make progress toward this target are allowed.",
+                "target": "station containing chicken__3",
+                "template": "move"
+              },
+              "condition": "At least one stove can accept chicken__3; move to the item.",
+              "guard": "stove_ready_for:chicken__3",
+              "next_state": "PICK_UP_chicken__3_FOR_COOK"
+            }
+          ]
+        },
+        {
+          "completion_condition": [
+            "robot holds stove blocker"
+          ],
+          "fsm_allowed_actions": [
+            {
+              "constraint": "Pick up any clear item currently sitting on a stove.",
+              "target": "occupied stove",
+              "template": "pick-up-item"
+            }
+          ],
+          "kind": "clear-blocker",
+          "name": "PICK_UP_STOVE_BLOCKER_FOR_chicken__3",
+          "next_state_on_completion": "NAVIGATE_TO_CLEAR_TABLE_WITH_STOVE_BLOCKER_FOR_chicken__3",
+          "phase_goal": "Pick up the top item blocking the stove before cooking chicken__3."
+        },
+        {
+          "completion_condition": [
+            "robot is at an empty table with stove blocker"
+          ],
+          "fsm_allowed_actions": [
+            {
+              "constraint": "Only grounded move actions that make progress toward this target are allowed.",
+              "target": "empty table while holding item",
+              "template": "move"
+            }
+          ],
+          "kind": "navigate",
+          "name": "NAVIGATE_TO_CLEAR_TABLE_WITH_STOVE_BLOCKER_FOR_chicken__3",
+          "next_state_on_completion": "PLACE_STOVE_BLOCKER_ON_TABLE_FOR_chicken__3",
+          "phase_goal": "Move the stove blocker to an empty table so chicken__3 can be cooked."
+        },
+        {
+          "completion_condition": [
+            "stove blocker is no longer on stove"
+          ],
+          "fsm_allowed_actions": [
+            {
+              "constraint": "Place the held blocker on an empty table; item identity is runtime-bound.",
+              "target": "table",
+              "template": "place-item"
+            }
+          ],
+          "kind": "place-item",
+          "name": "PLACE_STOVE_BLOCKER_ON_TABLE_FOR_chicken__3",
+          "next_state_on_completion": "NAVIGATE_TO_chicken__3_FOR_COOK",
+          "phase_goal": "Place the stove blocker on a table, then re-check stove readiness for chicken__3."
+        },
+        {
+          "completion_condition": [
+            "robot has chicken__3"
+          ],
+          "fsm_allowed_actions": [
+            {
+              "constraint": "Hands must be free and the robot must already be at the item's station.",
+              "item": "chicken__3",
+              "template": "pick-up-item"
+            }
+          ],
+          "kind": "pick-up-item",
+          "name": "PICK_UP_chicken__3_FOR_COOK",
+          "next_state_on_completion": "NAVIGATE_TO_STOVE_WITH_chicken__3",
+          "phase_goal": "Pick up chicken__3 for cooking."
+        },
+        {
+          "completion_condition": [
+            "robot is at an empty stove with chicken__3"
+          ],
+          "fsm_allowed_actions": [
+            {
+              "constraint": "Only grounded move actions that make progress toward this target are allowed.",
+              "target": "empty stove while holding item",
+              "template": "move"
+            }
+          ],
+          "kind": "navigate",
+          "name": "NAVIGATE_TO_STOVE_WITH_chicken__3",
+          "next_state_on_completion": "PLACE_chicken__3_ON_STOVE",
+          "phase_goal": "Bring chicken__3 to an empty stove."
+        },
+        {
+          "completion_condition": [
+            "chicken__3 is directly on stove"
+          ],
+          "fsm_allowed_actions": [
+            {
+              "constraint": "The stove must be empty so chicken__3 is directly on the stove, not stacked on another item.",
+              "item": "chicken__3",
+              "target": "empty stove",
+              "template": "place-item"
+            }
+          ],
+          "kind": "place-item",
+          "name": "PLACE_chicken__3_ON_STOVE",
+          "next_state_on_completion": "START_COOK_chicken__3",
+          "phase_goal": "Place chicken__3 directly on an empty stove."
+        },
+        {
+          "completion_condition": [
+            "iscooking(chicken__3) or iscooked(chicken__3)"
+          ],
+          "fsm_allowed_actions": [
+            {
+              "constraint": "Only start cooking once the item is directly on the stove.",
+              "item": "chicken__3",
+              "target": "stove",
+              "template": "cook"
+            }
+          ],
+          "kind": "cook",
+          "name": "START_COOK_chicken__3",
+          "next_state_on_completion": "chicken__3_COOKING_BRANCH",
+          "phase_goal": "Start cooking chicken__3."
+        },
+        {
+          "completion_condition": [
+            "iscooked(chicken__3)"
+          ],
+          "fsm_allowed_actions": [
+            {
+              "constraint": "Wait if chicken__3 is the only pending useful subgoal or if cooking is about to finish.",
+              "template": "wait"
+            },
+            {
+              "constraint": "Only switch to another pending subgoal if it does not interrupt cooking chicken__3.",
+              "template": "advance_pending_subgoal"
+            }
+          ],
+          "kind": "async-branch",
+          "name": "chicken__3_COOKING_BRANCH",
+          "notes": [
+            "This is the canonical asynchronous branch state.",
+            "Runtime verifier should forbid removing the item before it is fully cooked."
+          ],
+          "parallel_subgoals": [
+            "NAVIGATE_TO_bread__1_FOR_SERVE",
+            "NAVIGATE_TO_cheese__4_FOR_SERVE",
+            "NAVIGATE_TO_bread__5_FOR_SERVE",
+            "VERIFY_GOAL"
+          ],
+          "phase_goal": "Preserve chicken__3's cooking process while making progress on other pending subgoals."
+        },
+        {
+          "completion_condition": [
+            "robot is at station containing bread__1"
+          ],
+          "fsm_allowed_actions": [
+            {
+              "constraint": "Hands must be free and the robot must already be at the item's station.",
+              "item": "bread__1",
+              "template": "pick-up-item"
+            },
+            {
+              "constraint": "Only grounded move actions that make progress toward this target are allowed.",
+              "target": "station containing bread__1",
+              "template": "move"
+            }
+          ],
+          "kind": "guarded-serve-entry",
+          "name": "NAVIGATE_TO_bread__1_FOR_SERVE",
+          "phase_goal": "Reach or pick up bread__1 so it can be served to a table.",
+          "root_cluster": true,
+          "transitions": [
+            {
+              "action": {
+                "constraint": "Hands must be free and the robot must already be at the item's station.",
+                "item": "bread__1",
+                "template": "pick-up-item"
+              },
+              "condition": "Robot is already at the station containing bread__1; pick it up.",
+              "guard": "robot_at_station_containing:bread__1",
+              "next_state": "NAVIGATE_TO_TABLE_WITH_bread__1"
+            },
+            {
+              "action": {
+                "constraint": "Only grounded move actions that make progress toward this target are allowed.",
+                "target": "station containing bread__1",
+                "template": "move"
+              },
+              "condition": "Robot is not at bread__1; navigate to its station.",
+              "guard": "not_robot_at_station_containing:bread__1",
+              "next_state": "PICK_UP_bread__1_FOR_SERVE"
+            }
+          ]
+        },
+        {
+          "completion_condition": [
+            "robot has bread__1"
+          ],
+          "fsm_allowed_actions": [
+            {
+              "constraint": "Hands must be free and the robot must already be at the item's station.",
+              "item": "bread__1",
+              "template": "pick-up-item"
+            }
+          ],
+          "kind": "pick-up-item",
+          "name": "PICK_UP_bread__1_FOR_SERVE",
+          "next_state_on_completion": "NAVIGATE_TO_TABLE_WITH_bread__1",
+          "phase_goal": "Pick up bread__1 for serving."
+        },
+        {
+          "completion_condition": [
+            "robot is at serving table with bread__1"
+          ],
+          "fsm_allowed_actions": [
+            {
+              "constraint": "Only grounded move actions that make progress toward this target are allowed.",
+              "target": "serving table while holding item",
+              "template": "move"
+            }
+          ],
+          "kind": "navigate",
+          "name": "NAVIGATE_TO_TABLE_WITH_bread__1",
+          "next_state_on_completion": "PLACE_bread__1_ON_TABLE",
+          "phase_goal": "Bring bread__1 to a serving table."
+        },
+        {
+          "completion_condition": [
+            "ontable(bread__1)"
+          ],
+          "fsm_allowed_actions": [
+            {
+              "constraint": "Choose the serving table that keeps the dish decomposition reachable and respects any top/clear requirement.",
+              "item": "bread__1",
+              "table_mode": "on",
+              "target": "table",
+              "template": "place-item"
+            }
+          ],
+          "kind": "place-item",
+          "name": "PLACE_bread__1_ON_TABLE",
+          "phase_goal": "Serve bread__1 on the target table."
+        },
+        {
+          "completion_condition": [
+            "robot is at station containing chicken__3"
+          ],
+          "fsm_allowed_actions": [
+            {
+              "constraint": "Hands must be free and the robot must already be at the item's station.",
+              "item": "chicken__3",
+              "template": "pick-up-item"
+            },
+            {
+              "constraint": "Only grounded move actions that make progress toward this target are allowed.",
+              "target": "station containing chicken__3",
+              "template": "move"
+            }
+          ],
+          "kind": "guarded-serve-entry",
+          "name": "NAVIGATE_TO_chicken__3_FOR_SERVE",
+          "phase_goal": "Reach or pick up chicken__3 so it can be served to a table.",
+          "root_cluster": true,
+          "transitions": [
+            {
+              "action": {
+                "constraint": "Hands must be free and the robot must already be at the item's station.",
+                "item": "chicken__3",
+                "template": "pick-up-item"
+              },
+              "condition": "Robot is already at the station containing chicken__3; pick it up.",
+              "guard": "robot_at_station_containing:chicken__3",
+              "next_state": "NAVIGATE_TO_TABLE_WITH_chicken__3"
+            },
+            {
+              "action": {
+                "constraint": "Only grounded move actions that make progress toward this target are allowed.",
+                "target": "station containing chicken__3",
+                "template": "move"
+              },
+              "condition": "Robot is not at chicken__3; navigate to its station.",
+              "guard": "not_robot_at_station_containing:chicken__3",
+              "next_state": "PICK_UP_chicken__3_FOR_SERVE"
+            }
+          ]
+        },
+        {
+          "completion_condition": [
+            "robot has chicken__3"
+          ],
+          "fsm_allowed_actions": [
+            {
+              "constraint": "Hands must be free and the robot must already be at the item's station.",
+              "item": "chicken__3",
+              "template": "pick-up-item"
+            }
+          ],
+          "kind": "pick-up-item",
+          "name": "PICK_UP_chicken__3_FOR_SERVE",
+          "next_state_on_completion": "NAVIGATE_TO_TABLE_WITH_chicken__3",
+          "phase_goal": "Pick up chicken__3 for serving."
+        },
+        {
+          "completion_condition": [
+            "robot is at serving table with chicken__3"
+          ],
+          "fsm_allowed_actions": [
+            {
+              "constraint": "Only grounded move actions that make progress toward this target are allowed.",
+              "target": "serving table while holding item",
+              "template": "move"
+            }
+          ],
+          "kind": "navigate",
+          "name": "NAVIGATE_TO_TABLE_WITH_chicken__3",
+          "next_state_on_completion": "PLACE_chicken__3_ON_TABLE",
+          "phase_goal": "Bring chicken__3 to a serving table."
+        },
+        {
+          "completion_condition": [
+            "attable(chicken__3)"
+          ],
+          "fsm_allowed_actions": [
+            {
+              "constraint": "Choose the serving table that keeps the dish decomposition reachable and respects any top/clear requirement.",
+              "item": "chicken__3",
+              "table_mode": "at",
+              "target": "table",
+              "template": "place-item"
+            }
+          ],
+          "kind": "place-item",
+          "name": "PLACE_chicken__3_ON_TABLE",
+          "phase_goal": "Serve chicken__3 on the target table."
+        },
+        {
+          "completion_condition": [
+            "robot is at station containing cheese__4"
+          ],
+          "fsm_allowed_actions": [
+            {
+              "constraint": "Hands must be free and the robot must already be at the item's station.",
+              "item": "cheese__4",
+              "template": "pick-up-item"
+            },
+            {
+              "constraint": "Only grounded move actions that make progress toward this target are allowed.",
+              "target": "station containing cheese__4",
+              "template": "move"
+            }
+          ],
+          "kind": "guarded-serve-entry",
+          "name": "NAVIGATE_TO_cheese__4_FOR_SERVE",
+          "phase_goal": "Reach or pick up cheese__4 so it can be served to a table.",
+          "root_cluster": true,
+          "transitions": [
+            {
+              "action": {
+                "constraint": "Hands must be free and the robot must already be at the item's station.",
+                "item": "cheese__4",
+                "template": "pick-up-item"
+              },
+              "condition": "Robot is already at the station containing cheese__4; pick it up.",
+              "guard": "robot_at_station_containing:cheese__4",
+              "next_state": "NAVIGATE_TO_TABLE_WITH_cheese__4"
+            },
+            {
+              "action": {
+                "constraint": "Only grounded move actions that make progress toward this target are allowed.",
+                "target": "station containing cheese__4",
+                "template": "move"
+              },
+              "condition": "Robot is not at cheese__4; navigate to its station.",
+              "guard": "not_robot_at_station_containing:cheese__4",
+              "next_state": "PICK_UP_cheese__4_FOR_SERVE"
+            }
+          ]
+        },
+        {
+          "completion_condition": [
+            "robot has cheese__4"
+          ],
+          "fsm_allowed_actions": [
+            {
+              "constraint": "Hands must be free and the robot must already be at the item's station.",
+              "item": "cheese__4",
+              "template": "pick-up-item"
+            }
+          ],
+          "kind": "pick-up-item",
+          "name": "PICK_UP_cheese__4_FOR_SERVE",
+          "next_state_on_completion": "NAVIGATE_TO_TABLE_WITH_cheese__4",
+          "phase_goal": "Pick up cheese__4 for serving."
+        },
+        {
+          "completion_condition": [
+            "robot is at serving table with cheese__4"
+          ],
+          "fsm_allowed_actions": [
+            {
+              "constraint": "Only grounded move actions that make progress toward this target are allowed.",
+              "target": "serving table while holding item",
+              "template": "move"
+            }
+          ],
+          "kind": "navigate",
+          "name": "NAVIGATE_TO_TABLE_WITH_cheese__4",
+          "next_state_on_completion": "PLACE_cheese__4_ON_TABLE",
+          "phase_goal": "Bring cheese__4 to a serving table."
+        },
+        {
+          "completion_condition": [
+            "attable(cheese__4)"
+          ],
+          "fsm_allowed_actions": [
+            {
+              "constraint": "Choose the serving table that keeps the dish decomposition reachable and respects any top/clear requirement.",
+              "item": "cheese__4",
+              "table_mode": "at",
+              "target": "table",
+              "template": "place-item"
+            }
+          ],
+          "kind": "place-item",
+          "name": "PLACE_cheese__4_ON_TABLE",
+          "phase_goal": "Serve cheese__4 on the target table."
+        },
+        {
+          "completion_condition": [
+            "robot is at station containing bread__5"
+          ],
+          "fsm_allowed_actions": [
+            {
+              "constraint": "Hands must be free and the robot must already be at the item's station.",
+              "item": "bread__5",
+              "template": "pick-up-item"
+            },
+            {
+              "constraint": "Only grounded move actions that make progress toward this target are allowed.",
+              "target": "station containing bread__5",
+              "template": "move"
+            }
+          ],
+          "kind": "guarded-serve-entry",
+          "name": "NAVIGATE_TO_bread__5_FOR_SERVE",
+          "phase_goal": "Reach or pick up bread__5 so it can be served to a table.",
+          "root_cluster": true,
+          "transitions": [
+            {
+              "action": {
+                "constraint": "Hands must be free and the robot must already be at the item's station.",
+                "item": "bread__5",
+                "template": "pick-up-item"
+              },
+              "condition": "Robot is already at the station containing bread__5; pick it up.",
+              "guard": "robot_at_station_containing:bread__5",
+              "next_state": "NAVIGATE_TO_TABLE_WITH_bread__5"
+            },
+            {
+              "action": {
+                "constraint": "Only grounded move actions that make progress toward this target are allowed.",
+                "target": "station containing bread__5",
+                "template": "move"
+              },
+              "condition": "Robot is not at bread__5; navigate to its station.",
+              "guard": "not_robot_at_station_containing:bread__5",
+              "next_state": "PICK_UP_bread__5_FOR_SERVE"
+            }
+          ]
+        },
+        {
+          "completion_condition": [
+            "robot has bread__5"
+          ],
+          "fsm_allowed_actions": [
+            {
+              "constraint": "Hands must be free and the robot must already be at the item's station.",
+              "item": "bread__5",
+              "template": "pick-up-item"
+            }
+          ],
+          "kind": "pick-up-item",
+          "name": "PICK_UP_bread__5_FOR_SERVE",
+          "next_state_on_completion": "NAVIGATE_TO_TABLE_WITH_bread__5",
+          "phase_goal": "Pick up bread__5 for serving."
+        },
+        {
+          "completion_condition": [
+            "robot is at serving table with bread__5"
+          ],
+          "fsm_allowed_actions": [
+            {
+              "constraint": "Only grounded move actions that make progress toward this target are allowed.",
+              "target": "serving table while holding item",
+              "template": "move"
+            }
+          ],
+          "kind": "navigate",
+          "name": "NAVIGATE_TO_TABLE_WITH_bread__5",
+          "next_state_on_completion": "PLACE_bread__5_ON_TABLE",
+          "phase_goal": "Bring bread__5 to a serving table."
+        },
+        {
+          "completion_condition": [
+            "attable(bread__5)"
+          ],
+          "fsm_allowed_actions": [
+            {
+              "constraint": "Choose the serving table that keeps the dish decomposition reachable and respects any top/clear requirement.",
+              "item": "bread__5",
+              "table_mode": "at",
+              "target": "table",
+              "template": "place-item"
+            }
+          ],
+          "kind": "place-item",
+          "name": "PLACE_bread__5_ON_TABLE",
+          "notes": [
+            "bread__5 is marked clear in the goal, so it should be placed as the top-most visible item."
+          ],
+          "phase_goal": "Serve bread__5 on the target table."
+        },
+        {
+          "completion_condition": [
+            "all goal predicates satisfied"
+          ],
+          "fsm_allowed_actions": [
+            {
+              "constraint": "All official goal predicates must evaluate to true in the simulator state.",
+              "template": "verify_goal_complete"
+            }
+          ],
+          "kind": "verify",
+          "name": "VERIFY_GOAL",
+          "next_state_on_completion": "DONE",
+          "phase_goal": "Check that all Robotouille goal predicates are satisfied.",
+          "root_cluster": true
+        },
+        {
+          "completion_condition": [
+            "terminal"
+          ],
+          "fsm_allowed_actions": [],
+          "kind": "terminal",
+          "name": "DONE",
+          "phase_goal": "Task complete."
+        }
+      ],
+      "task_id": "robotouille/asynchronous/0_cheese_chicken_sandwich",
+      "testing_seeds": [
+        42,
+        84,
+        126,
+        168,
+        210,
+        252,
+        294,
+        336,
+        378,
+        420
+      ],
+      "verified_plan_status": "stateful_ground_truth_branching_ready"
+    }
+  ],
+  "testing_seeds": [
+    42,
+    84,
+    126,
+    168,
+    210,
+    252,
+    294,
+    336,
+    378,
+    420
+  ]
+}

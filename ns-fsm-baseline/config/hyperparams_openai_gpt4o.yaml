@@ -1,0 +1,12 @@
+# OpenAI configuration for Robotouille ground-truth FSM state-list generation/judging.
+# Runtime NS-FSM inference should still use config/hyperparams_psc.yaml with Qwen/vLLM.
+
+llm:
+  model_name: "gpt-4o"
+  backend: "openai"
+  api_base: "https://api.openai.com/v1"
+  api_key_env: "OPENAI_API_KEY"
+  temperature: 0.0
+  max_retries: 2
+  timeout: 120
+  ignore_env_overrides: true
