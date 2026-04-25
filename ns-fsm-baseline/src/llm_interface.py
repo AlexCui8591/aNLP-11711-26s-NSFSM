@@ -30,14 +30,27 @@ class LLMInterface:
         with open(config_path, "r", encoding="utf-8") as f:
             self.config = yaml.safe_load(f)["llm"]
 
+        backend = str(self.config.get("backend") or "").lower()
         api_base = (
             os.environ.get("NSFSM_LLM_API_BASE")
             or self.config.get("api_base")
             or "http://localhost:11434/v1"
         )
-        api_key = os.environ.get("NSFSM_LLM_API_KEY") or self.config.get("api_key") or "ollama_placeholder"
+        api_key = (
+            os.environ.get("NSFSM_LLM_API_KEY")
+            or os.environ.get("OPENAI_API_KEY")
+            or self.config.get("api_key")
+        )
+        requires_real_api_key = backend == "api" or "api.openai.com" in str(api_base)
+        if requires_real_api_key and not api_key:
+            raise RuntimeError(
+                "Missing API key for OpenAI-compatible API backend. "
+                "Set NSFSM_LLM_API_KEY or OPENAI_API_KEY before starting the run."
+            )
+        api_key = api_key or "ollama_placeholder"
         model_name = os.environ.get("NSFSM_LLM_MODEL_NAME") or self.config["model_name"]
 
+        self.backend = backend
         self.api_base = api_base.rstrip("/")
         self.api_key = api_key
         self.model = model_name

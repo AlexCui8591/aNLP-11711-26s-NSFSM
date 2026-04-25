@@ -1,0 +1,26 @@
+# OpenAI-compatible Reflexion API baseline configuration.
+# This is a non-NS-FSM comparison run: no FSM, Datalog, or synthesized plan hints.
+
+llm:
+  model_name: "gpt-5-mini"
+  backend: "api"
+  api_base: "https://ai-gateway.andrew.cmu.edu"
+  api_key: null
+  temperature: 0.2
+  max_retries: 2
+  timeout: 180
+
+env:
+  max_steps_per_episode: 100
+  num_runs: 3
+
+react:
+  max_steps_per_episode: 100
+
+reflexion:
+  max_attempts: 3
+  max_steps_per_episode: 100
+
+logging:
+  save_trajectories: true
+  verbose: false
