@@ -1,12 +1,12 @@
 #!/bin/bash
-#SBATCH --job-name=nsfsm-robot-gpu
+#SBATCH --job-name=nsfsm-robot-14b
 #SBATCH --partition=GPU-shared
 #SBATCH --nodes=1
 #SBATCH --gpus=v100-32:1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=5
 #SBATCH --mem=32G
-#SBATCH --time=24:00:00
+#SBATCH --time=48:00:00
 #SBATCH --account=cis250260p
 #SBATCH --output=logs/nsfsm_robotouille_%j.out
 #SBATCH --error=logs/nsfsm_robotouille_%j.err
@@ -16,18 +16,16 @@ trap 'rc=$?; echo "ERROR: line ${LINENO}: ${BASH_COMMAND} exited with ${rc}" >&2
 
 # SLURM script: NS-FSM Robotouille GPU run on PSC Bridges-2.
 #
-# This entrypoint intentionally keeps only one GPU-backed Robotouille path:
-# start a local vLLM server, then run NS-FSM on Robotouille with runtime LLM
-# inference enabled.
+# This entrypoint runs the full official asynchronous Robotouille benchmark
+# with a local vLLM-backed 14B runtime model.
 #
 # Usage:
 #   sbatch scripts/slurm_nsfsm_robotouille.sh
 #
 # Optional overrides:
-#   TAG=robotouille_async_qwen_r1 TASK_IDS=robotouille/asynchronous/0_cheese_chicken_sandwich RUNS=1 sbatch scripts/slurm_nsfsm_robotouille.sh
-#   TASK_IDS=robotouille/asynchronous/5_potato_soup RUNS=1 sbatch scripts/slurm_nsfsm_robotouille.sh
-#   ROBOTOUILLE_SEED=84 sbatch scripts/slurm_nsfsm_robotouille.sh
-#   MODEL_NAME=Qwen/Qwen2.5-7B-Instruct sbatch scripts/slurm_nsfsm_robotouille.sh
+#   sbatch scripts/slurm_nsfsm_robotouille.sh
+#   TASK_IDS=robotouille/asynchronous/5_potato_soup ROBOTOUILLE_SEEDS=42,84 TAG=robotouille_potato_14b sbatch scripts/slurm_nsfsm_robotouille.sh
+#   MODEL_NAME=Qwen/Qwen2.5-14B-Instruct TAG=robotouille_async_qwen14b_r2 sbatch scripts/slurm_nsfsm_robotouille.sh
 
 if [ -z "${SLURM_JOB_ID:-}" ] && [ "${ALLOW_LOGIN_RUN:-0}" != "1" ]; then
     echo "ERROR: submit this script with sbatch, not bash."
@@ -62,15 +60,23 @@ else
     DEFAULT_ROBOTOUILLE_ROOT="${PROJECT_ROOT}/Robotouille"
 fi
 
-TAG="${TAG:-robotouille_async_qwen_r1}"
-TASK_IDS="${TASK_IDS-robotouille/asynchronous/0_cheese_chicken_sandwich}"
+TAG="${TAG:-robotouille_async_qwen14b_official_r1}"
+TASK_IDS="${TASK_IDS-}"
 RUNS="${RUNS:-1}"
 CONFIG_PATH="${CONFIG_PATH:-config/hyperparams_psc.yaml}"
-MODEL_NAME="${MODEL_NAME:-Qwen/Qwen2.5-7B-Instruct}"
+MODEL_NAME="${MODEL_NAME:-Qwen/Qwen2.5-14B-Instruct}"
+SERVED_MODEL_NAME="${SERVED_MODEL_NAME:-${MODEL_NAME}}"
 PORT="${PORT:-8000}"
 GPU_MEMORY_UTILIZATION="${GPU_MEMORY_UTILIZATION:-0.90}"
 RESUME="${RESUME:-0}"
-ROBOTOUILLE_SEED="${ROBOTOUILLE_SEED:-42}"
+if [ "${ROBOTOUILLE_SEEDS+x}" = "x" ]; then
+    ROBOTOUILLE_SEEDS_VALUE="${ROBOTOUILLE_SEEDS}"
+elif [ -n "${ROBOTOUILLE_SEED:-}" ]; then
+    ROBOTOUILLE_SEEDS_VALUE="${ROBOTOUILLE_SEED}"
+else
+    ROBOTOUILLE_SEEDS_VALUE="42,84,126,168,210,252,294,336,378,420"
+fi
+MAX_STEP_MULTIPLIER="${MAX_STEP_MULTIPLIER:-1.5}"
 ROBOTOUILLE_ROOT="${ROBOTOUILLE_ROOT:-${DEFAULT_ROBOTOUILLE_ROOT}}"
 ROBOTOUILLE_GT_PATH="${ROBOTOUILLE_GT_PATH:-${ROOT}/config/robotouille_ground_truth_asynchronous_fsm.json}"
 CONDA_ENV="${CONDA_ENV:-nsfsm}"
@@ -97,9 +103,10 @@ echo "  Node:         $(hostname)"
 echo "  GPU:          $(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null || echo 'N/A')"
 echo "  Time:         $(date)"
 echo "  Tag:          ${TAG}"
-echo "  Task IDs:     ${TASK_IDS}"
+echo "  Task IDs:     ${TASK_IDS:-ALL official async tasks}"
 echo "  Runs:         ${RUNS}"
-echo "  Seed:         ${ROBOTOUILLE_SEED}"
+echo "  Seeds:        ${ROBOTOUILLE_SEEDS_VALUE}"
+echo "  Step x:       ${MAX_STEP_MULTIPLIER}"
 echo "  Model:        ${MODEL_NAME}"
 echo "  Port:         ${PORT}"
 echo "  Cache root:   ${CACHE_ROOT}"
@@ -130,6 +137,11 @@ echo "  Python:       $(which python)"
 echo "  Conda env:    ${CONDA_DEFAULT_ENV}"
 
 export PYTHONPATH="${ROBOTOUILLE_ROOT}:${PYTHONPATH:-}"
+export NSFSM_LLM_BACKEND="vllm"
+export NSFSM_LLM_API_BASE="http://localhost:${PORT}/v1"
+export NSFSM_LLM_API_KEY="${NSFSM_LLM_API_KEY:-not-needed}"
+export NSFSM_LLM_MODEL_NAME="${SERVED_MODEL_NAME}"
+export NSFSM_LLM_TIMEOUT="${NSFSM_LLM_TIMEOUT:-180}"
 
 RESUME_ARG=()
 if [ "${RESUME}" = "1" ]; then
@@ -147,6 +159,7 @@ trap cleanup EXIT
 echo "[1/3] Starting vLLM server..."
 python -m vllm.entrypoints.openai.api_server \
     --model "${MODEL_NAME}" \
+    --served-model-name "${SERVED_MODEL_NAME}" \
     --port "${PORT}" \
     --trust-remote-code \
     --gpu-memory-utilization "${GPU_MEMORY_UTILIZATION}" \
@@ -174,18 +187,20 @@ while ! curl -s "http://localhost:${PORT}/v1/models" > /dev/null 2>&1; do
 done
 echo "  vLLM is ready! (took ${WAITED}s)"
 
-echo "[3/3] Running NS-FSM Robotouille experiment..."
+echo "[3/3] Running full Robotouille benchmark..."
 python scripts/run_nsfsm_experiment.py \
     --dataset robotouille \
     --robotouille-split asynchronous \
     --robotouille-root "${ROBOTOUILLE_ROOT}" \
     --robotouille-ground-truth-path "${ROBOTOUILLE_GT_PATH}" \
-    --robotouille-seed "${ROBOTOUILLE_SEED}" \
+    --robotouille-seeds "${ROBOTOUILLE_SEEDS_VALUE}" \
+    --max-step-multiplier "${MAX_STEP_MULTIPLIER}" \
     --task-ids "${TASK_IDS}" \
     --runs "${RUNS}" \
     --tag "${TAG}" \
     --llm-config "${CONFIG_PATH}" \
     --use-llm \
+    --require-llm \
     --save-fsm-design \
     --quiet \
     "${RESUME_ARG[@]}" \
