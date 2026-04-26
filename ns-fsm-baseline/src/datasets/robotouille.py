@@ -407,7 +407,63 @@ class RobotouilleAdapter(DatasetAdapter):
             self.completed_root_clusters.add(self.current_fsm_state)
             return [skip_action]
 
-        return list(dict.fromkeys(self.current_valid_action_strings))
+        preferred = self._current_runtime_descriptions_for_semantic_actions()
+        return list(dict.fromkeys([*preferred, *self.current_valid_action_strings]))
+
+    def get_preferred_runtime_action(
+        self,
+        task_spec: TaskSpec | Mapping[str, Any],
+        state: Mapping[str, Any],
+        legal_actions: list[str] | None = None,
+    ) -> str | None:
+        """Prefer the primitive that is grounded from the current FSM subgoal."""
+
+        spec = task_spec_to_dict(task_spec)
+        self.task_spec = spec
+        self.current_fsm_state = str(self.current_fsm_state or state.get("fsm_state") or "")
+        if self.env is None:
+            return None
+
+        self._refresh_valid_actions()
+        legal_set = {str(action) for action in legal_actions or []}
+        for description in self._current_runtime_descriptions_for_semantic_actions():
+            if description and (not legal_set or description in legal_set):
+                return description
+        return None
+
+    def bind_runtime_action_for_semantic_action(
+        self,
+        raw_action: str | Mapping[str, Any],
+        legal_actions: list[str] | list[dict[str, Any]],
+    ) -> str | None:
+        """Map a semantic FSM-ish proposal to its current runtime primitive."""
+
+        semantic_names = self._ordered_current_semantic_actions()
+        if not semantic_names:
+            return None
+
+        action_name = self._clean_model_text(self._action_name(raw_action))
+        semantic = self._match_model_name(
+            action_name,
+            semantic_names,
+            include_runtime_action_descriptions=True,
+            include_action_variants=True,
+        ) or self._match_semantic_intent_to_current_action(action_name, semantic_names)
+        if not semantic:
+            return None
+
+        description = self._runtime_description_for_match(self._current_matches.get(semantic))
+        legal_names = [
+            str(item.get("action", "")) if isinstance(item, Mapping) else str(item)
+            for item in legal_actions
+        ]
+        if description:
+            for legal in legal_names:
+                if description == legal or description.lower() == legal.lower():
+                    return legal
+        if semantic in legal_names:
+            return semantic
+        return None
 
     def normalize_action(
         self,
@@ -419,12 +475,20 @@ class RobotouilleAdapter(DatasetAdapter):
             str(item.get("action", "")) if isinstance(item, Mapping) else str(item)
             for item in legal_actions
         ]
-        return self._match_model_name(
+        direct = self._match_model_name(
             action_name,
             legal_names,
             include_runtime_action_descriptions=True,
             include_action_variants=True,
         )
+        if direct:
+            return direct
+        if self.env is not None:
+            self._refresh_valid_actions()
+        bound = self.bind_runtime_action_for_semantic_action(raw_action, legal_names)
+        if bound:
+            return bound
+        return None
 
     def normalize_state_name(self, raw_state: str | None) -> str | None:
         state_name = self._clean_model_text(raw_state or "")
@@ -1196,6 +1260,148 @@ class RobotouilleAdapter(DatasetAdapter):
                     aliases[description] = canonical
                     aliases[description.lower()] = canonical
         return aliases
+
+    def _current_runtime_descriptions_for_semantic_actions(self) -> list[str]:
+        descriptions: list[str] = []
+        for canonical in self._ordered_current_semantic_actions():
+            description = self._runtime_description_for_match(self._current_matches.get(canonical))
+            if description:
+                descriptions.append(description)
+        return list(dict.fromkeys(descriptions))
+
+    def _ordered_current_semantic_actions(self) -> list[str]:
+        if self.task_spec is None:
+            return []
+        state_map = self.task_spec.get("metadata", {}).get("compiled_state_map", {})
+        current = state_map.get(self.current_fsm_state or "", {})
+        ordered: list[str] = []
+        for transition in self._state_transition_specs(current):
+            action = transition.get("action", {})
+            if not isinstance(action, Mapping):
+                continue
+            if not self._guard_satisfied(str(transition.get("guard", "")).strip()):
+                continue
+            canonical = canonical_action_name(action)
+            if canonical in self._current_matches:
+                ordered.append(canonical)
+        for action in current.get("fsm_allowed_actions", []):
+            if not isinstance(action, Mapping):
+                continue
+            canonical = canonical_action_name(action)
+            if canonical in self._current_matches:
+                ordered.append(canonical)
+        return list(dict.fromkeys(ordered))
+
+    def _runtime_description_for_match(
+        self,
+        match: tuple[Any, dict[str, Any]] | None,
+    ) -> str | None:
+        if match is None:
+            return None
+        for idx, runtime_match in enumerate(self.current_valid_actions):
+            if runtime_match == match and idx < len(self.current_valid_action_strings):
+                return self.current_valid_action_strings[idx]
+        return None
+
+    def _match_semantic_intent_to_current_action(
+        self,
+        raw_action: str,
+        semantic_names: list[str],
+    ) -> str | None:
+        text = self._semantic_match_text(raw_action)
+        if not text:
+            return None
+        best_name = None
+        best_score = 0
+        for canonical in semantic_names:
+            score = self._semantic_intent_score(text, canonical)
+            if score > best_score:
+                best_name = canonical
+                best_score = score
+        return best_name if best_score >= 3 else None
+
+    def _semantic_intent_score(self, text: str, canonical: str) -> int:
+        template, fields = self._canonical_action_parts(canonical)
+        score = 0
+        canonical_matched = self._semantic_match_text(canonical) in text
+        template_matched = self._template_semantic_match(template, text)
+        if canonical_matched:
+            score += 8
+        if template_matched:
+            score += 3
+        for key in (
+            "item",
+            "target",
+            "container",
+            "meal",
+            "source_container",
+            "target_container",
+        ):
+            value = fields.get(key, "")
+            if not value:
+                continue
+            if self._field_semantic_match(value, text):
+                score += 3 if key == "item" else 2
+        return score if canonical_matched or template_matched else 0
+
+    @staticmethod
+    def _canonical_action_parts(action_name: str) -> tuple[str, dict[str, str]]:
+        parts = [part.strip() for part in str(action_name).split("|") if part.strip()]
+        if not parts:
+            return "", {}
+        fields: dict[str, str] = {}
+        for part in parts[1:]:
+            if "=" not in part:
+                continue
+            key, value = part.split("=", 1)
+            fields[key.strip()] = value.strip()
+        return parts[0].strip(), fields
+
+    def _template_semantic_match(self, template: str, text: str) -> bool:
+        aliases = {
+            "move": ["move", "go", "navigate", "walk", "travel", "reach", "bring"],
+            "pick-up-item": ["pick up", "pickup", "pick", "grab", "take", "get", "hold", "unstack"],
+            "pick-up-container": ["pick up", "pickup", "grab", "take", "get", "hold"],
+            "place-item": ["place", "put", "drop", "stack", "serve"],
+            "place-container": ["place", "put", "drop", "stack"],
+            "cut": ["cut", "chop", "slice"],
+            "cook": ["cook", "cooking", "heat"],
+            "fry": ["fry", "frying"],
+            "fill-pot": ["fill pot", "fill", "water"],
+            "boil-water": ["boil water", "boil"],
+            "add-to": ["add to", "add", "put into"],
+            "fill-bowl": ["fill bowl", "fill", "pour"],
+            "wait": ["wait"],
+            "verify_goal_complete": ["verify", "complete", "done", "goal"],
+            "advance_pending_subgoal": ["advance", "switch", "subgoal"],
+        }
+        terms = aliases.get(template, [])
+        terms.append(template.replace("-", " "))
+        return any(self._contains_semantic_phrase(text, term) for term in terms)
+
+    def _field_semantic_match(self, value: str, text: str) -> bool:
+        candidates = [value, self._alias_to_runtime_name(value)]
+        if "__" in value:
+            base, suffix = value.split("__", 1)
+            candidates.extend([base, f"{base}{suffix}", f"{base} {suffix}"])
+        candidates.extend(str(value).replace("_", " ").split())
+        return any(
+            candidate and self._contains_semantic_phrase(text, candidate)
+            for candidate in dict.fromkeys(candidates)
+        )
+
+    @staticmethod
+    def _contains_semantic_phrase(text: str, phrase: str) -> bool:
+        normalized = RobotouilleAdapter._semantic_match_text(phrase)
+        if not normalized:
+            return False
+        return re.search(rf"(?<![a-z0-9]){re.escape(normalized)}(?![a-z0-9])", text) is not None
+
+    @staticmethod
+    def _semantic_match_text(text: str) -> str:
+        lowered = str(text or "").lower()
+        lowered = re.sub(r"[^a-z0-9]+", " ", lowered)
+        return re.sub(r"\s+", " ", lowered).strip()
 
     def _primitive_match_from_action(
         self,

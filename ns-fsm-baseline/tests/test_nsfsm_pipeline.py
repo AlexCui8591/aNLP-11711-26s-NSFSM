@@ -438,17 +438,23 @@ class NSFSMTests(unittest.TestCase):
             Obj("move", "action"),
             {"s1": Obj("sink1", "station"), "s2": Obj("board1", "station")},
         )
+        pickup_match = (
+            Obj("pick-up", "action"),
+            {"i1": Obj("chicken1"), "s1": Obj("table1", "station")},
+        )
         cut_match = (
             Obj("cut", "action"),
             {"i1": Obj("tomato1"), "s1": Obj("board1", "station")},
         )
-        adapter.current_valid_actions = [move_match, cut_match]
+        adapter.current_valid_actions = [move_match, pickup_match, cut_match]
         adapter.current_valid_action_strings = [
             "Move robot1 from sink1 to board1",
+            "pick-up(robot1,chicken1,table1)",
             "Cut tomato1 on board1 using robot1",
         ]
         adapter._current_matches = {
             "move|target=station containing pot": move_match,
+            "pick-up-item|item=chicken__3": pickup_match,
             "cut|item=tomato__4|target=board": cut_match,
         }
 
@@ -472,6 +478,25 @@ class NSFSMTests(unittest.TestCase):
                 ["move|target=cutting board while holding item"],
             ),
             "move|target=cutting board while holding item",
+        )
+        adapter.current_fsm_state = "PICK_UP_chicken__3"
+        adapter.task_spec = {
+            "metadata": {
+                "compiled_state_map": {
+                    "PICK_UP_chicken__3": {
+                        "fsm_allowed_actions": [
+                            {"template": "pick-up-item", "item": "chicken__3"}
+                        ],
+                    },
+                },
+            }
+        }
+        self.assertEqual(
+            adapter.normalize_action(
+                "grab the chicken",
+                adapter.current_valid_action_strings,
+            ),
+            "pick-up(robot1,chicken1,table1)",
         )
 
         adapter.task_spec = {
@@ -618,7 +643,10 @@ class NSFSMTests(unittest.TestCase):
                 return []
 
             def get_runtime_actions(self, task_spec, state):
-                return ["move(robot1,table1,table2)"]
+                return ["move(robot1,table1,table2)", "pick-up(robot1,chicken1,table2)"]
+
+            def get_preferred_runtime_action(self, task_spec, state, legal_actions=None):
+                return "pick-up(robot1,chicken1,table2)"
 
             def normalize_action(self, raw_action, legal_actions):
                 action = raw_action.get("action") if isinstance(raw_action, dict) else raw_action
@@ -627,7 +655,7 @@ class NSFSMTests(unittest.TestCase):
 
             def step(self, action):
                 action_name = action.get("action") if isinstance(action, dict) else action
-                self.state = {"step_count": 1, "done": action_name == "move(robot1,table1,table2)"}
+                self.state = {"step_count": 1, "done": action_name == "pick-up(robot1,chicken1,table2)"}
                 return type(
                     "StepResult",
                     (),
@@ -671,7 +699,7 @@ class NSFSMTests(unittest.TestCase):
         )
         result = NSFSMAgent(spec, adapter, fsm, llm=llm, max_llm_retries=0).run_episode()
         self.assertTrue(result["success"], result)
-        self.assertEqual(result["trajectory"][0]["action"], "move(robot1,table1,table2)")
+        self.assertEqual(result["trajectory"][0]["action"], "pick-up(robot1,chicken1,table2)")
         self.assertEqual(result["trajectory"][0]["decision_source"], "runtime_fallback")
         self.assertFalse(result["trajectory"][0]["forced_choice"])
         self.assertEqual(

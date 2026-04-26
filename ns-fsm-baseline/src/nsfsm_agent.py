@@ -391,9 +391,14 @@ class NSFSMAgent:
         proposed_action = proposal.get("action")
         normalized_action = None
         if proposed_action:
+            normalization_candidates = (
+                legal_actions
+                if self._uses_robotouille_runtime_binding()
+                else self._normalization_candidates(legal_actions)
+            )
             normalized_action = self.adapter.normalize_action(
                 proposed_action,
-                self._normalization_candidates(legal_actions),
+                normalization_candidates,
             )
 
         if self._uses_robotouille_runtime_binding():
@@ -673,15 +678,35 @@ class NSFSMAgent:
         if not legal_actions:
             return None
 
-        fallback = self.planner.next_action(
-            self.task_spec,
-            state,
-            legal_actions,
-            self.trajectory,
-            None,
-            blocked_reason,
-        )
-        proposed = fallback.get("action") if fallback else legal_actions[0]
+        preferred = None
+        if hasattr(self.adapter, "get_preferred_runtime_action"):
+            try:
+                preferred = self.adapter.get_preferred_runtime_action(
+                    self.task_spec,
+                    state,
+                    legal_actions,
+                )
+            except Exception:
+                preferred = None
+
+        fallback = None
+        if preferred:
+            proposed = preferred
+            fallback = {
+                "action": preferred,
+                "next_state": self.fsm.current_state,
+                "reason": "fsm_grounded_runtime_action_policy",
+            }
+        else:
+            fallback = self.planner.next_action(
+                self.task_spec,
+                state,
+                legal_actions,
+                self.trajectory,
+                None,
+                blocked_reason,
+            )
+            proposed = fallback.get("action") if fallback else legal_actions[0]
         action = self.adapter.normalize_action(proposed, legal_actions) or str(proposed or "")
         if action not in set(legal_actions):
             action = legal_actions[0]
