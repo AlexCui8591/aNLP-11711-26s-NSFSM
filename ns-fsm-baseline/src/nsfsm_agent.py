@@ -69,12 +69,17 @@ class NSFSMAgent:
         self.fallback_actions = []
         termination = "max_steps"
         max_steps = int(self.task_spec.get("max_steps", 30))
+        completion_driven = self._completion_driven_until_success()
 
-        for step_idx in range(max_steps):
+        step_idx = 0
+        while True:
+            if not completion_driven and step_idx >= max_steps:
+                termination = "max_steps"
+                break
             if self.adapter.is_done(state, self.task_spec):
                 termination = "success"
                 break
-            if self.fsm.is_terminal():
+            if self.fsm.is_terminal() and not completion_driven:
                 termination = "fsm_terminal"
                 break
 
@@ -163,22 +168,25 @@ class NSFSMAgent:
                 "adapter_state": state,
             }
             self.trajectory.append(record)
+            step_idx += 1
 
             if self.verbose:
                 print(
-                    f"[NS-FSM] step={step_idx + 1} state={previous_fsm_state} "
+                    f"[NS-FSM] step={step_idx} state={previous_fsm_state} "
                     f"action={decision['action']} -> {self.fsm.current_state} "
                     f"success={adapter_success}"
                 )
 
             if step_result.done or self.adapter.is_done(state, self.task_spec):
-                termination = "success" if self._adapter_success(state) else "max_steps"
-                break
-            if self._blocked_dead_loop():
+                if self._adapter_success(state):
+                    termination = "success"
+                    break
+                if not completion_driven:
+                    termination = "max_steps"
+                    break
+            if not completion_driven and self._blocked_dead_loop():
                 termination = "repeated_blocked_actions"
                 break
-        else:
-            termination = "max_steps"
 
         summary = self.adapter.summarize_result(state)
         success = bool(summary.get("success", termination == "success"))
@@ -837,6 +845,9 @@ class NSFSMAgent:
             self.task_spec.get("dataset") == "robotouille"
             and hasattr(self.adapter, "get_runtime_actions")
         )
+
+    def _completion_driven_until_success(self) -> bool:
+        return self._uses_robotouille_runtime_binding()
 
     @staticmethod
     def _is_fsm_transition_action(

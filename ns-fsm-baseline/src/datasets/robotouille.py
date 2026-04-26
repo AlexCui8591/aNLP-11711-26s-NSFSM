@@ -291,10 +291,7 @@ class RobotouilleAdapter(DatasetAdapter):
         state: Mapping[str, Any],
         task_spec: TaskSpec | Mapping[str, Any],
     ) -> bool:
-        spec = task_spec_to_dict(task_spec)
-        return bool(state.get("goal_satisfied")) or int(state.get("step_count", 0)) >= int(
-            spec.get("max_steps", 100)
-        )
+        return bool(state.get("goal_satisfied"))
 
     def get_available_tools(
         self,

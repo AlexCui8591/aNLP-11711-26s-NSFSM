@@ -679,6 +679,83 @@ class NSFSMTests(unittest.TestCase):
             "runtime_primitive_fallback",
         )
 
+    def test_robotouille_runs_past_max_steps_until_goal_complete(self):
+        class CompletionDrivenAdapter:
+            dataset_name = "robotouille"
+
+            def reset(self, task_spec):
+                self.state = {"step_count": 0, "done": False}
+                return dict(self.state)
+
+            def is_done(self, state, task_spec):
+                return bool(state.get("done"))
+
+            def get_available_tools(self, task_spec, state):
+                return []
+
+            def get_runtime_actions(self, task_spec, state):
+                return ["primitive_1"] if int(state.get("step_count", 0)) == 0 else ["primitive_2"]
+
+            def normalize_action(self, raw_action, legal_actions):
+                action = raw_action.get("action") if isinstance(raw_action, dict) else raw_action
+                return action if action in legal_actions else None
+
+            def step(self, action):
+                action_name = action.get("action") if isinstance(action, dict) else action
+                step_count = int(self.state.get("step_count", 0)) + 1
+                done = action_name == "primitive_2"
+                info = {"success": True}
+                if done:
+                    info["fsm_next_state"] = "DONE"
+                    info["fsm_transition_action"] = "finish"
+                self.state = {"step_count": step_count, "done": done}
+                return type(
+                    "StepResult",
+                    (),
+                    {"state": dict(self.state), "done": done, "info": info},
+                )()
+
+            def format_state_for_prompt(self, state):
+                return str(state)
+
+            def summarize_result(self, state):
+                return {"success": bool(state.get("done")), "total_steps": state.get("step_count", 0)}
+
+        spec = {
+            "dataset": "robotouille",
+            "task_id": "robotouille/completion",
+            "task_type": "symbolic_planning",
+            "instruction": "Finish only after the second primitive.",
+            "initial_state": {},
+            "goal_condition": {"done": True},
+            "available_tools": ["finish"],
+            "max_steps": 1,
+            "success_criteria": ["done"],
+            "metadata": {},
+        }
+        design = {
+            "states": ["START", "DONE"],
+            "initial_state": "START",
+            "terminal_states": ["DONE"],
+            "transitions_by_state": {
+                "START": [{"action": "finish", "next_state": "DONE", "condition": "unit"}],
+                "DONE": [],
+            },
+            "fallback_policy": {"on_invalid_action": "runtime_primitive_fallback"},
+            "success_signals": ["done"],
+            "risk_notes": ["unit test"],
+        }
+        adapter = CompletionDrivenAdapter()
+        fsm = FSMBuilder().from_design(design, spec, adapter)
+        result = NSFSMAgent(spec, adapter, fsm, planner_only=True).run_episode()
+        self.assertTrue(result["success"], result)
+        self.assertEqual(result["termination"], "success")
+        self.assertEqual(result["total_steps"], 2)
+        self.assertEqual(
+            [entry["action"] for entry in result["trajectory"]],
+            ["primitive_1", "primitive_2"],
+        )
+
     def test_runner_smoke_and_analysis(self):
         tag = "unit_smoke_nsfsm"
         scenario_cmd = [

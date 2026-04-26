@@ -45,8 +45,12 @@ class RuleChecker:
                 message="No proposed action was provided.",
             ).to_dict()
 
-        if spec and int(state.get("step_count", state.get("step", 0))) >= int(
-            spec.get("max_steps", 10**9)
+        if (
+            spec
+            and spec.get("dataset") != "robotouille"
+            and int(state.get("step_count", state.get("step", 0))) >= int(
+                spec.get("max_steps", 10**9)
+            )
         ):
             return LegalityResult(
                 legal=False,

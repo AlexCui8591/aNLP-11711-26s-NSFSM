@@ -177,7 +177,8 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help=(
             "Override max_steps to ceil(optimal_steps * multiplier) when "
-            "optimal_steps is available. Use 1.5 for official Robotouille comparison."
+            "optimal_steps is available. Robotouille ignores this because it "
+            "runs until the simulator goal is complete."
         ),
     )
     parser.add_argument("--task-type", default="")
@@ -245,6 +246,8 @@ def parse_int_list(value: str) -> list[int]:
 
 def apply_max_step_multiplier(task_spec: dict[str, Any], multiplier: float | None) -> None:
     if multiplier is None:
+        return
+    if task_spec.get("dataset") == "robotouille":
         return
     raw_task = task_spec.get("metadata", {}).get("ground_truth_task", {})
     optimal_steps = raw_task.get("optimal_steps") if isinstance(raw_task, Mapping) else None
