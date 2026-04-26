@@ -17,9 +17,37 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(dirname "$SCRIPT_DIR")"
 MC_TW="$(dirname "$ROOT")/MC-TextWorld"
 
-module load anaconda3
-source /opt/packages/anaconda3-2024.10-1/etc/profile.d/conda.sh
-echo "[OK] Loaded anaconda3"
+if command -v module >/dev/null 2>&1; then
+    module load anaconda3
+    echo "[OK] Loaded anaconda3 via environment modules"
+fi
+
+CONDA_SH=""
+if [ -n "${CONDA_EXE:-}" ]; then
+    CONDA_BASE="$(dirname "$(dirname "$CONDA_EXE")")"
+    if [ -f "$CONDA_BASE/etc/profile.d/conda.sh" ]; then
+        CONDA_SH="$CONDA_BASE/etc/profile.d/conda.sh"
+    fi
+fi
+
+if [ -z "$CONDA_SH" ] && command -v conda >/dev/null 2>&1; then
+    CONDA_BASE="$(conda info --base 2>/dev/null || true)"
+    if [ -n "$CONDA_BASE" ] && [ -f "$CONDA_BASE/etc/profile.d/conda.sh" ]; then
+        CONDA_SH="$CONDA_BASE/etc/profile.d/conda.sh"
+    fi
+fi
+
+if [ -z "$CONDA_SH" ] && [ -f /opt/packages/anaconda3-2024.10-1/etc/profile.d/conda.sh ]; then
+    CONDA_SH=/opt/packages/anaconda3-2024.10-1/etc/profile.d/conda.sh
+fi
+
+if [ -z "$CONDA_SH" ]; then
+    echo "[ERROR] Could not locate conda.sh. Activate conda manually and re-run."
+    exit 1
+fi
+
+source "$CONDA_SH"
+echo "[OK] Conda initialized from $CONDA_SH"
 
 if conda env list | awk '{print $1}' | grep -qx "nsfsm"; then
     echo "[SKIP] Conda env 'nsfsm' already exists"
