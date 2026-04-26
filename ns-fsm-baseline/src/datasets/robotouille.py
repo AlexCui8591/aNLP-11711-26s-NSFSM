@@ -2,9 +2,9 @@
 
 This adapter consumes the human-verified/stateful Robotouille ground-truth FSM
 JSON, runs the official Robotouille simulator, and treats the FSM as a
-high-level workflow/subgoal controller. Normal environment steps execute the
-currently valid Robotouille primitive actions rather than sending canonical FSM
-transition names directly to the simulator.
+high-level workflow/subgoal controller. The agent chooses canonical FSM
+transition names; the adapter grounds each accepted transition to a currently
+valid Robotouille primitive before calling the simulator.
 """
 
 from __future__ import annotations
@@ -370,12 +370,13 @@ class RobotouilleAdapter(DatasetAdapter):
         task_spec: TaskSpec | Mapping[str, Any],
         state: Mapping[str, Any],
     ) -> list[str]:
-        """Return actions the model may output for the next Robotouille step.
+        """Return simulator primitives as execution-layer context.
 
         In ordinary workflow states these are Robotouille simulator primitives
         such as move/pick-up/unstack/stack/cut/cook. FSM-only control states
         still expose explicit control actions such as branch switches or final
-        goal verification.
+        goal verification. The NS-FSM agent still verifies and outputs canonical
+        FSM transitions; this list is prompt context and adapter grounding data.
         """
 
         spec = task_spec_to_dict(task_spec)

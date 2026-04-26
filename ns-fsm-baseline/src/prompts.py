@@ -297,14 +297,15 @@ You must obey the externally verified workflow FSM.
 First propose exactly one action and one intended next FSM state.
 Your proposal will be checked after generation against the current allowed
 runtime action list and the workflow FSM.
-For most datasets the output action is a canonical FSM transition action.
-For Robotouille, the FSM state is a high-level subgoal and the output action
-must be one currently executable simulator primitive, such as move/pick-up/
-unstack/stack/cut/cook. Do not output a high-level Robotouille FSM action
-unless it is explicitly listed as an action you may output now.
+The output action is a canonical FSM transition action from the current FSM
+state to an intended next FSM state.
+For Robotouille, simulator primitives such as move/pick-up/unstack/stack/cut/
+cook are execution-layer context only. Output the listed FSM canonical action;
+the Robotouille adapter will bind it to the currently executable primitive.
 If your action is outside the current allowed action list, the verifier will
 block it and ask for a new proposal. After repeated failures, Robotouille uses
-a simulator-valid primitive fallback, not a forced high-level FSM action.
+a BFS-safe FSM transition fallback whose next state can still reach a terminal
+state.
 Copy action strings exactly from the current allowed action list whenever
 possible.
 Do not invent tools, actions, or next states.
@@ -357,15 +358,14 @@ Validated FSM summary:
 == SIMULATOR EXECUTABLE ACTIONS ==
 {executable_actions}
 
-== VERIFIED RUNTIME ACTIONS ==
+== VERIFIED FSM ACTIONS ==
 {verified_actions}
 
 Choose from ACTIONS YOU MAY OUTPUT NOW exactly. For Robotouille, those actions
-are simulator primitive actions while the FSM transitions describe the current
-high-level phase/subgoal; do not send semantic FSM actions such as
-pick-up-item|item=... unless they appear in ACTIONS YOU MAY OUTPUT NOW. If
-blocked, propose a different currently listed action. Robotouille recovery must
-stay in the simulator primitive action space.
+are executable, BFS-safe FSM canonical transitions out of the current state.
+SIMULATOR EXECUTABLE ACTIONS are shown only so you can understand what the
+adapter can execute after it binds your FSM action to a Robotouille primitive.
+If blocked, propose a different currently listed FSM action.
 
 Choose exactly one action and the intended next FSM state.
 Thought: """

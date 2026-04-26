@@ -38,6 +38,7 @@ class NSFSMAgent:
         require_llm: bool = False,
         max_llm_retries: int = 1,
         max_blocked_repeats: int = 3,
+        max_stalled_repeats: int = 20,
         verbose: bool = False,
     ):
         self.task_spec = task_spec_to_dict(task_spec)
@@ -51,6 +52,7 @@ class NSFSMAgent:
         self.require_llm = require_llm
         self.max_llm_retries = max_llm_retries
         self.max_blocked_repeats = max_blocked_repeats
+        self.max_stalled_repeats = max_stalled_repeats
         self.verbose = verbose
         self.trajectory: list[dict[str, Any]] = []
         self.blocked_actions: list[dict[str, Any]] = []
@@ -70,6 +72,8 @@ class NSFSMAgent:
         termination = "max_steps"
         max_steps = int(self.task_spec.get("max_steps", 30))
         completion_driven = self._completion_driven_until_success()
+        stalled_signature: str | None = None
+        stalled_repeats = 0
 
         step_idx = 0
         while True:
@@ -127,16 +131,11 @@ class NSFSMAgent:
             if adapter_success:
                 preferred_next_state = info.get("fsm_next_state") or decision.get("next_state")
                 update_action = info.get("fsm_transition_action") or decision["action"]
-                runtime_binding = str(decision.get("transition_check", {}).get("runtime_binding", ""))
-                if not (
-                    runtime_binding == "robotouille_primitive"
-                    and not info.get("fsm_next_state")
-                ):
-                    fsm_update = self.fsm.update(
-                        update_action,
-                        preferred_next_state,
-                        info,
-                    )
+                fsm_update = self.fsm.update(
+                    update_action,
+                    preferred_next_state,
+                    info,
+                )
                 if (
                     not fsm_update.get("updated")
                     and self._uses_robotouille_runtime_binding()
@@ -181,9 +180,30 @@ class NSFSMAgent:
                 if self._adapter_success(state):
                     termination = "success"
                     break
+                if completion_driven and step_result.done:
+                    termination = "simulator_done_without_goal"
+                    break
                 if not completion_driven:
                     termination = "max_steps"
                     break
+            if completion_driven and not self._robotouille_progress_made(
+                previous_fsm_state,
+                fsm_update,
+                info,
+                state,
+            ):
+                current_signature = self._stalled_progress_signature(state)
+                if current_signature == stalled_signature:
+                    stalled_repeats += 1
+                else:
+                    stalled_signature = current_signature
+                    stalled_repeats = 1
+                if self.max_stalled_repeats > 0 and stalled_repeats >= self.max_stalled_repeats:
+                    termination = "stalled_no_progress"
+                    break
+            elif completion_driven:
+                stalled_signature = None
+                stalled_repeats = 0
             if not completion_driven and self._blocked_dead_loop():
                 termination = "repeated_blocked_actions"
                 break
@@ -349,10 +369,22 @@ class NSFSMAgent:
                 runtime_actions = list(self.adapter.get_runtime_actions(self.task_spec, state))
             except Exception:
                 runtime_actions = []
+            try:
+                executable_fsm_actions = set(
+                    self.adapter.get_available_tools(self.task_spec, state)
+                )
+            except Exception:
+                executable_fsm_actions = set()
+            verified_options = [
+                dict(option)
+                for option in static_options
+                if str(option.get("action")) in executable_fsm_actions
+                and self._transition_can_reach_terminal(option)
+            ]
             self.current_executable_actions = list(runtime_actions)
-            self.current_verified_transition_options = list(static_options)
-            self.current_verified_actions = list(runtime_actions)
-            return static_options, runtime_actions
+            self.current_verified_transition_options = verified_options
+            self.current_verified_actions = self._transition_action_names(verified_options)
+            return verified_options, list(self.current_verified_actions)
 
         try:
             executable = set(self.adapter.get_available_tools(self.task_spec, state))
@@ -456,31 +488,17 @@ class NSFSMAgent:
         normalized_action: str | None,
     ) -> tuple[dict[str, Any] | None, dict[str, Any]]:
         proposed_next = self._normalize_next_state(proposal.get("next_state"))
-        if normalized_action and self._is_fsm_transition_action(
-            normalized_action,
-            transition_options,
-        ):
-            transition_check = self._verify_transition_with_next_fallback(
+        if normalized_action:
+            transition_check = self._verify_reachable_transition(
                 normalized_action,
                 proposed_next,
                 transition_options,
             )
             next_state = transition_check.get("inferred_next_state") or proposed_next
-        elif normalized_action:
-            transition_check = {
-                "valid": True,
-                "runtime_binding": "robotouille_primitive",
-                "fsm_state": self.fsm.current_state,
-                "message": (
-                    "Robotouille primitive action verified against the simulator's "
-                    "current executable action set; FSM remains the high-level subgoal."
-                ),
-            }
-            next_state = self.fsm.current_state
         else:
             transition_check = {
                 "valid": False,
-                "runtime_binding": "robotouille_primitive",
+                "runtime_binding": "robotouille_fsm_transition",
                 "violations": [{"type": "parse_error"}],
             }
             next_state = proposed_next
@@ -498,7 +516,8 @@ class NSFSMAgent:
             and rule_check.get("reason_type") == "not_in_legal_actions"
         ):
             rule_check["message"] = (
-                "Action is not one of the current Robotouille primitive actions."
+                "Action is not one of the current Robotouille FSM transition actions "
+                "that are executable now and can still reach a terminal state."
             )
             rule_check.setdefault("metadata", {})["runtime_action_space"] = "robotouille"
 
@@ -532,7 +551,7 @@ class NSFSMAgent:
             state,
             legal_actions,
             self.trajectory,
-            None if self._uses_robotouille_runtime_binding() else transition_options,
+            transition_options,
             blocked_reason,
         )
         if fallback is None:
@@ -678,58 +697,29 @@ class NSFSMAgent:
         if not legal_actions:
             return None
 
-        preferred = None
-        if hasattr(self.adapter, "get_preferred_runtime_action"):
-            try:
-                preferred = self.adapter.get_preferred_runtime_action(
-                    self.task_spec,
-                    state,
-                    legal_actions,
-                )
-            except Exception:
-                preferred = None
-
-        fallback = None
-        if preferred:
-            proposed = preferred
-            fallback = {
-                "action": preferred,
-                "next_state": self.fsm.current_state,
-                "reason": "fsm_grounded_runtime_action_policy",
-            }
-        else:
-            fallback = self.planner.next_action(
-                self.task_spec,
-                state,
-                legal_actions,
-                self.trajectory,
-                None,
-                blocked_reason,
-            )
-            proposed = fallback.get("action") if fallback else legal_actions[0]
+        fallback = self.planner.next_action(
+            self.task_spec,
+            state,
+            legal_actions,
+            self.trajectory,
+            transition_options,
+            blocked_reason,
+        )
+        proposed = fallback.get("action") if fallback else legal_actions[0]
         action = self.adapter.normalize_action(proposed, legal_actions) or str(proposed or "")
         if action not in set(legal_actions):
             action = legal_actions[0]
         if not action:
             return None
 
-        if self._is_fsm_transition_action(action, transition_options):
-            transition_check = self._verify_transition_with_next_fallback(
-                action,
-                fallback.get("next_state") if fallback else None,
-                transition_options,
-            )
-            next_state = transition_check.get("inferred_next_state") or (
-                fallback.get("next_state") if fallback else None
-            )
-        else:
-            transition_check = {
-                "valid": True,
-                "runtime_binding": "robotouille_primitive",
-                "fsm_state": self.fsm.current_state,
-                "fallback": True,
-            }
-            next_state = self.fsm.current_state
+        transition_check = self._verify_reachable_transition(
+            action,
+            fallback.get("next_state") if fallback else None,
+            transition_options,
+        )
+        next_state = transition_check.get("inferred_next_state") or (
+            fallback.get("next_state") if fallback else None
+        )
 
         rule_check = self.rule_checker.check(
             action,
@@ -743,9 +733,9 @@ class NSFSMAgent:
             return None
 
         reason = (
-            fallback.get("reason", "runtime primitive fallback")
+            fallback.get("reason", "bfs-safe FSM transition fallback")
             if fallback
-            else "runtime primitive fallback"
+            else "bfs-safe FSM transition fallback"
         )
         self.fallback_actions.append(
             {
@@ -759,11 +749,7 @@ class NSFSMAgent:
             }
         )
         self.fsm.record_fallback_action(action, next_state, reason)
-        rule_check["reason_type"] = (
-            "runtime_primitive_fallback"
-            if transition_check.get("runtime_binding") == "robotouille_primitive"
-            else rule_check.get("reason_type", "ok")
-        )
+        rule_check["reason_type"] = "bfs_safe_fsm_transition_fallback"
         return {
             "action": action,
             "next_state": next_state,
@@ -874,6 +860,31 @@ class NSFSMAgent:
     def _completion_driven_until_success(self) -> bool:
         return self._uses_robotouille_runtime_binding()
 
+    def _robotouille_progress_made(
+        self,
+        previous_fsm_state: str,
+        fsm_update: Mapping[str, Any],
+        info: Mapping[str, Any],
+        state: Mapping[str, Any],
+    ) -> bool:
+        if state.get("goal_satisfied"):
+            return True
+        if info.get("fsm_next_state") and str(info.get("fsm_next_state")) != previous_fsm_state:
+            return True
+        if fsm_update.get("updated") and self.fsm.current_state != previous_fsm_state:
+            return True
+        return self.fsm.current_state != previous_fsm_state
+
+    @staticmethod
+    def _stalled_progress_signature(state: Mapping[str, Any]) -> str:
+        ignored = {"step", "step_count"}
+        material = {
+            str(key): value
+            for key, value in state.items()
+            if str(key) not in ignored
+        }
+        return repr(sorted(material.items(), key=lambda item: item[0]))
+
     @staticmethod
     def _is_fsm_transition_action(
         action: str | None,
@@ -882,6 +893,90 @@ class NSFSMAgent:
         if not action:
             return False
         return any(str(option.get("action")) == action for option in transition_options)
+
+    @staticmethod
+    def _transition_action_names(
+        transition_options: list[dict[str, Any]],
+    ) -> list[str]:
+        return list(
+            dict.fromkeys(
+                str(option.get("action"))
+                for option in transition_options
+                if str(option.get("action"))
+            )
+        )
+
+    def _transition_can_reach_terminal(self, transition: Mapping[str, Any]) -> bool:
+        next_state = str(transition.get("next_state", "")).strip()
+        if not next_state:
+            return False
+        return self._state_can_reach_terminal(next_state)
+
+    def _state_can_reach_terminal(self, state_name: str | None) -> bool:
+        start = str(state_name or "").strip()
+        if not start:
+            return False
+        if self.fsm.is_terminal(start):
+            return True
+
+        visited = {start}
+        queue = [start]
+        while queue:
+            current = queue.pop(0)
+            if self.fsm.is_terminal(current):
+                return True
+            for option in self.fsm.get_valid_transitions(current):
+                target = str(option.get("next_state", "")).strip()
+                if not target or target in visited:
+                    continue
+                if self.fsm.is_terminal(target):
+                    return True
+                visited.add(target)
+                queue.append(target)
+        return False
+
+    def _verify_reachable_transition(
+        self,
+        action: str,
+        proposed_next: str | None,
+        transition_options: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        transition_check = self._verify_transition_with_next_fallback(
+            action,
+            proposed_next,
+            transition_options,
+        )
+        if not transition_check.get("valid"):
+            return transition_check
+
+        next_state = (
+            transition_check.get("inferred_next_state")
+            or self._next_state_for_action(action, transition_options)
+        )
+        if next_state is None and transition_check.get("expected_next_states"):
+            next_state = transition_check["expected_next_states"][0]
+        if self._state_can_reach_terminal(str(next_state or "")):
+            transition_check["bfs_reaches_terminal"] = True
+            transition_check["runtime_binding"] = "robotouille_fsm_transition"
+            return transition_check
+
+        failed = dict(transition_check)
+        failed["valid"] = False
+        failed["bfs_reaches_terminal"] = False
+        failed["runtime_binding"] = "robotouille_fsm_transition"
+        failed.setdefault("violations", []).append(
+            {
+                "type": "dead_end_transition",
+                "message": (
+                    "The proposed Robotouille FSM transition cannot reach a "
+                    "terminal state under the static FSM graph."
+                ),
+                "state": self.fsm.current_state,
+                "action": action,
+                "next_state": next_state,
+            }
+        )
+        return failed
 
     def _sync_fsm_state_from_runtime(
         self,

@@ -93,6 +93,7 @@ def main() -> None:
                     planner_only=args.planner_only,
                     require_llm=args.require_llm,
                     max_llm_retries=args.max_llm_retries,
+                    max_stalled_repeats=args.max_stalled_repeats,
                     verbose=not args.quiet,
                 ).run_episode()
                 result["run_id"] = run_idx
@@ -206,6 +207,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--save-fsm-design", action="store_true")
     parser.add_argument("--planner-only", action="store_true")
     parser.add_argument("--max-llm-retries", type=int, default=1)
+    parser.add_argument(
+        "--max-stalled-repeats",
+        type=int,
+        default=20,
+        help=(
+            "Robotouille completion-driven safety valve: return a stalled_no_progress "
+            "result after this many repeated no-progress states. Set <=0 to disable."
+        ),
+    )
     parser.add_argument(
         "--use-llm",
         action="store_true",

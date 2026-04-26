@@ -25,6 +25,7 @@ from datasets.structured import StructuredScenarioAdapter
 from datasets.swe_bench import SWEBenchAdapter
 from action_parser import ActionParser
 from env_wrapper import MCTextWorldWrapper
+from fsm import RuntimeFSM
 from fsm_builder import FSMBuilder
 from fsm_designer import LLMFSMDesigner
 from fsm_validator import FSMDesignValidator, build_generic_tool_use_fsm_design
@@ -494,9 +495,9 @@ class NSFSMTests(unittest.TestCase):
         self.assertEqual(
             adapter.normalize_action(
                 "grab the chicken",
-                adapter.current_valid_action_strings,
+                ["pick-up-item|item=chicken__3"],
             ),
-            "pick-up(robot1,chicken1,table1)",
+            "pick-up-item|item=chicken__3",
         )
 
         adapter.task_spec = {
@@ -628,7 +629,7 @@ class NSFSMTests(unittest.TestCase):
         self.assertEqual(second.info["fsm_next_state"], "NEXT")
         self.assertEqual(second.info["fsm_transition_action"], "pick-up-item|item=chicken__3")
 
-    def test_robotouille_runtime_fallback_uses_primitive_not_fsm_action(self):
+    def test_robotouille_runtime_fallback_uses_bfs_safe_fsm_action(self):
         class NoIntersectionAdapter:
             dataset_name = "robotouille"
 
@@ -640,7 +641,7 @@ class NSFSMTests(unittest.TestCase):
                 return bool(state.get("done"))
 
             def get_available_tools(self, task_spec, state):
-                return []
+                return ["safe"]
 
             def get_runtime_actions(self, task_spec, state):
                 return ["move(robot1,table1,table2)", "pick-up(robot1,chicken1,table2)"]
@@ -655,7 +656,7 @@ class NSFSMTests(unittest.TestCase):
 
             def step(self, action):
                 action_name = action.get("action") if isinstance(action, dict) else action
-                self.state = {"step_count": 1, "done": action_name == "pick-up(robot1,chicken1,table2)"}
+                self.state = {"step_count": 1, "done": action_name == "safe"}
                 return type(
                     "StepResult",
                     (),
@@ -688,7 +689,7 @@ class NSFSMTests(unittest.TestCase):
                 "START": [{"action": "safe", "next_state": "DONE", "condition": "unit"}],
                 "DONE": [],
             },
-            "fallback_policy": {"on_invalid_action": "runtime_primitive_fallback"},
+            "fallback_policy": {"on_invalid_action": "bfs_safe_fsm_transition_fallback"},
             "success_signals": ["done"],
             "risk_notes": ["unit test"],
         }
@@ -699,12 +700,91 @@ class NSFSMTests(unittest.TestCase):
         )
         result = NSFSMAgent(spec, adapter, fsm, llm=llm, max_llm_retries=0).run_episode()
         self.assertTrue(result["success"], result)
-        self.assertEqual(result["trajectory"][0]["action"], "pick-up(robot1,chicken1,table2)")
+        self.assertEqual(result["trajectory"][0]["action"], "safe")
         self.assertEqual(result["trajectory"][0]["decision_source"], "runtime_fallback")
         self.assertFalse(result["trajectory"][0]["forced_choice"])
         self.assertEqual(
             result["trajectory"][0]["rule_check"]["reason_type"],
-            "runtime_primitive_fallback",
+            "bfs_safe_fsm_transition_fallback",
+        )
+
+    def test_robotouille_filters_fsm_actions_that_cannot_reach_terminal(self):
+        class DeadEndAdapter:
+            dataset_name = "robotouille"
+
+            def reset(self, task_spec):
+                self.state = {"step_count": 0, "done": False}
+                return dict(self.state)
+
+            def is_done(self, state, task_spec):
+                return bool(state.get("done"))
+
+            def get_available_tools(self, task_spec, state):
+                return ["dead", "safe"]
+
+            def get_runtime_actions(self, task_spec, state):
+                return ["dead primitive context", "safe primitive context"]
+
+            def normalize_action(self, raw_action, legal_actions):
+                action = raw_action.get("action") if isinstance(raw_action, dict) else raw_action
+                return action if action in legal_actions else None
+
+            def step(self, action):
+                action_name = action.get("action") if isinstance(action, dict) else action
+                self.state = {"step_count": 1, "done": action_name == "safe"}
+                return type(
+                    "StepResult",
+                    (),
+                    {"state": dict(self.state), "done": self.state["done"], "info": {"success": self.state["done"]}},
+                )()
+
+            def format_state_for_prompt(self, state):
+                return str(state)
+
+            def summarize_result(self, state):
+                return {"success": bool(state.get("done")), "total_steps": state.get("step_count", 0)}
+
+        spec = {
+            "dataset": "robotouille",
+            "task_id": "robotouille/bfs",
+            "task_type": "symbolic_planning",
+            "instruction": "Avoid FSM dead ends.",
+            "initial_state": {},
+            "goal_condition": {"done": True},
+            "available_tools": ["dead", "safe"],
+            "max_steps": 3,
+            "success_criteria": ["done"],
+            "metadata": {},
+        }
+        design = {
+            "states": ["START", "DEAD", "DONE"],
+            "initial_state": "START",
+            "terminal_states": ["DONE"],
+            "transitions_by_state": {
+                "START": [
+                    {"action": "dead", "next_state": "DEAD", "condition": "unit"},
+                    {"action": "safe", "next_state": "DONE", "condition": "unit"},
+                ],
+                "DEAD": [],
+                "DONE": [],
+            },
+            "fallback_policy": {"on_invalid_action": "bfs_safe_fsm_transition_fallback"},
+            "success_signals": ["done"],
+            "risk_notes": ["unit test"],
+        }
+        adapter = DeadEndAdapter()
+        fsm = RuntimeFSM(design, spec, adapter)
+        llm = SequenceLLM(
+            [json.dumps({"thought": "dead is in the FSM", "action": "dead", "next_state": "DEAD"})]
+        )
+        result = NSFSMAgent(spec, adapter, fsm, llm=llm, max_llm_retries=0).run_episode()
+        self.assertTrue(result["success"], result)
+        self.assertEqual(result["blocked_action_count"], 1)
+        self.assertEqual(result["trajectory"][0]["proposal"]["action"], "dead")
+        self.assertEqual(result["trajectory"][0]["action"], "safe")
+        self.assertEqual(
+            result["trajectory"][0]["transition_check"]["bfs_reaches_terminal"],
+            True,
         )
 
     def test_robotouille_runs_past_max_steps_until_goal_complete(self):
@@ -719,7 +799,7 @@ class NSFSMTests(unittest.TestCase):
                 return bool(state.get("done"))
 
             def get_available_tools(self, task_spec, state):
-                return []
+                return ["prepare"] if int(state.get("step_count", 0)) == 0 else ["finish"]
 
             def get_runtime_actions(self, task_spec, state):
                 return ["primitive_1"] if int(state.get("step_count", 0)) == 0 else ["primitive_2"]
@@ -731,11 +811,12 @@ class NSFSMTests(unittest.TestCase):
             def step(self, action):
                 action_name = action.get("action") if isinstance(action, dict) else action
                 step_count = int(self.state.get("step_count", 0)) + 1
-                done = action_name == "primitive_2"
-                info = {"success": True}
-                if done:
-                    info["fsm_next_state"] = "DONE"
-                    info["fsm_transition_action"] = "finish"
+                done = action_name == "finish"
+                info = {
+                    "success": True,
+                    "fsm_next_state": "DONE" if done else "MID",
+                    "fsm_transition_action": action_name,
+                }
                 self.state = {"step_count": step_count, "done": done}
                 return type(
                     "StepResult",
@@ -756,20 +837,21 @@ class NSFSMTests(unittest.TestCase):
             "instruction": "Finish only after the second primitive.",
             "initial_state": {},
             "goal_condition": {"done": True},
-            "available_tools": ["finish"],
+            "available_tools": ["prepare", "finish"],
             "max_steps": 1,
             "success_criteria": ["done"],
             "metadata": {},
         }
         design = {
-            "states": ["START", "DONE"],
+            "states": ["START", "MID", "DONE"],
             "initial_state": "START",
             "terminal_states": ["DONE"],
             "transitions_by_state": {
-                "START": [{"action": "finish", "next_state": "DONE", "condition": "unit"}],
+                "START": [{"action": "prepare", "next_state": "MID", "condition": "unit"}],
+                "MID": [{"action": "finish", "next_state": "DONE", "condition": "unit"}],
                 "DONE": [],
             },
-            "fallback_policy": {"on_invalid_action": "runtime_primitive_fallback"},
+            "fallback_policy": {"on_invalid_action": "bfs_safe_fsm_transition_fallback"},
             "success_signals": ["done"],
             "risk_notes": ["unit test"],
         }
@@ -781,8 +863,135 @@ class NSFSMTests(unittest.TestCase):
         self.assertEqual(result["total_steps"], 2)
         self.assertEqual(
             [entry["action"] for entry in result["trajectory"]],
-            ["primitive_1", "primitive_2"],
+            ["prepare", "finish"],
         )
+
+    def test_robotouille_returns_result_when_simulator_done_without_goal(self):
+        class DoneWithoutGoalAdapter:
+            dataset_name = "robotouille"
+
+            def reset(self, task_spec):
+                self.state = {"step_count": 0, "done": False}
+                return dict(self.state)
+
+            def is_done(self, state, task_spec):
+                return bool(state.get("done"))
+
+            def get_available_tools(self, task_spec, state):
+                return ["finish"]
+
+            def get_runtime_actions(self, task_spec, state):
+                return ["noop"]
+
+            def normalize_action(self, raw_action, legal_actions):
+                action = raw_action.get("action") if isinstance(raw_action, dict) else raw_action
+                return action if action in legal_actions else None
+
+            def step(self, action):
+                self.state = {"step_count": 1, "done": False}
+                return type(
+                    "StepResult",
+                    (),
+                    {"state": dict(self.state), "done": True, "info": {"success": True}},
+                )()
+
+            def format_state_for_prompt(self, state):
+                return str(state)
+
+            def summarize_result(self, state):
+                return {"success": False, "total_steps": state.get("step_count", 0)}
+
+        spec, design = self._robotouille_single_action_spec_and_design()
+        adapter = DoneWithoutGoalAdapter()
+        fsm = FSMBuilder().from_design(design, spec, adapter)
+        result = NSFSMAgent(spec, adapter, fsm, planner_only=True).run_episode()
+        self.assertFalse(result["success"], result)
+        self.assertEqual(result["termination"], "simulator_done_without_goal")
+        self.assertEqual(result["total_steps"], 1)
+
+    def test_robotouille_returns_result_on_repeated_no_progress(self):
+        class NoProgressAdapter:
+            dataset_name = "robotouille"
+
+            def reset(self, task_spec):
+                self.state = {"step_count": 0, "done": False, "observation": "same"}
+                return dict(self.state)
+
+            def is_done(self, state, task_spec):
+                return False
+
+            def get_available_tools(self, task_spec, state):
+                return ["noop"]
+
+            def get_runtime_actions(self, task_spec, state):
+                return ["noop"]
+
+            def normalize_action(self, raw_action, legal_actions):
+                action = raw_action.get("action") if isinstance(raw_action, dict) else raw_action
+                return action if action in legal_actions else None
+
+            def step(self, action):
+                self.state = {
+                    "step_count": int(self.state.get("step_count", 0)) + 1,
+                    "done": False,
+                    "observation": "same",
+                }
+                return type(
+                    "StepResult",
+                    (),
+                    {"state": dict(self.state), "done": False, "info": {"success": True}},
+                )()
+
+            def format_state_for_prompt(self, state):
+                return str(state)
+
+            def summarize_result(self, state):
+                return {"success": False, "total_steps": state.get("step_count", 0)}
+
+        spec, design = self._robotouille_single_action_spec_and_design()
+        adapter = NoProgressAdapter()
+        fsm = FSMBuilder().from_design(design, spec, adapter)
+        result = NSFSMAgent(
+            spec,
+            adapter,
+            fsm,
+            planner_only=True,
+            max_stalled_repeats=2,
+        ).run_episode()
+        self.assertFalse(result["success"], result)
+        self.assertEqual(result["termination"], "stalled_no_progress")
+        self.assertEqual(result["total_steps"], 2)
+
+    @staticmethod
+    def _robotouille_single_action_spec_and_design():
+        spec = {
+            "dataset": "robotouille",
+            "task_id": "robotouille/stalled",
+            "task_type": "symbolic_planning",
+            "instruction": "Return a result instead of hanging.",
+            "initial_state": {},
+            "goal_condition": {"done": True},
+            "available_tools": ["finish", "noop"],
+            "max_steps": 1,
+            "success_criteria": ["done"],
+            "metadata": {},
+        }
+        design = {
+            "states": ["START", "DONE"],
+            "initial_state": "START",
+            "terminal_states": ["DONE"],
+            "transitions_by_state": {
+                "START": [
+                    {"action": "finish", "next_state": "DONE", "condition": "unit"},
+                    {"action": "noop", "next_state": "START", "condition": "unit"},
+                ],
+                "DONE": [],
+            },
+            "fallback_policy": {"on_invalid_action": "bfs_safe_fsm_transition_fallback"},
+            "success_signals": ["done"],
+            "risk_notes": ["unit test"],
+        }
+        return spec, design
 
     def test_runner_smoke_and_analysis(self):
         tag = "unit_smoke_nsfsm"
