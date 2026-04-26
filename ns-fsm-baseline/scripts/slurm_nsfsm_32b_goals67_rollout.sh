@@ -149,7 +149,6 @@ python scripts/run_nsfsm_full_rollout.py \
     --task-shard-count "$SHARD_COUNT" \
     --shard-label "$SHARD_LABEL" \
     --resume \
-    --quiet \
     --wandb \
     --wandb-project "$WANDB_PROJECT" \
     --wandb-entity "$WANDB_ENTITY" \

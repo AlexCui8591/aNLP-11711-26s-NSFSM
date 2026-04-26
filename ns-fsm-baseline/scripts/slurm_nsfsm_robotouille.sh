@@ -202,7 +202,6 @@ python scripts/run_nsfsm_experiment.py \
     --use-llm \
     --require-llm \
     --save-fsm-design \
-    --quiet \
     "${RESUME_ARG[@]}" \
     ${NSFSM_EXTRA_ARGS:-}
 

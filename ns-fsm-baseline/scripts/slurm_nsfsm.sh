@@ -143,7 +143,6 @@ python scripts/run_nsfsm_experiment.py \
     --tag "${TAG}" \
     --config "${CONFIG_PATH}" \
     --save-fsm-design \
-    --quiet \
     "${RESUME_ARG[@]}" \
     ${NSFSM_EXTRA_ARGS:-}
 

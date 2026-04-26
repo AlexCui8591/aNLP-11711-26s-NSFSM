@@ -89,8 +89,7 @@ python scripts/run_full_experiment.py \
     --agent react \
     --config config/hyperparams_psc.yaml \
     --tag full_v1 \
-    --resume \
-    --quiet
+    --resume
 
 echo "============================================"
 echo "  ReAct experiment completed at $(date)"

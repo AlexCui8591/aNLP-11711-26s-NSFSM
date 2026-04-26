@@ -102,8 +102,7 @@ python scripts/run_full_experiment.py \
     --agent reflexion \
     --config config/hyperparams_psc.yaml \
     --tag full_v1 \
-    --resume \
-    --quiet
+    --resume
 
 echo "============================================"
 echo "  Reflexion experiment completed at $(date)"
