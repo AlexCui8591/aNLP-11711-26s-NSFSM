@@ -545,8 +545,44 @@ class RobotouilleAdapter(DatasetAdapter):
         with open(self.ground_truth_path, "r", encoding="utf-8") as f:
             payload = json.load(f)
         tasks = [dict(task) for task in payload.get("tasks", [])]
+        tasks = self._apply_task_overrides(tasks)
         self._tasks_cache = tasks
         return {"tasks": deepcopy(tasks)}
+
+    def _apply_task_overrides(self, tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Overlay task-specific FSM fixes that are shipped next to the default FSM."""
+
+        override_path = self._task_override_path()
+        if not override_path:
+            return tasks
+        try:
+            with open(override_path, "r", encoding="utf-8") as f:
+                payload = json.load(f)
+        except (OSError, json.JSONDecodeError):
+            return tasks
+
+        overrides = {
+            str(task.get("task_id", "")): dict(task)
+            for task in payload.get("tasks", [])
+            if str(task.get("task_id", ""))
+        }
+        if not overrides:
+            return tasks
+
+        merged: list[dict[str, Any]] = []
+        for task in tasks:
+            task_id = str(task.get("task_id", ""))
+            merged.append(overrides.get(task_id, task))
+        return merged
+
+    def _task_override_path(self) -> str | None:
+        base, filename = os.path.split(self.ground_truth_path)
+        if not filename.endswith("_fsm.json"):
+            return None
+        override = os.path.join(base, filename.replace("_fsm.json", "_fsm_branching_first.json"))
+        if override == self.ground_truth_path or not os.path.exists(override):
+            return None
+        return override
 
     def _compile_ground_truth(self, raw_task: Mapping[str, Any]) -> dict[str, Any]:
         states = [dict(state) for state in raw_task.get("state_list", [])]
@@ -1050,6 +1086,7 @@ class RobotouilleAdapter(DatasetAdapter):
             object_types,
             desired_item,
             desired_table_mode,
+            desired_template=template,
         ):
             return False
         return True
@@ -1064,6 +1101,8 @@ class RobotouilleAdapter(DatasetAdapter):
     ) -> bool:
         if runtime_template == desired_template:
             return True
+        if desired_template == "place-item" and runtime_template == "place":
+            return not desired_item or desired_item in values.values()
         if desired_template == "place-item" and runtime_template == "stack":
             if desired_target and desired_target not in {
                 "table",
@@ -1085,6 +1124,7 @@ class RobotouilleAdapter(DatasetAdapter):
         object_types: Mapping[str, str],
         desired_item: str,
         desired_table_mode: str = "",
+        desired_template: str = "",
     ) -> bool:
         station_names = [name for key, name in values.items() if object_types.get(key) == "station"]
         destination = values.get("s2") or values.get("s1") or ""
@@ -1094,8 +1134,18 @@ class RobotouilleAdapter(DatasetAdapter):
         if "while holding pot" in desired_target and not self._robot_holds_container("pot"):
             return False
         if desired_target == "stove":
+            if desired_template == "place-item":
+                return any(
+                    name.startswith("stove") and self._station_empty(name)
+                    for name in candidate_stations
+                )
             return any(name.startswith("stove") for name in candidate_stations)
         if desired_target == "fryer":
+            if desired_template == "place-item":
+                return any(
+                    name.startswith("fryer") and self._station_empty(name)
+                    for name in candidate_stations
+                )
             return any(name.startswith("fryer") for name in candidate_stations)
         if desired_target == "board":
             return any(name.startswith("board") for name in candidate_stations)
@@ -1138,7 +1188,10 @@ class RobotouilleAdapter(DatasetAdapter):
                 for station in candidate_stations
             )
         if desired_target == "stove while holding item":
-            return any(name.startswith("stove") for name in candidate_stations)
+            return any(
+                name.startswith("stove") and self._station_empty(name)
+                for name in candidate_stations
+            )
         if desired_target == "empty stove while holding item":
             return any(
                 name.startswith("stove") and self._station_empty(name)
@@ -1150,7 +1203,10 @@ class RobotouilleAdapter(DatasetAdapter):
                 for name in candidate_stations
             )
         if desired_target == "fryer while holding item":
-            return any(name.startswith("fryer") for name in candidate_stations)
+            return any(
+                name.startswith("fryer") and self._station_empty(name)
+                for name in candidate_stations
+            )
         if desired_target == "cutting board while holding item":
             return any(name.startswith("board") for name in candidate_stations)
         if desired_target == "sink while holding pot":
@@ -1553,6 +1609,51 @@ class RobotouilleAdapter(DatasetAdapter):
             return any(self._completion_condition_true(part) for part in condition.split(" or "))
         if condition == "All official goal predicates are satisfied.":
             return bool(self.env and self.env.current_state.is_goal_reached())
+        if condition == "all goal predicates satisfied":
+            return bool(self.env and self.env.current_state.is_goal_reached())
+        if condition == "terminal":
+            return True
+        surface_ready_match = re.fullmatch(r"(stove|fryer) is ready for (.+)", condition)
+        if surface_ready_match:
+            station_prefix, alias = surface_ready_match.groups()
+            return self._surface_ready_for(station_prefix, alias.strip())
+        empty_surface_match = re.fullmatch(
+            r"robot is at an empty (stove|fryer) with (.+)",
+            condition,
+        )
+        if empty_surface_match:
+            station_prefix, alias = empty_surface_match.groups()
+            robot_station = self._robot_station()
+            return bool(
+                robot_station
+                and robot_station.startswith(station_prefix)
+                and self._station_empty(robot_station)
+                and self._robot_holds_item(self._alias_to_runtime_name(alias.strip()))
+            )
+        empty_table_match = re.fullmatch(r"robot is at an empty table with .+", condition)
+        if empty_table_match:
+            robot_station = self._robot_station()
+            return bool(
+                robot_station
+                and robot_station.startswith("table")
+                and self._station_empty(robot_station)
+                and self._robot_holds_item()
+            )
+        serving_table_match = re.fullmatch(r"robot is at serving table with (.+)", condition)
+        if serving_table_match:
+            alias = serving_table_match.group(1).strip()
+            robot_station = self._robot_station()
+            return bool(
+                robot_station
+                and self._matches_serving_table(robot_station)
+                and self._robot_holds_item(self._alias_to_runtime_name(alias))
+            )
+        if condition == "robot holds stove blocker":
+            return self._robot_holds_item()
+        if condition == "stove blocker is no longer on stove":
+            return (not self._robot_holds_item()) and any(
+                self._station_empty(station) for station in self._stations_with_prefix("stove")
+            )
         if condition.startswith("robot is at station containing "):
             alias = condition.split("robot is at station containing ", 1)[1].strip()
             return self._robot_at_station_containing(alias)
@@ -1566,10 +1667,28 @@ class RobotouilleAdapter(DatasetAdapter):
             runtime_item = "water" if alias == "WATER" else self._alias_to_runtime_name(alias)
             return self._predicate_true(predicate, runtime_item)
 
+        direct_location_match = re.fullmatch(
+            r"(.+) is directly on (stove|fryer|table|board|sink)",
+            condition,
+        )
+        if direct_location_match:
+            alias, station_prefix = direct_location_match.groups()
+            item = self._alias_to_runtime_name(alias.strip())
+            return any(
+                self._predicate_true("item_on", item, station)
+                or self._predicate_true("container_at", item, station)
+                for station in self._stations_with_prefix(station_prefix)
+            )
         location_match = re.fullmatch(r"(.+) is on (stove|fryer|table|board|sink)", condition)
         if location_match:
             alias, station_prefix = location_match.groups()
             item = self._alias_to_runtime_name(alias.strip())
+            if station_prefix in {"stove", "fryer"}:
+                return any(
+                    self._predicate_true("item_on", item, station)
+                    or self._predicate_true("container_at", item, station)
+                    for station in self._stations_with_prefix(station_prefix)
+                )
             return any(
                 self._predicate_true("item_on", item, station)
                 or self._predicate_true("item_at", item, station)

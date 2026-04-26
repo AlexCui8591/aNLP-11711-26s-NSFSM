@@ -524,6 +524,69 @@ class NSFSMTests(unittest.TestCase):
             )
         )
 
+    def test_robotouille_uses_branching_first_clear_stove_fsm_for_task0(self):
+        adapter = RobotouilleAdapter()
+        task = next(
+            task
+            for task in adapter.list_tasks()
+            if task["task_id"] == "robotouille/asynchronous/0_cheese_chicken_sandwich"
+        )
+        state_names = {state["name"] for state in task["state_list"]}
+        self.assertIn("PICK_UP_STOVE_BLOCKER_FOR_chicken__3", state_names)
+        self.assertIn("PLACE_STOVE_BLOCKER_ON_TABLE_FOR_chicken__3", state_names)
+        navigate_state = next(
+            state
+            for state in task["state_list"]
+            if state["name"] == "NAVIGATE_TO_STOVE_WITH_chicken__3"
+        )
+        self.assertEqual(
+            navigate_state["fsm_allowed_actions"][0]["target"],
+            "empty stove while holding item",
+        )
+
+    def test_robotouille_place_on_stove_requires_empty_direct_surface(self):
+        class Obj:
+            def __init__(self, name, object_type="item"):
+                self.name = name
+                self.object_type = object_type
+
+        class Pred:
+            def __init__(self, name, params):
+                self.name = name
+                self.params = params
+
+        class FakeState:
+            def __init__(self, predicates):
+                self.predicates = predicates
+                self.objects = [Obj("stove1", "station")]
+
+        chicken = Obj("chicken1")
+        cheese = Obj("cheese1")
+        stove = Obj("stove1", "station")
+        place_match = (Obj("place", "action"), {"i1": chicken, "s1": stove})
+        adapter = RobotouilleAdapter()
+        adapter._alias_map = {"chicken__3": "chicken1"}
+
+        adapter.env = type(
+            "FakeEnv",
+            (),
+            {"current_state": FakeState({Pred("item_at", [cheese, stove]): True})},
+        )()
+        self.assertFalse(
+            adapter._action_spec_matches_runtime_match(
+                {"template": "place-item", "item": "chicken__3", "target": "stove"},
+                place_match,
+            )
+        )
+
+        adapter.env.current_state = FakeState({})
+        self.assertTrue(
+            adapter._action_spec_matches_runtime_match(
+                {"template": "place-item", "item": "chicken__3", "target": "stove"},
+                place_match,
+            )
+        )
+
     def test_robotouille_primitive_pickup_macro_does_not_advance_on_unstack(self):
         class Obj:
             def __init__(self, name, object_type="item"):
