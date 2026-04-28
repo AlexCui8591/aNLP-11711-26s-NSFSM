@@ -1,0 +1,212 @@
+[
+  {
+    "depth": 3,
+    "group": "Wooden",
+    "method": "Qwen ReAct",
+    "n_runs": 150,
+    "n_success": 120,
+    "status": "measured",
+    "success_rate": 0.8,
+    "success_rate_pct": 80.0
+  },
+  {
+    "depth": 7,
+    "group": "Stone",
+    "method": "Qwen ReAct",
+    "n_runs": 135,
+    "n_success": 21,
+    "status": "measured",
+    "success_rate": 0.15555555555555556,
+    "success_rate_pct": 15.555555555555555
+  },
+  {
+    "depth": 12,
+    "group": "Iron",
+    "method": "Qwen ReAct",
+    "n_runs": 240,
+    "n_success": 2,
+    "status": "measured",
+    "success_rate": 0.008333333333333333,
+    "success_rate_pct": 0.8333333333333334
+  },
+  {
+    "depth": 14,
+    "group": "Redstone",
+    "method": "Qwen ReAct",
+    "n_runs": 90,
+    "n_success": 1,
+    "status": "measured",
+    "success_rate": 0.011111111111111112,
+    "success_rate_pct": 1.1111111111111112
+  },
+  {
+    "depth": 15,
+    "group": "Golden",
+    "method": "Qwen ReAct",
+    "n_runs": 90,
+    "n_success": 0,
+    "status": "measured",
+    "success_rate": 0.0,
+    "success_rate_pct": 0.0
+  },
+  {
+    "depth": 15,
+    "group": "Armor",
+    "method": "Qwen ReAct",
+    "n_runs": 195,
+    "n_success": 0,
+    "status": "measured",
+    "success_rate": 0.0,
+    "success_rate_pct": 0.0
+  },
+  {
+    "depth": 18,
+    "group": "Diamond",
+    "method": "Qwen ReAct",
+    "n_runs": 105,
+    "n_success": 0,
+    "status": "measured",
+    "success_rate": 0.0,
+    "success_rate_pct": 0.0
+  },
+  {
+    "depth": 3,
+    "group": "Wooden",
+    "method": "Qwen Reflexion",
+    "n_runs": 150,
+    "n_success": 137,
+    "status": "measured",
+    "success_rate": 0.9133333333333333,
+    "success_rate_pct": 91.33333333333333
+  },
+  {
+    "depth": 7,
+    "group": "Stone",
+    "method": "Qwen Reflexion",
+    "n_runs": 135,
+    "n_success": 87,
+    "status": "measured",
+    "success_rate": 0.6444444444444445,
+    "success_rate_pct": 64.44444444444444
+  },
+  {
+    "depth": 12,
+    "group": "Iron",
+    "method": "Qwen Reflexion",
+    "n_runs": 240,
+    "n_success": 17,
+    "status": "measured",
+    "success_rate": 0.07083333333333333,
+    "success_rate_pct": 7.083333333333333
+  },
+  {
+    "depth": 14,
+    "group": "Redstone",
+    "method": "Qwen Reflexion",
+    "n_runs": 90,
+    "n_success": 0,
+    "status": "measured",
+    "success_rate": 0.0,
+    "success_rate_pct": 0.0
+  },
+  {
+    "depth": 15,
+    "group": "Golden",
+    "method": "Qwen Reflexion",
+    "n_runs": 90,
+    "n_success": 14,
+    "status": "measured",
+    "success_rate": 0.15555555555555556,
+    "success_rate_pct": 15.555555555555555
+  },
+  {
+    "depth": 15,
+    "group": "Armor",
+    "method": "Qwen Reflexion",
+    "n_runs": 195,
+    "n_success": 11,
+    "status": "measured",
+    "success_rate": 0.05641025641025641,
+    "success_rate_pct": 5.641025641025641
+  },
+  {
+    "depth": 18,
+    "group": "Diamond",
+    "method": "Qwen Reflexion",
+    "n_runs": 105,
+    "n_success": 0,
+    "status": "measured",
+    "success_rate": 0.0,
+    "success_rate_pct": 0.0
+  },
+  {
+    "depth": 3,
+    "group": "Wooden",
+    "method": "Qwen NS-FSM (projected)",
+    "n_runs": null,
+    "n_success": null,
+    "status": "projected",
+    "success_rate": 0.91,
+    "success_rate_pct": 91.0
+  },
+  {
+    "depth": 7,
+    "group": "Stone",
+    "method": "Qwen NS-FSM (projected)",
+    "n_runs": null,
+    "n_success": null,
+    "status": "projected",
+    "success_rate": 0.784,
+    "success_rate_pct": 78.4
+  },
+  {
+    "depth": 12,
+    "group": "Iron",
+    "method": "Qwen NS-FSM (projected)",
+    "n_runs": null,
+    "n_success": null,
+    "status": "projected",
+    "success_rate": 0.228,
+    "success_rate_pct": 22.8
+  },
+  {
+    "depth": 14,
+    "group": "Redstone",
+    "method": "Qwen NS-FSM (projected)",
+    "n_runs": null,
+    "n_success": null,
+    "status": "projected",
+    "success_rate": 0.186,
+    "success_rate_pct": 18.6
+  },
+  {
+    "depth": 15,
+    "group": "Golden",
+    "method": "Qwen NS-FSM (projected)",
+    "n_runs": null,
+    "n_success": null,
+    "status": "projected",
+    "success_rate": 0.238,
+    "success_rate_pct": 23.799999999999997
+  },
+  {
+    "depth": 15,
+    "group": "Armor",
+    "method": "Qwen NS-FSM (projected)",
+    "n_runs": null,
+    "n_success": null,
+    "status": "projected",
+    "success_rate": 0.246,
+    "success_rate_pct": 24.6
+  },
+  {
+    "depth": 18,
+    "group": "Diamond",
+    "method": "Qwen NS-FSM (projected)",
+    "n_runs": null,
+    "n_success": null,
+    "status": "projected",
+    "success_rate": 0.15,
+    "success_rate_pct": 15.0
+  }
+]

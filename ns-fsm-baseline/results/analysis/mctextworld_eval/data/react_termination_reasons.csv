@@ -1,0 +1,5 @@
+method,termination_reason,count,percent
+Qwen ReAct,dead_loop,856,85.17412935323384
+Qwen ReAct,success,144,14.328358208955224
+Qwen ReAct,llm_error,3,0.29850746268656714
+Qwen ReAct,max_steps,2,0.19900497512437812

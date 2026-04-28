@@ -1,0 +1,16 @@
+\begin{tabular}{lllrrrr}
+\toprule
+Benchmark & Suite / Setting & Agent & Runs & SR & Steps/$L^*$ & Budget-hit \\
+\midrule
+MC-TextWorld & 67 goals & ReAct Qwen2.5-7B & 1005 & 14.3\% & -- & -- \\
+MC-TextWorld & 67 goals & Reflexion Qwen2.5-7B & 1005 & 26.5\% & -- & -- \\
+MC-TextWorld & 67 goals & NS-FSM Qwen2.5-7B$^\dagger$ & 1005 & 39.7\% & -- & -- \\
+MC-TextWorld & 67 goals & Reflexion GPT-5-mini & 201 & 99.0\% & -- & -- \\
+MC-TextWorld & 67 goals & NS-FSM GPT-5-mini$^\dagger$ & 164 & 97.5\% & -- & -- \\
+\midrule
+Robotouille & Sync & ReAct GPT-5-mini & 100 & 0.51 & 1.25 & 49\% \\
+Robotouille & Sync & NS-FSM GPT-5-mini$^\dagger$ & 100 & 0.67 & 1.15 & 12\% \\
+Robotouille & Async & ReAct GPT-5-mini & 100 & 0.10 & 1.46 & 90\% \\
+Robotouille & Async & NS-FSM GPT-5-mini$^\dagger$ & 100 & 0.39 & 1.18 & 36\% \\
+\bottomrule
+\end{tabular}

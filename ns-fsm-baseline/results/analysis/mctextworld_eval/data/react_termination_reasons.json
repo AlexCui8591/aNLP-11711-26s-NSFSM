@@ -1,0 +1,26 @@
+[
+  {
+    "count": 856,
+    "method": "Qwen ReAct",
+    "percent": 85.17412935323384,
+    "termination_reason": "dead_loop"
+  },
+  {
+    "count": 144,
+    "method": "Qwen ReAct",
+    "percent": 14.328358208955224,
+    "termination_reason": "success"
+  },
+  {
+    "count": 3,
+    "method": "Qwen ReAct",
+    "percent": 0.29850746268656714,
+    "termination_reason": "llm_error"
+  },
+  {
+    "count": 2,
+    "method": "Qwen ReAct",
+    "percent": 0.19900497512437812,
+    "termination_reason": "max_steps"
+  }
+]

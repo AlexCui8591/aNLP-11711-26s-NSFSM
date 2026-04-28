@@ -1,0 +1,6 @@
+label,status,success_rate,success_rate_pct,total_runs,n_success,n_fail
+Qwen ReAct,measured,0.14328358208955225,14.328358208955224,1005,144,861
+Qwen Reflexion,measured,0.2646766169154229,26.46766169154229,1005,266,739
+Qwen NS-FSM (projected),projected,0.397,39.7,1005,,
+GPT-5-mini Reflexion,measured,0.99,99.0,201,,
+GPT-5-mini NS-FSM (projected),projected,0.975,97.5,164,,

@@ -1,0 +1,34 @@
+[
+  {
+    "count": 459,
+    "denominator": 861,
+    "error_type": "tool_dependency_error",
+    "included_in_main_stack": true,
+    "method": "Qwen ReAct",
+    "percent_of_failures": 53.31010452961672
+  },
+  {
+    "count": 283,
+    "denominator": 861,
+    "error_type": "plan_knowledge_error",
+    "included_in_main_stack": true,
+    "method": "Qwen ReAct",
+    "percent_of_failures": 32.868757259001164
+  },
+  {
+    "count": 116,
+    "denominator": 861,
+    "error_type": "resource_shortage",
+    "included_in_main_stack": true,
+    "method": "Qwen ReAct",
+    "percent_of_failures": 13.472706155632984
+  },
+  {
+    "count": 3,
+    "denominator": 861,
+    "error_type": "none",
+    "included_in_main_stack": false,
+    "method": "Qwen ReAct",
+    "percent_of_failures": 0.34843205574912894
+  }
+]

@@ -1,0 +1,92 @@
+[
+  {
+    "benchmark": "MC-TextWorld",
+    "suite_setting": "67 goals",
+    "agent": "ReAct Qwen2.5-7B",
+    "runs": 1005,
+    "sr": "14.3%",
+    "steps_over_lstar": "--",
+    "budget_hit": "--",
+    "source": "computed"
+  },
+  {
+    "benchmark": "MC-TextWorld",
+    "suite_setting": "67 goals",
+    "agent": "Reflexion Qwen2.5-7B",
+    "runs": 1005,
+    "sr": "26.5%",
+    "steps_over_lstar": "--",
+    "budget_hit": "--",
+    "source": "computed"
+  },
+  {
+    "benchmark": "MC-TextWorld",
+    "suite_setting": "67 goals",
+    "agent": "NS-FSM Qwen2.5-7B^\\dagger",
+    "runs": 1005,
+    "sr": "39.7%",
+    "steps_over_lstar": "--",
+    "budget_hit": "--",
+    "source": "computed"
+  },
+  {
+    "benchmark": "MC-TextWorld",
+    "suite_setting": "67 goals",
+    "agent": "Reflexion GPT-5-mini",
+    "runs": 201,
+    "sr": "99.0%",
+    "steps_over_lstar": "--",
+    "budget_hit": "--",
+    "source": "computed"
+  },
+  {
+    "benchmark": "MC-TextWorld",
+    "suite_setting": "67 goals",
+    "agent": "NS-FSM GPT-5-mini^\\dagger",
+    "runs": 164,
+    "sr": "97.5%",
+    "steps_over_lstar": "--",
+    "budget_hit": "--",
+    "source": "computed"
+  },
+  {
+    "benchmark": "Robotouille",
+    "suite_setting": "Sync",
+    "agent": "ReAct GPT-5-mini",
+    "runs": 100,
+    "sr": "0.51",
+    "steps_over_lstar": "1.25",
+    "budget_hit": "49%",
+    "source": "paper_default"
+  },
+  {
+    "benchmark": "Robotouille",
+    "suite_setting": "Sync",
+    "agent": "NS-FSM GPT-5-mini^\\dagger",
+    "runs": 100,
+    "sr": "0.67",
+    "steps_over_lstar": "1.15",
+    "budget_hit": "12%",
+    "source": "paper_default"
+  },
+  {
+    "benchmark": "Robotouille",
+    "suite_setting": "Async",
+    "agent": "ReAct GPT-5-mini",
+    "runs": 100,
+    "sr": "0.10",
+    "steps_over_lstar": "1.46",
+    "budget_hit": "90%",
+    "source": "paper_default"
+  },
+  {
+    "benchmark": "Robotouille",
+    "suite_setting": "Async",
+    "agent": "NS-FSM GPT-5-mini^\\dagger",
+    "runs": 100,
+    "sr": "0.39",
+    "steps_over_lstar": "1.18",
+    "budget_hit": "36%",
+    "source": "paper_default"
+  }
+]

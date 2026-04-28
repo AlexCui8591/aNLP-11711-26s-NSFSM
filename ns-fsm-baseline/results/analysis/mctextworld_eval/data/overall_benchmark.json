@@ -1,0 +1,47 @@
+[
+  {
+    "label": "Qwen ReAct",
+    "n_fail": 861,
+    "n_success": 144,
+    "status": "measured",
+    "success_rate": 0.14328358208955225,
+    "success_rate_pct": 14.328358208955224,
+    "total_runs": 1005
+  },
+  {
+    "label": "Qwen Reflexion",
+    "n_fail": 739,
+    "n_success": 266,
+    "status": "measured",
+    "success_rate": 0.2646766169154229,
+    "success_rate_pct": 26.46766169154229,
+    "total_runs": 1005
+  },
+  {
+    "label": "Qwen NS-FSM (projected)",
+    "n_fail": null,
+    "n_success": null,
+    "status": "projected",
+    "success_rate": 0.397,
+    "success_rate_pct": 39.7,
+    "total_runs": 1005
+  },
+  {
+    "label": "GPT-5-mini Reflexion",
+    "n_fail": null,
+    "n_success": null,
+    "status": "measured",
+    "success_rate": 0.99,
+    "success_rate_pct": 99.0,
+    "total_runs": 201
+  },
+  {
+    "label": "GPT-5-mini NS-FSM (projected)",
+    "n_fail": null,
+    "n_success": null,
+    "status": "projected",
+    "success_rate": 0.975,
+    "success_rate_pct": 97.5,
+    "total_runs": 164
+  }
+]

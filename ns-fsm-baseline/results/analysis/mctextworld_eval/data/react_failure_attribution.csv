@@ -1,0 +1,5 @@
+method,error_type,count,denominator,percent_of_failures,included_in_main_stack
+Qwen ReAct,tool_dependency_error,459,861,53.31010452961672,True
+Qwen ReAct,plan_knowledge_error,283,861,32.868757259001164,True
+Qwen ReAct,resource_shortage,116,861,13.472706155632984,True
+Qwen ReAct,none,3,861,0.34843205574912894,False
