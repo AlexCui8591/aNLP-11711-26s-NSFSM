@@ -233,12 +233,14 @@ class RobotouilleAdapter(DatasetAdapter):
         else:
             match = self._current_matches.get(action_name)
             if match is not None:
-                matched_transition_actions = [
-                    {
-                        "action": action_name,
-                        "next_state": self._next_state_for_semantic_action(action_name) or "",
-                    }
-                ]
+                matched_transition_actions = self._matching_transition_actions_for_runtime_match(match)
+                if not matched_transition_actions:
+                    matched_transition_actions = [
+                        {
+                            "action": action_name,
+                            "next_state": self._next_state_for_semantic_action(action_name) or "",
+                        }
+                    ]
 
         if match is None:
             self._refresh_valid_actions()
@@ -249,12 +251,14 @@ class RobotouilleAdapter(DatasetAdapter):
             else:
                 match = self._current_matches.get(action_name)
                 if match is not None:
-                    matched_transition_actions = [
-                        {
-                            "action": action_name,
-                            "next_state": self._next_state_for_semantic_action(action_name) or "",
-                        }
-                    ]
+                    matched_transition_actions = self._matching_transition_actions_for_runtime_match(match)
+                    if not matched_transition_actions:
+                        matched_transition_actions = [
+                            {
+                                "action": action_name,
+                                "next_state": self._next_state_for_semantic_action(action_name) or "",
+                            }
+                        ]
         if match is None:
             info["success"] = False
             info["message"] = self._last_match_reason.get(
@@ -306,6 +310,7 @@ class RobotouilleAdapter(DatasetAdapter):
 
         self._refresh_valid_actions()
         state_map = spec.get("metadata", {}).get("compiled_state_map", {})
+        self._advance_completed_fsm_state(state_map)
         current = state_map.get(self.current_fsm_state, {})
         if not current:
             return []
@@ -324,11 +329,7 @@ class RobotouilleAdapter(DatasetAdapter):
             .get("transitions_by_state", {})
             .get(self.current_fsm_state, [])
         )
-        if has_skip_transition and (
-            self.current_fsm_state in self.completed_root_clusters
-            or self._state_completion_satisfied(current)
-        ):
-            self.completed_root_clusters.add(self.current_fsm_state)
+        if has_skip_transition and self.current_fsm_state in self.completed_root_clusters:
             return [skip_action]
 
         if current.get("kind") == "async-branch":
@@ -387,6 +388,7 @@ class RobotouilleAdapter(DatasetAdapter):
 
         self._refresh_valid_actions()
         state_map = spec.get("metadata", {}).get("compiled_state_map", {})
+        self._advance_completed_fsm_state(state_map)
         current = state_map.get(self.current_fsm_state, {})
         if not current or current.get("kind") == "terminal":
             return []
@@ -401,11 +403,7 @@ class RobotouilleAdapter(DatasetAdapter):
             .get("transitions_by_state", {})
             .get(self.current_fsm_state, [])
         )
-        if has_skip_transition and (
-            self.current_fsm_state in self.completed_root_clusters
-            or self._state_completion_satisfied(current)
-        ):
-            self.completed_root_clusters.add(self.current_fsm_state)
+        if has_skip_transition and self.current_fsm_state in self.completed_root_clusters:
             return [skip_action]
 
         preferred = self._current_runtime_descriptions_for_semantic_actions()
@@ -426,6 +424,7 @@ class RobotouilleAdapter(DatasetAdapter):
             return None
 
         self._refresh_valid_actions()
+        self._advance_completed_fsm_state()
         legal_set = {str(action) for action in legal_actions or []}
         for description in self._current_runtime_descriptions_for_semantic_actions():
             if description and (not legal_set or description in legal_set):
@@ -576,11 +575,8 @@ class RobotouilleAdapter(DatasetAdapter):
         return merged
 
     def _task_override_path(self) -> str | None:
-        base, filename = os.path.split(self.ground_truth_path)
-        if not filename.endswith("_fsm.json"):
-            return None
-        override = os.path.join(base, filename.replace("_fsm.json", "_fsm_branching_first.json"))
-        if override == self.ground_truth_path or not os.path.exists(override):
+        override = os.environ.get("ROBOTOUILLE_FSM_OVERRIDE_PATH", "").strip()
+        if not override or override == self.ground_truth_path or not os.path.exists(override):
             return None
         return override
 
@@ -701,16 +697,6 @@ class RobotouilleAdapter(DatasetAdapter):
                             ),
                         }
                     )
-                if name in root_cluster_starts and name in next_root_by_root:
-                    skip_action = f"skip_completed::{name}"
-                    actions.add(skip_action)
-                    options.append(
-                        {
-                            "action": skip_action,
-                            "next_state": next_root_by_root[name],
-                            "condition": "Skip a root subgoal that was completed while inside an async branch.",
-                        }
-                    )
                 transitions_by_state[name] = options
                 continue
 
@@ -732,16 +718,6 @@ class RobotouilleAdapter(DatasetAdapter):
                         "action": action_name,
                         "next_state": next_state,
                         "condition": "Ground-truth state-local action template.",
-                    }
-                )
-            if name in root_cluster_starts and name in next_root_by_root:
-                skip_action = f"skip_completed::{name}"
-                actions.add(skip_action)
-                options.append(
-                    {
-                        "action": skip_action,
-                        "next_state": next_root_by_root[name],
-                        "condition": "Skip a root subgoal that was completed while inside an async branch.",
                     }
                 )
             transitions_by_state[name] = options
@@ -787,6 +763,8 @@ class RobotouilleAdapter(DatasetAdapter):
         branch_item: str,
         state_map: Mapping[str, Mapping[str, Any]],
     ) -> str | None:
+        if branch_item == "WATER" and "VERIFY_GOAL" in state_map:
+            return "VERIFY_GOAL"
         candidate = f"NAVIGATE_TO_{branch_item}_FOR_SERVE"
         if candidate in state_map:
             return candidate
@@ -1058,6 +1036,7 @@ class RobotouilleAdapter(DatasetAdapter):
             values,
             desired_item,
             desired_target,
+            str(action_spec.get("table_mode", "")).strip(),
         ):
             return False
 
@@ -1098,17 +1077,27 @@ class RobotouilleAdapter(DatasetAdapter):
         values: Mapping[str, str],
         desired_item: str,
         desired_target: str = "",
+        desired_table_mode: str = "",
     ) -> bool:
         if runtime_template == desired_template:
             return True
         if desired_template == "place-item" and runtime_template == "place":
             return not desired_item or desired_item in values.values()
         if desired_template == "place-item" and runtime_template == "stack":
-            if desired_target and desired_target not in {
+            if desired_table_mode == "on":
+                return False
+            if (
+                desired_target
+                and not desired_target.startswith("temporary surface")
+                and desired_target not in {
                 "table",
+                "non-serving table",
+                "serving table",
+                "occupied serving table",
                 "serving table while holding item",
                 "serving table while holding bowl",
-            }:
+                }
+            ):
                 return False
             return not desired_item or desired_item in values.values()
         if desired_template == "pick-up-item" and runtime_template == "pick-up":
@@ -1148,13 +1137,66 @@ class RobotouilleAdapter(DatasetAdapter):
                 )
             return any(name.startswith("fryer") for name in candidate_stations)
         if desired_target == "board":
+            if desired_template == "place-item":
+                return any(
+                    name.startswith("board") and self._station_empty(name)
+                    for name in candidate_stations
+                )
             return any(name.startswith("board") for name in candidate_stations)
+        if desired_target == "occupied board":
+            return any(
+                name.startswith("board") and not self._station_empty(name)
+                for name in candidate_stations
+            )
         if desired_target == "sink":
             return any(name.startswith("sink") for name in candidate_stations)
         if desired_target == "table":
+            if desired_table_mode == "on":
+                return any(
+                    name.startswith("table")
+                    and self._matches_serving_table(name)
+                    and self._station_empty(name)
+                    for name in candidate_stations
+                )
             if desired_table_mode and self.serving_table_target:
                 return any(self._matches_serving_table(name) for name in candidate_stations)
             return any(name.startswith("table") for name in candidate_stations)
+        if desired_target == "non-serving table":
+            if not self.serving_table_target:
+                return any(name.startswith("table") for name in candidate_stations)
+            return any(
+                name.startswith("table") and not self._matches_serving_table(name)
+                for name in candidate_stations
+            )
+        if desired_target == "serving table":
+            return any(self._matches_serving_table(name) for name in candidate_stations)
+        if desired_target == "occupied serving table":
+            return any(
+                self._matches_serving_table(name) and not self._station_empty(name)
+                for name in candidate_stations
+            )
+        if desired_target.startswith("temporary surface"):
+            avoid_aliases: list[str] = []
+            if " away from " in desired_target:
+                avoid_aliases = [
+                    item.strip()
+                    for item in desired_target.split(" away from ", 1)[1].split(" and ")
+                    if item.strip()
+                ]
+            avoid_items = [
+                self._alias_to_runtime_name(alias)
+                for alias in avoid_aliases
+                if alias not in {"stove", "fryer", "board"}
+            ]
+            avoid_station_prefixes = [
+                alias for alias in avoid_aliases if alias in {"stove", "fryer", "board"}
+            ]
+            return any(
+                name.startswith("table")
+                and not any(name.startswith(prefix) for prefix in avoid_station_prefixes)
+                and not any(self._object_at_station(item, name) for item in avoid_items)
+                for name in candidate_stations
+            )
         if desired_target == "occupied stove":
             return any(
                 name.startswith("stove") and not self._station_empty(name)
@@ -1183,8 +1225,7 @@ class RobotouilleAdapter(DatasetAdapter):
         if desired_target.startswith("station containing "):
             target_item = self._alias_to_runtime_name(desired_target.split("station containing ", 1)[1])
             return any(
-                self._predicate_true("item_at", target_item, station)
-                or self._predicate_true("container_at", target_item, station)
+                self._object_at_station(target_item, station)
                 for station in candidate_stations
             )
         if desired_target == "stove while holding item":
@@ -1208,7 +1249,10 @@ class RobotouilleAdapter(DatasetAdapter):
                 for name in candidate_stations
             )
         if desired_target == "cutting board while holding item":
-            return any(name.startswith("board") for name in candidate_stations)
+            return any(
+                name.startswith("board") and self._station_empty(name)
+                for name in candidate_stations
+            )
         if desired_target == "sink while holding pot":
             return any(name.startswith("sink") for name in candidate_stations)
         if desired_target == "stove while holding water-filled pot":
@@ -1219,15 +1263,31 @@ class RobotouilleAdapter(DatasetAdapter):
                 for name in candidate_stations
             )
         if desired_target == "pot on stove while holding ingredient":
-            return any(name.startswith("stove") for name in candidate_stations)
+            return any(
+                name.startswith("stove") and self._object_at_station("pot", name)
+                for name in candidate_stations
+            )
         if desired_target == "bowl while holding pot":
-            return any(name.startswith("table") or name.startswith("board") or name.startswith("sink") for name in candidate_stations)
+            return any(self._object_at_station("bowl", name) for name in candidate_stations)
         if desired_target == "serving table while holding bowl":
-            return any(self._matches_serving_table(name) for name in candidate_stations)
+            return any(
+                self._matches_serving_table(name) and self._station_empty(name)
+                for name in candidate_stations
+            )
         if desired_target == "serving table while holding item":
+            held_direct_table_goal = (
+                self._goal_requires_direct_table(desired_item)
+                if desired_item
+                else self._held_item_requires_direct_table()
+            )
+            if held_direct_table_goal and not self.serving_table_target:
+                return any(
+                    name.startswith("table") and self._station_empty(name)
+                    for name in candidate_stations
+                )
             return any(self._matches_serving_table(name) for name in candidate_stations)
         if desired_target == "pot location":
-            return True
+            return any(self._object_at_station("pot", name) for name in candidate_stations)
         return True
 
     def _match_model_name(
@@ -1595,11 +1655,92 @@ class RobotouilleAdapter(DatasetAdapter):
                 return True
         return False
 
+    def _predicate_true_or_prefix(self, predicate_name: str, runtime_prefix: str) -> bool:
+        if self.env is None:
+            return False
+        for predicate, value in self.env.current_state.predicates.items():
+            if not value or getattr(predicate, "name", "") != predicate_name:
+                continue
+            params = [getattr(obj, "name", "") for obj in getattr(predicate, "params", [])]
+            if len(params) == 1 and params[0].startswith(runtime_prefix):
+                return True
+        return False
+
+    def _predicate_true_with_prefix_args(self, predicate_name: str, *runtime_args: str) -> bool:
+        if self.env is None:
+            return False
+        for predicate, value in self.env.current_state.predicates.items():
+            if not value or getattr(predicate, "name", "") != predicate_name:
+                continue
+            params = [getattr(obj, "name", "") for obj in getattr(predicate, "params", [])]
+            if len(params) != len(runtime_args):
+                continue
+            if all(
+                actual == expected
+                or (expected and not re.search(r"\d+$", expected) and actual.startswith(expected))
+                for actual, expected in zip(params, runtime_args)
+            ):
+                return True
+        return False
+
     def _state_completion_satisfied(self, state: Mapping[str, Any]) -> bool:
         conditions = state.get("completion_condition", [])
         if not isinstance(conditions, list) or not conditions:
             return False
         return all(self._completion_condition_true(str(condition)) for condition in conditions)
+
+    def _advance_completed_fsm_state(
+        self,
+        state_map: Mapping[str, Mapping[str, Any]] | None = None,
+        *,
+        max_hops: int = 8,
+    ) -> None:
+        if self.task_spec is None:
+            return
+        metadata = self.task_spec.get("metadata", {})
+        state_map = state_map or metadata.get("compiled_state_map", {})
+        if not state_map:
+            return
+
+        roots = [str(root) for root in metadata.get("root_cluster_starts", [])]
+        next_root_by_root = {
+            root: roots[idx + 1]
+            for idx, root in enumerate(roots[:-1])
+        }
+        state_to_root = metadata.get("state_to_root_cluster", {})
+        root_end_states = metadata.get("root_cluster_end_states", {})
+
+        for _ in range(max_hops):
+            current_name = str(self.current_fsm_state or "")
+            current = state_map.get(current_name, {})
+            if not current:
+                return
+            if current.get("kind") in {"terminal", "verify", "async-branch"}:
+                return
+            if current_name.startswith("NAVIGATE_TO_CLEAR_TABLE_WITH_"):
+                return
+            if not self._state_completion_satisfied(current):
+                return
+
+            target = str(current.get("next_state_on_completion", "")).strip()
+            self._mark_completed_root_if_at_end(current_name, state_to_root, root_end_states)
+            if not target:
+                return_branch = str(current.get("return_branch_state", "")).strip()
+                if return_branch:
+                    target = return_branch
+                else:
+                    root_start = state_to_root.get(current_name)
+                    if root_start and root_end_states.get(root_start) == current_name:
+                        target = next_root_by_root.get(str(root_start), "DONE")
+            if not target or target == current_name:
+                return
+            if target != "DONE" and target not in state_map:
+                return
+            self.current_fsm_state = target
+            if self.state is not None:
+                self.state["fsm_state"] = target
+            if target == "DONE":
+                return
 
     def _completion_condition_true(self, condition: str) -> bool:
         condition = condition.strip()
@@ -1613,22 +1754,48 @@ class RobotouilleAdapter(DatasetAdapter):
             return bool(self.env and self.env.current_state.is_goal_reached())
         if condition == "terminal":
             return True
-        surface_ready_match = re.fullmatch(r"(stove|fryer) is ready for (.+)", condition)
+        clear_item_match = re.fullmatch(r"(.+) is clear", condition)
+        if clear_item_match:
+            alias = clear_item_match.group(1).strip()
+            return not self._item_blocked_for(alias)
+        if condition == "robot is holding nothing":
+            return not self._robot_holds_item() and not self._robot_holds_container()
+        if condition == "pot contains water":
+            return self._container_contains("pot", "water")
+        if condition == "robot has pot":
+            return self._robot_holds_container("pot")
+        if condition == "robot has pot with water":
+            return self._robot_holds_container("pot") and self._container_contains("pot", "water")
+        if condition == "robot has bowl":
+            return self._robot_holds_container("bowl")
+        if condition == "robot is at pot":
+            robot_station = self._robot_station()
+            return bool(robot_station and self._object_at_station("pot", robot_station))
+        if condition == "robot is at bowl":
+            robot_station = self._robot_station()
+            return bool(robot_station and self._object_at_station("bowl", robot_station))
+        surface_ready_match = re.fullmatch(r"(stove|fryer|board) is ready for (.+)", condition)
         if surface_ready_match:
             station_prefix, alias = surface_ready_match.groups()
             return self._surface_ready_for(station_prefix, alias.strip())
         empty_surface_match = re.fullmatch(
-            r"robot is at an empty (stove|fryer) with (.+)",
+            r"robot is at an empty (stove|fryer|board) with (.+)",
             condition,
         )
         if empty_surface_match:
             station_prefix, alias = empty_surface_match.groups()
             robot_station = self._robot_station()
+            alias = alias.strip()
+            holds_payload = (
+                self._robot_holds_container(alias)
+                if alias in {"pot", "bowl"}
+                else self._robot_holds_item(self._alias_to_runtime_name(alias))
+            )
             return bool(
                 robot_station
                 and robot_station.startswith(station_prefix)
                 and self._station_empty(robot_station)
-                and self._robot_holds_item(self._alias_to_runtime_name(alias.strip()))
+                and holds_payload
             )
         empty_table_match = re.fullmatch(r"robot is at an empty table with .+", condition)
         if empty_table_match:
@@ -1643,16 +1810,99 @@ class RobotouilleAdapter(DatasetAdapter):
         if serving_table_match:
             alias = serving_table_match.group(1).strip()
             robot_station = self._robot_station()
+            holds_payload = (
+                self._robot_holds_container(alias)
+                if alias in {"pot", "bowl"}
+                else self._robot_holds_item(self._alias_to_runtime_name(alias))
+            )
+            if (
+                alias not in {"pot", "bowl"}
+                and self._goal_requires_direct_table(alias)
+                and not self.serving_table_target
+            ):
+                return bool(
+                    robot_station
+                    and robot_station.startswith("table")
+                    and self._station_empty(robot_station)
+                    and holds_payload
+                )
             return bool(
                 robot_station
                 and self._matches_serving_table(robot_station)
-                and self._robot_holds_item(self._alias_to_runtime_name(alias))
+                and holds_payload
             )
         if condition == "robot holds stove blocker":
             return self._robot_holds_item()
         if condition == "stove blocker is no longer on stove":
             return (not self._robot_holds_item()) and any(
                 self._station_empty(station) for station in self._stations_with_prefix("stove")
+            )
+        if condition == "robot holds fryer blocker":
+            return self._robot_holds_item()
+        if condition == "fryer blocker is no longer on fryer":
+            return (not self._robot_holds_item()) and any(
+                self._station_empty(station) for station in self._stations_with_prefix("fryer")
+            )
+        if condition == "robot holds board blocker":
+            return self._robot_holds_item()
+        if condition == "board blocker is no longer on board":
+            return (not self._robot_holds_item()) and any(
+                self._station_empty(station) for station in self._stations_with_prefix("board")
+            )
+        if condition in {
+            "robot holds item blocker",
+            "robot holds serving-table blocker",
+        }:
+            return self._robot_holds_item()
+        if condition in {
+            "item blocker is no longer on target",
+            "serving-table blocker is no longer on target table",
+        }:
+            return not self._robot_holds_item()
+        generic_blocker_table_match = re.fullmatch(
+            r"robot is at a table with (item blocker|serving-table blocker)",
+            condition,
+        )
+        if generic_blocker_table_match:
+            robot_station = self._robot_station()
+            return bool(robot_station and robot_station.startswith("table") and self._robot_holds_item())
+        board_blocker_table_match = re.fullmatch(r"robot is at a table with board blocker", condition)
+        if board_blocker_table_match:
+            robot_station = self._robot_station()
+            return bool(robot_station and robot_station.startswith("table") and self._robot_holds_item())
+        pot_with_item_match = re.fullmatch(r"robot is at pot with (.+)", condition)
+        if pot_with_item_match:
+            alias = pot_with_item_match.group(1).strip()
+            robot_station = self._robot_station()
+            return bool(
+                robot_station
+                and self._object_at_station("pot", robot_station)
+                and self._robot_holds_item(self._alias_to_runtime_name(alias))
+            )
+        bowl_with_pot_match = re.fullmatch(r"robot is at bowl with pot", condition)
+        if bowl_with_pot_match:
+            robot_station = self._robot_station()
+            return bool(
+                robot_station
+                and self._object_at_station("bowl", robot_station)
+                and self._robot_holds_container("pot")
+            )
+        sink_with_pot_match = re.fullmatch(r"robot is at sink with pot", condition)
+        if sink_with_pot_match:
+            robot_station = self._robot_station()
+            return bool(
+                robot_station
+                and robot_station.startswith("sink")
+                and self._robot_holds_container("pot")
+            )
+        board_with_item_match = re.fullmatch(r"robot is at board with (.+)", condition)
+        if board_with_item_match:
+            alias = board_with_item_match.group(1).strip()
+            robot_station = self._robot_station()
+            return bool(
+                robot_station
+                and robot_station.startswith("board")
+                and self._robot_holds_item(self._alias_to_runtime_name(alias))
             )
         if condition.startswith("robot is at station containing "):
             alias = condition.split("robot is at station containing ", 1)[1].strip()
@@ -1661,11 +1911,31 @@ class RobotouilleAdapter(DatasetAdapter):
             alias = condition.split("robot has ", 1)[1].strip()
             return self._robot_holds_item(self._alias_to_runtime_name(alias))
 
-        predicate_match = re.fullmatch(r"(is[a-z_]+)\\(([^)]+)\\)", condition)
+        predicate_match = re.fullmatch(r"(is[a-z_]+)\(([^)]+)\)", condition)
         if predicate_match:
             predicate, alias = predicate_match.groups()
             runtime_item = "water" if alias == "WATER" else self._alias_to_runtime_name(alias)
+            if runtime_item == "water":
+                return self._predicate_true_or_prefix(predicate, runtime_item)
             return self._predicate_true(predicate, runtime_item)
+        generic_predicate_match = re.fullmatch(r"([a-z_]+)\(([^)]*)\)", condition)
+        if generic_predicate_match:
+            predicate, raw_args = generic_predicate_match.groups()
+            args = [arg.strip() for arg in raw_args.split(",") if arg.strip()]
+            if predicate == "in" and len(args) == 2:
+                return self._container_contains(args[1], args[0])
+            if predicate == "container_at" and len(args) == 2:
+                container, station_type = args
+                if station_type in {"table", "stove", "fryer", "board", "sink"}:
+                    return any(
+                        self._object_at_station(container, station)
+                        for station in self._stations_with_prefix(station_type)
+                    )
+                return self._object_at_station(container, station_type)
+            if predicate == "addedto" and len(args) == 2:
+                item = self._alias_to_runtime_name(args[0])
+                meal = "water" if args[1].upper() == "WATER" else self._alias_to_runtime_name(args[1])
+                return self._predicate_true_with_prefix_args("addedto", item, meal)
 
         direct_location_match = re.fullmatch(
             r"(.+) is directly on (stove|fryer|table|board|sink)",
@@ -1675,7 +1945,7 @@ class RobotouilleAdapter(DatasetAdapter):
             alias, station_prefix = direct_location_match.groups()
             item = self._alias_to_runtime_name(alias.strip())
             return any(
-                self._predicate_true("item_on", item, station)
+                self._predicate_true("atop", item, station)
                 or self._predicate_true("container_at", item, station)
                 for station in self._stations_with_prefix(station_prefix)
             )
@@ -1685,12 +1955,12 @@ class RobotouilleAdapter(DatasetAdapter):
             item = self._alias_to_runtime_name(alias.strip())
             if station_prefix in {"stove", "fryer"}:
                 return any(
-                    self._predicate_true("item_on", item, station)
+                    self._predicate_true("atop", item, station)
                     or self._predicate_true("container_at", item, station)
                     for station in self._stations_with_prefix(station_prefix)
                 )
             return any(
-                self._predicate_true("item_on", item, station)
+                self._predicate_true("atop", item, station)
                 or self._predicate_true("item_at", item, station)
                 or self._predicate_true("container_at", item, station)
                 for station in self._stations_with_prefix(station_prefix)
@@ -1719,6 +1989,38 @@ class RobotouilleAdapter(DatasetAdapter):
                 return True
         return False
 
+    def _held_item_requires_direct_table(self) -> bool:
+        held_item = self._held_runtime_item()
+        if not held_item:
+            return False
+        for alias, runtime_name in self._alias_map.items():
+            if runtime_name == held_item and self._goal_requires_direct_table(alias):
+                return True
+        return False
+
+    def _held_runtime_item(self) -> str:
+        if self.env is None:
+            return ""
+        for predicate, value in self.env.current_state.predicates.items():
+            if not value or getattr(predicate, "name", "") != "has_item":
+                continue
+            params = [getattr(obj, "name", "") for obj in getattr(predicate, "params", [])]
+            if len(params) == 2 and params[0].startswith("robot"):
+                return params[1]
+        return ""
+
+    def _robot_holds_unrelated_item(self, alias: str) -> bool:
+        target_item = self._alias_to_runtime_name(alias)
+        if self.env is None:
+            return False
+        for predicate, value in self.env.current_state.predicates.items():
+            if not value or getattr(predicate, "name", "") != "has_item":
+                continue
+            params = [getattr(obj, "name", "") for obj in getattr(predicate, "params", [])]
+            if len(params) == 2 and params[0].startswith("robot") and params[1] != target_item:
+                return True
+        return False
+
     def _robot_holds_container(self, container_prefix: str = "") -> bool:
         if self.env is None:
             return False
@@ -1731,6 +2033,108 @@ class RobotouilleAdapter(DatasetAdapter):
             if not container_prefix or params[1].startswith(container_prefix):
                 return True
         return False
+
+    def _object_at_station(self, runtime_name_or_prefix: str, station: str) -> bool:
+        if self.env is None or not runtime_name_or_prefix or not station:
+            return False
+        allow_container_prefix = not re.search(r"\d+$", runtime_name_or_prefix)
+        for predicate, value in self.env.current_state.predicates.items():
+            predicate_name = getattr(predicate, "name", "")
+            if not value or predicate_name not in {"item_at", "container_at"}:
+                continue
+            params = [getattr(obj, "name", "") for obj in getattr(predicate, "params", [])]
+            if len(params) < 2 or params[1] != station:
+                continue
+            object_name = params[0]
+            if object_name == runtime_name_or_prefix:
+                return True
+            if (
+                allow_container_prefix
+                and predicate_name == "container_at"
+                and object_name.startswith(runtime_name_or_prefix)
+            ):
+                return True
+        return False
+
+    def _container_contains(self, container_prefix: str, meal_name: str) -> bool:
+        if self.env is None:
+            return False
+        runtime_meal = "water" if meal_name.upper() == "WATER" else self._alias_to_runtime_name(meal_name)
+        for predicate, value in self.env.current_state.predicates.items():
+            if not value or getattr(predicate, "name", "") != "in":
+                continue
+            params = [getattr(obj, "name", "") for obj in getattr(predicate, "params", [])]
+            if len(params) != 2:
+                continue
+            meal, container = params
+            meal_matches = meal == runtime_meal or (
+                not re.search(r"\d+$", runtime_meal) and meal.startswith(runtime_meal)
+            )
+            if meal_matches and container.startswith(container_prefix):
+                return True
+        return False
+
+    def _serving_table_blocked_for(self, alias: str) -> bool:
+        if not self.serving_table_target:
+            return False
+        if not self._goal_requires_direct_table(alias):
+            return False
+        item = self._alias_to_runtime_name(alias)
+        if self._predicate_true("atop", item, self.serving_table_target):
+            return False
+        if self._object_at_station(item, self.serving_table_target):
+            return False
+        return not self._station_empty(self.serving_table_target)
+
+    def _goal_requires_direct_table(self, alias: str) -> bool:
+        alias = str(alias or "")
+        if "__" in alias:
+            base, raw_id = alias.rsplit("__", 1)
+            try:
+                item_id = int(raw_id)
+            except ValueError:
+                item_id = None
+        else:
+            base = alias
+            item_id = None
+        for goal in (self.raw_task or {}).get("goal_predicates", []):
+            if not isinstance(goal, Mapping) or goal.get("predicate") != "item_on":
+                continue
+            args = [str(arg) for arg in goal.get("args", [])]
+            ids = list(goal.get("ids", []))
+            if len(args) < 2 or args[0] != base or args[1] != "table":
+                continue
+            if item_id is None:
+                return True
+            try:
+                if ids and int(ids[0]) == item_id:
+                    return True
+            except (TypeError, ValueError):
+                continue
+        return False
+
+    def _item_blocked_for(self, alias: str) -> bool:
+        item = self._alias_to_runtime_name(alias)
+        if not self._item_station(item):
+            return False
+        for predicate, value in (self.env.current_state.predicates.items() if self.env else []):
+            if not value or getattr(predicate, "name", "") != "atop":
+                continue
+            params = [getattr(obj, "name", "") for obj in getattr(predicate, "params", [])]
+            if len(params) == 2 and params[1] == item:
+                return True
+        return False
+
+    def _item_station(self, runtime_item: str) -> str | None:
+        if self.env is None:
+            return None
+        for predicate, value in self.env.current_state.predicates.items():
+            if not value or getattr(predicate, "name", "") not in {"item_at", "container_at"}:
+                continue
+            params = [getattr(obj, "name", "") for obj in getattr(predicate, "params", [])]
+            if len(params) >= 2 and params[0] == runtime_item:
+                return params[1]
+        return None
 
     def _post_runtime_action_fsm_transition(
         self,
@@ -1756,6 +2160,11 @@ class RobotouilleAdapter(DatasetAdapter):
                 continue
             target = str(transition.get("next_state", "")).strip()
             if target:
+                self._mark_completed_root_if_at_end(
+                    str(self.current_fsm_state or ""),
+                    state_to_root,
+                    root_end_states,
+                )
                 return target, str(transition.get("action", "")).strip() or action_name
 
         if not self._state_completion_satisfied(current):
@@ -1763,11 +2172,18 @@ class RobotouilleAdapter(DatasetAdapter):
 
         target = str(current.get("next_state_on_completion", "")).strip()
         if target:
+            self._mark_completed_root_if_at_end(
+                str(self.current_fsm_state or ""),
+                state_to_root,
+                root_end_states,
+            )
             return target, self._matching_completion_action_for_runtime_match(current, action_name)
 
-        root_start = state_to_root.get(self.current_fsm_state or "")
-        if root_start and root_end_states.get(root_start) == self.current_fsm_state:
-            self.completed_root_clusters.add(root_start)
+        self._mark_completed_root_if_at_end(
+            str(self.current_fsm_state or ""),
+            state_to_root,
+            root_end_states,
+        )
 
         return_branch = str(current.get("return_branch_state", "")).strip()
         if return_branch:
@@ -1796,6 +2212,36 @@ class RobotouilleAdapter(DatasetAdapter):
             return False
         if self.task_spec is None:
             return False
+        if self._root_goal_subgoal_satisfied(target_state):
+            self.completed_root_clusters.add(target_state)
+            return False
+        target_alias = self._root_state_alias(target_state)
+        if target_alias and target_state.endswith("_FOR_SERVE"):
+            current = (
+                self.task_spec.get("metadata", {})
+                .get("compiled_state_map", {})
+                .get(self.current_fsm_state or "", {})
+            )
+            branch_item = str(current.get("branch_item") or "")
+            own_serve_root = f"NAVIGATE_TO_{branch_item}_FOR_SERVE" if branch_item else ""
+            if (
+                own_serve_root
+                and own_serve_root != target_state
+                and own_serve_root not in self.completed_root_clusters
+                and not self._goal_requires_direct_table(target_alias)
+            ):
+                return False
+            branch_subgoals = [str(item) for item in current.get("parallel_subgoals", [])]
+            if target_state in branch_subgoals:
+                for prior_state in branch_subgoals[: branch_subgoals.index(target_state)]:
+                    if prior_state in self.completed_root_clusters:
+                        continue
+                    if self._root_goal_subgoal_satisfied(prior_state):
+                        self.completed_root_clusters.add(prior_state)
+                        continue
+                    return False
+        if target_state == "NAVIGATE_TO_POT_FOR_BOWL_FILL" and not self._water_ingredient_goals_satisfied():
+            return False
         state_map = self.task_spec.get("metadata", {}).get("compiled_state_map", {})
         target = state_map.get(target_state, {})
         transitions = self._state_transition_specs(target)
@@ -1810,6 +2256,91 @@ class RobotouilleAdapter(DatasetAdapter):
         if not actions:
             return False
         return any(self._match_template_action(action) is not None for action in actions)
+
+    def _root_goal_subgoal_satisfied(self, root_state: str) -> bool:
+        alias = self._root_state_alias(root_state)
+        if not alias:
+            return False
+        related_goals = self._goal_predicates_for_alias(alias)
+        if not related_goals:
+            return False
+        return all(self._goal_predicate_satisfied(goal, alias) for goal in related_goals)
+
+    @staticmethod
+    def _root_state_alias(root_state: str) -> str:
+        match = re.fullmatch(r"NAVIGATE_TO_(.+)_FOR_(SERVE|COOK|FRY|CUT)", root_state)
+        return match.group(1) if match else ""
+
+    def _goal_predicates_for_alias(self, alias: str) -> list[Mapping[str, Any]]:
+        base, item_id = self._alias_base_and_id(alias)
+        goals: list[Mapping[str, Any]] = []
+        for goal in (self.raw_task or {}).get("goal_predicates", []):
+            if not isinstance(goal, Mapping):
+                continue
+            args = [str(arg) for arg in goal.get("args", [])]
+            if not args or args[0] != base:
+                continue
+            ids = list(goal.get("ids", []))
+            if item_id is not None:
+                try:
+                    if not ids or int(ids[0]) != item_id:
+                        continue
+                except (TypeError, ValueError):
+                    continue
+            goals.append(goal)
+        return goals
+
+    def _goal_predicate_satisfied(self, goal: Mapping[str, Any], alias: str) -> bool:
+        predicate = str(goal.get("predicate", "")).strip()
+        args = [str(arg) for arg in goal.get("args", [])]
+        item = self._alias_to_runtime_name(alias)
+        if predicate in {"item_on", "item_at"} and len(args) >= 2:
+            station_kind = args[1]
+            stations = (
+                [self.serving_table_target]
+                if station_kind == "table" and self.serving_table_target
+                else self._stations_with_prefix(station_kind)
+            )
+            stations = [station for station in stations if station]
+            runtime_predicate = "atop" if predicate == "item_on" else predicate
+            return any(self._predicate_true(runtime_predicate, item, station) for station in stations)
+        if predicate == "clear":
+            return not self._item_blocked_for(alias)
+        if predicate.startswith("is"):
+            return self._predicate_true(predicate, item)
+        if predicate == "addedto" and len(args) >= 2:
+            meal = "water" if args[1].upper() == "WATER" else self._alias_to_runtime_name(args[1])
+            return self._predicate_true_with_prefix_args("addedto", item, meal)
+        return False
+
+    @staticmethod
+    def _alias_base_and_id(alias: str) -> tuple[str, int | None]:
+        if "__" not in alias:
+            return alias, None
+        base, raw_id = alias.rsplit("__", 1)
+        try:
+            return base, int(raw_id)
+        except ValueError:
+            return base, None
+
+    def _water_ingredient_goals_satisfied(self) -> bool:
+        for goal in (self.raw_task or {}).get("goal_predicates", []):
+            if not isinstance(goal, Mapping) or goal.get("predicate") != "addedto":
+                continue
+            args = [str(arg) for arg in goal.get("args", [])]
+            ids = list(goal.get("ids", []))
+            if len(args) < 2 or args[1] != "water":
+                continue
+            item_alias = args[0]
+            if ids:
+                try:
+                    item_alias = f"{args[0]}__{int(ids[0])}"
+                except (TypeError, ValueError):
+                    pass
+            runtime_item = self._alias_to_runtime_name(item_alias)
+            if not self._predicate_true_with_prefix_args("addedto", runtime_item, "water"):
+                return False
+        return True
 
     def _skip_target(self, root_state: str) -> str | None:
         if self.task_spec is None:
@@ -1874,6 +2405,8 @@ class RobotouilleAdapter(DatasetAdapter):
     def _guard_satisfied(self, guard: str) -> bool:
         if not guard:
             return True
+        if "&&" in guard:
+            return all(self._guard_satisfied(part.strip()) for part in guard.split("&&"))
         if guard.startswith("stove_blocked_for:"):
             alias = guard.split(":", 1)[1]
             return self._stove_blocked_for(alias)
@@ -1886,13 +2419,50 @@ class RobotouilleAdapter(DatasetAdapter):
         if guard.startswith("fryer_ready_for:"):
             alias = guard.split(":", 1)[1]
             return self._fryer_ready_for(alias)
+        if guard.startswith("board_blocked_for:"):
+            alias = guard.split(":", 1)[1]
+            return self._board_blocked_for(alias)
+        if guard.startswith("board_ready_for:"):
+            alias = guard.split(":", 1)[1]
+            return self._board_ready_for(alias)
         if guard.startswith("robot_at_station_containing:"):
             alias = guard.split(":", 1)[1]
             return self._robot_at_station_containing(alias)
         if guard.startswith("not_robot_at_station_containing:"):
             alias = guard.split(":", 1)[1]
             return not self._robot_at_station_containing(alias)
+        if guard.startswith("robot_holding_item:"):
+            alias = guard.split(":", 1)[1]
+            return self._robot_holds_item(self._alias_to_runtime_name(alias))
+        if guard.startswith("not_robot_holding_item:"):
+            alias = guard.split(":", 1)[1]
+            return not self._robot_holds_item(self._alias_to_runtime_name(alias))
+        if guard.startswith("robot_holding_unrelated_for:"):
+            alias = guard.split(":", 1)[1]
+            return self._robot_holds_unrelated_item(alias)
+        if guard.startswith("not_robot_holding_unrelated_for:"):
+            alias = guard.split(":", 1)[1]
+            return not self._robot_holds_unrelated_item(alias)
+        if guard.startswith("serving_table_blocked_for:"):
+            alias = guard.split(":", 1)[1]
+            return self._serving_table_blocked_for(alias)
+        if guard.startswith("item_blocked_for:"):
+            alias = guard.split(":", 1)[1]
+            return self._item_blocked_for(alias)
+        if guard.startswith("not_item_blocked_for:"):
+            alias = guard.split(":", 1)[1]
+            return not self._item_blocked_for(alias)
         return True
+
+    def _mark_completed_root_if_at_end(
+        self,
+        state_name: str,
+        state_to_root: Mapping[str, str],
+        root_end_states: Mapping[str, str],
+    ) -> None:
+        root_start = state_to_root.get(state_name)
+        if root_start and root_end_states.get(root_start) == state_name:
+            self.completed_root_clusters.add(str(root_start))
 
     def _stove_ready_for(self, alias: str) -> bool:
         return self._surface_ready_for("stove", alias)
@@ -1906,12 +2476,16 @@ class RobotouilleAdapter(DatasetAdapter):
     def _fryer_blocked_for(self, alias: str) -> bool:
         return self._surface_blocked_for("fryer", alias)
 
+    def _board_ready_for(self, alias: str) -> bool:
+        return self._surface_ready_for("board", alias)
+
+    def _board_blocked_for(self, alias: str) -> bool:
+        return self._surface_blocked_for("board", alias)
+
     def _surface_ready_for(self, station_prefix: str, alias: str) -> bool:
         item = self._alias_to_runtime_name(alias)
         for station in self._stations_with_prefix(station_prefix):
-            if self._predicate_true("item_on", item, station):
-                return True
-            if self._predicate_true("item_at", item, station):
+            if self._predicate_true("atop", item, station):
                 return True
             if self._predicate_true("container_at", item, station):
                 return True
@@ -1931,18 +2505,29 @@ class RobotouilleAdapter(DatasetAdapter):
             return False
         predicate = str(branch_state.get("branch_completion_predicate") or "iscooked")
         runtime_item = "water" if branch_item == "WATER" else self._alias_to_runtime_name(branch_item)
-        return self._predicate_true(predicate, runtime_item)
+        done = (
+            self._predicate_true_or_prefix(predicate, runtime_item)
+            if runtime_item == "water"
+            else self._predicate_true(predicate, runtime_item)
+        )
+        if not done:
+            return False
+        own_serve_root = f"NAVIGATE_TO_{branch_item}_FOR_SERVE"
+        state_map = (self.task_spec or {}).get("metadata", {}).get("compiled_state_map", {})
+        if own_serve_root in state_map and own_serve_root not in self.completed_root_clusters:
+            if self._root_goal_subgoal_satisfied(own_serve_root):
+                self.completed_root_clusters.add(own_serve_root)
+            else:
+                return True
+        return not any(
+            self._subgoal_available_from_branch(str(target_state))
+            for target_state in branch_state.get("parallel_subgoals", [])
+        )
 
     def _robot_at_station_containing(self, alias: str) -> bool:
         item = self._alias_to_runtime_name(alias)
         robot_station = self._robot_station()
-        return bool(
-            robot_station
-            and (
-                self._predicate_true("item_at", item, robot_station)
-                or self._predicate_true("container_at", item, robot_station)
-            )
-        )
+        return bool(robot_station and self._object_at_station(item, robot_station))
 
     def _robot_station(self) -> str | None:
         if self.env is None:

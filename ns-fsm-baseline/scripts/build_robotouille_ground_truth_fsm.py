@@ -337,7 +337,10 @@ def build_task_fsm(task: Mapping[str, Any], mode: str = "branching") -> dict[str
 
     for req in requirements:
         if req.needs_cut:
-            build_cut_cluster(req, add_state)
+            if mode == "branching":
+                build_branching_cut_cluster(req, add_state)
+            else:
+                build_cut_cluster(req, add_state)
         if req.needs_cook:
             if mode == "branching":
                 build_branching_cook_cluster(req, add_state)
@@ -356,6 +359,8 @@ def build_task_fsm(task: Mapping[str, Any], mode: str = "branching") -> dict[str
         build_fill_bowl_cluster(add_state)
 
     for req in ordered_serve_requirements(requirements):
+        if req.name in {"bowl", "pot", "water"}:
+            continue
         if req.serve_at_table or req.serve_on_table:
             build_serve_cluster(req, add_state)
 
@@ -556,6 +561,261 @@ def build_cut_cluster(req: ObjectRequirement, add_state) -> None:
     )
 
 
+def build_branching_cut_cluster(req: ObjectRequirement, add_state) -> None:
+    """Build a cut cluster that handles randomized starts and blocked boards."""
+
+    alias = req.alias
+    names = [
+        f"NAVIGATE_TO_{alias}_FOR_CUT",
+        f"PICK_UP_{alias}_FOR_CUT",
+        f"NAVIGATE_TO_BOARD_WITH_{alias}",
+        f"PLACE_{alias}_ON_BOARD_FOR_CUT",
+        f"CUT_{alias}",
+    ]
+    clear_held_names = [
+        f"NAVIGATE_TO_CLEAR_TABLE_WITH_CUT_HELD_ITEM_FOR_{alias}",
+        f"PLACE_CUT_HELD_ITEM_ON_TABLE_FOR_{alias}",
+    ]
+    clear_board_names = [
+        f"PICK_UP_BOARD_BLOCKER_FOR_{alias}",
+        f"NAVIGATE_TO_CLEAR_TABLE_WITH_BOARD_BLOCKER_FOR_{alias}",
+        f"PLACE_BOARD_BLOCKER_ON_TABLE_FOR_{alias}",
+    ]
+    clear_item_names = [
+        f"PICK_UP_ITEM_BLOCKER_FOR_CUT_{alias}",
+        f"NAVIGATE_TO_CLEAR_TABLE_WITH_ITEM_BLOCKER_FOR_CUT_{alias}",
+        f"PLACE_ITEM_BLOCKER_ON_TABLE_FOR_CUT_{alias}",
+    ]
+    add_state(
+        names[0],
+        "guarded-cut-entry",
+        f"Prepare an open cutting board, then reach {alias} so it can be cut.",
+        [],
+        [f"board is ready for {alias}", f"robot is at station containing {alias}"],
+        root_cluster=True,
+        transitions=[
+            _transition(
+                _place_held_item_action("non-serving table"),
+                names[0],
+                f"The robot is already at a table; put down the unrelated item before handling {alias}.",
+                guard=f"robot_holding_unrelated_for:{alias}",
+            ),
+            _transition(
+                _move_action("non-serving table"),
+                clear_held_names[1],
+                f"The robot is holding another item; move to a table before handling {alias}.",
+                guard=f"robot_holding_unrelated_for:{alias}",
+            ),
+            _transition(
+                _place_item_action(alias, "temporary surface"),
+                names[0],
+                f"The robot is holding {alias}, but the board is blocked; put it down before clearing the board.",
+                guard=f"robot_holding_item:{alias}&&board_blocked_for:{alias}",
+            ),
+            _transition(
+                _move_action("temporary surface"),
+                clear_held_names[1],
+                f"The robot is holding {alias}, but the board is blocked; move to a table before clearing the board.",
+                guard=f"robot_holding_item:{alias}&&board_blocked_for:{alias}",
+            ),
+            _transition(
+                _move_action("occupied board"),
+                clear_board_names[0],
+                f"A cutting board is occupied by another item; clear it before cutting {alias}.",
+                guard=f"board_blocked_for:{alias}&&not_robot_holding_item:{alias}&&not_robot_holding_unrelated_for:{alias}",
+            ),
+            _transition(
+                {
+                    "template": "pick-up-item",
+                    "target": f"station containing {alias}",
+                    "constraint": f"Pick up the clear item stacked on top of {alias}.",
+                },
+                clear_item_names[1],
+                f"{alias} is buried under another item at the current station; clear that blocker.",
+                guard=f"item_blocked_for:{alias}&&robot_at_station_containing:{alias}&&not_robot_holding_item:{alias}&&not_robot_holding_unrelated_for:{alias}",
+            ),
+            _transition(
+                _move_action(f"station containing {alias}"),
+                clear_item_names[0],
+                f"{alias} is buried under another item; move to its station and clear the blocker.",
+                guard=f"item_blocked_for:{alias}&&not_robot_at_station_containing:{alias}&&not_robot_holding_item:{alias}&&not_robot_holding_unrelated_for:{alias}",
+            ),
+            _transition(
+                _place_item_action(alias, "board"),
+                names[4],
+                f"If already at a cutting board while holding {alias}, place it directly.",
+                guard=f"robot_holding_item:{alias}&&board_ready_for:{alias}",
+            ),
+            _transition(
+                _move_action("cutting board while holding item"),
+                names[3],
+                f"The robot already holds {alias}; bring it to a cutting board.",
+                guard=f"robot_holding_item:{alias}&&board_ready_for:{alias}",
+            ),
+            _transition(
+                _move_action(f"station containing {alias}"),
+                names[1],
+                f"Move to {alias}'s current station before picking it up.",
+                guard=f"board_ready_for:{alias}&&not_robot_holding_item:{alias}&&not_robot_holding_unrelated_for:{alias}",
+            ),
+        ],
+    )
+    add_state(
+        clear_held_names[1],
+        "place-item",
+        f"Put down the held item before cutting {alias}.",
+        [
+            {
+                "template": "place-item",
+                "target": "temporary surface",
+                "constraint": "Place the currently held item on a table.",
+            }
+        ],
+        ["robot is holding nothing"],
+        next_state=names[0],
+    )
+    add_state(
+        clear_board_names[0],
+        "clear-blocker",
+        f"Pick up the top item blocking the cutting board before cutting {alias}.",
+        [
+            {
+                "template": "pick-up-item",
+                "target": "occupied board",
+                "constraint": "Pick up any clear item currently sitting on a cutting board.",
+            }
+        ],
+        ["robot holds board blocker"],
+        next_state=clear_board_names[1],
+    )
+    add_state(
+        clear_board_names[1],
+        "navigate",
+        f"Move the board blocker to a table so {alias} can be cut.",
+        [_move_action(f"temporary surface away from {alias}")],
+        ["robot is at a table with board blocker"],
+        next_state=clear_board_names[2],
+    )
+    add_state(
+        clear_board_names[2],
+        "place-item",
+        f"Place the board blocker away from {alias}, then re-check board readiness.",
+        [
+            {
+                "template": "place-item",
+                "target": f"temporary surface away from {alias}",
+                "constraint": "Place the held blocker away from the target item; item identity is runtime-bound.",
+            }
+        ],
+        ["board blocker is no longer on board"],
+        next_state=names[0],
+    )
+    add_state(
+        clear_item_names[0],
+        "clear-blocker",
+        f"Pick up the top item blocking {alias}.",
+        [
+            {
+                "template": "pick-up-item",
+                "target": f"station containing {alias}",
+                "constraint": f"Pick up the clear item stacked on top of {alias}.",
+            }
+        ],
+        ["robot holds item blocker"],
+        next_state=clear_item_names[1],
+    )
+    add_state(
+        clear_item_names[1],
+        "navigate",
+        f"Move the blocker away from {alias}.",
+        [],
+        ["robot is at a table with item blocker"],
+        transitions=[
+            _transition(
+                _place_item_action(alias, "board"),
+                names[4],
+                f"If the target {alias} was picked up, place it on the board.",
+                guard=f"robot_holding_item:{alias}&&board_ready_for:{alias}",
+            ),
+            _transition(
+                _move_action("cutting board while holding item"),
+                names[3],
+                f"If the target {alias} was picked up, move it to the board.",
+                guard=f"robot_holding_item:{alias}&&board_ready_for:{alias}",
+            ),
+            _transition(
+                _move_action(f"temporary surface away from {alias}"),
+                clear_item_names[2],
+                f"Move the blocker away from {alias}.",
+                guard=f"not_robot_holding_item:{alias}",
+            ),
+        ],
+    )
+    add_state(
+        clear_item_names[2],
+        "place-item",
+        f"Place the blocker away from {alias}.",
+        [
+            {
+                "template": "place-item",
+                "target": f"temporary surface away from {alias}",
+                "constraint": "Place the held blocker away from the target item.",
+            }
+        ],
+        ["item blocker is no longer on target"],
+        next_state=names[0],
+    )
+    add_state(
+        names[1],
+        "pick-up-item",
+        f"Pick up {alias} for cutting.",
+        [_pickup_item_action(alias)],
+        [f"robot has {alias}"],
+        next_state=names[2],
+    )
+    add_state(
+        names[2],
+        "navigate",
+        f"Bring {alias} to a cutting board.",
+        [],
+        [f"robot is at board with {alias}"],
+        transitions=[
+            _transition(
+                _place_item_action(alias, "board"),
+                names[4],
+                f"If already at a cutting board, place {alias} directly.",
+            ),
+            _transition(
+                _move_action("cutting board while holding item"),
+                names[3],
+                f"Move to a cutting board while holding {alias}.",
+            ),
+        ],
+    )
+    add_state(
+        names[3],
+        "place-item",
+        f"Place {alias} on the cutting board.",
+        [_place_item_action(alias, "board")],
+        [f"{alias} is on a board"],
+        next_state=names[4],
+    )
+    add_state(
+        names[4],
+        "cut",
+        f"Cut {alias} until the goal predicate is satisfied.",
+        [
+            {
+                "template": "cut",
+                "item": alias,
+                "target": "board",
+                "constraint": "Repeat as needed until the simulator marks the item as cut.",
+            }
+        ],
+        [f"iscut({alias})"],
+    )
+
+
 def build_cook_cluster(req: ObjectRequirement, add_state) -> None:
     alias = req.alias
     names = [
@@ -658,12 +918,25 @@ def build_branching_cook_cluster(req: ObjectRequirement, add_state) -> None:
         f"NAVIGATE_TO_CLEAR_TABLE_WITH_STOVE_BLOCKER_FOR_{alias}",
         f"PLACE_STOVE_BLOCKER_ON_TABLE_FOR_{alias}",
     ]
+    clear_held_names = [
+        f"NAVIGATE_TO_CLEAR_TABLE_WITH_HELD_ITEM_FOR_{alias}",
+        f"PLACE_HELD_ITEM_ON_TABLE_FOR_{alias}",
+    ]
+    clear_item_names = [
+        f"PICK_UP_ITEM_BLOCKER_FOR_COOK_{alias}",
+        f"NAVIGATE_TO_CLEAR_TABLE_WITH_ITEM_BLOCKER_FOR_COOK_{alias}",
+        f"PLACE_ITEM_BLOCKER_ON_TABLE_FOR_COOK_{alias}",
+    ]
     add_state(
         names[0],
         "guarded-cook-entry",
         f"Prepare an empty stove, then reach {alias} so it can be cooked.",
         [],
-        [f"stove is ready for {alias}", f"robot is at station containing {alias}"],
+        [
+            f"stove is ready for {alias}",
+            f"robot is at station containing {alias}",
+            f"{alias} is clear",
+        ],
         root_cluster=True,
         notes=[
             "This state deliberately branches before picking up the cook target.",
@@ -671,18 +944,83 @@ def build_branching_cook_cluster(req: ObjectRequirement, add_state) -> None:
         ],
         transitions=[
             _transition(
+                _place_held_item_action("non-serving table"),
+                names[0],
+                f"The robot is already at a table; put down the unrelated item before handling {alias}.",
+                guard=f"robot_holding_unrelated_for:{alias}",
+            ),
+            _transition(
+                _move_action("non-serving table"),
+                clear_held_names[1],
+                f"The robot is holding another item; move to a table before handling {alias}.",
+                guard=f"robot_holding_unrelated_for:{alias}",
+            ),
+            _transition(
                 _move_action("occupied stove"),
                 clear_names[0],
                 f"A stove is occupied by an item other than {alias}.",
-                guard=f"stove_blocked_for:{alias}",
+                guard=f"stove_blocked_for:{alias}&&not_robot_holding_item:{alias}&&not_robot_holding_unrelated_for:{alias}",
+            ),
+            _transition(
+                {
+                    "template": "pick-up-item",
+                    "target": f"station containing {alias}",
+                    "constraint": f"Pick up the clear item stacked on top of {alias}.",
+                },
+                clear_item_names[1],
+                f"{alias} is buried under another item at the current station; clear that blocker.",
+                guard=f"item_blocked_for:{alias}&&robot_at_station_containing:{alias}&&not_robot_holding_item:{alias}&&not_robot_holding_unrelated_for:{alias}",
+            ),
+            _transition(
+                _move_action(f"station containing {alias}"),
+                clear_item_names[0],
+                f"{alias} is buried under another item; move to its station and clear the blocker.",
+                guard=f"item_blocked_for:{alias}&&not_robot_at_station_containing:{alias}&&not_robot_holding_item:{alias}&&not_robot_holding_unrelated_for:{alias}",
+            ),
+            _transition(
+                _move_action("empty stove while holding item"),
+                names[3],
+                f"The robot already holds {alias}; bring it to an empty stove.",
+                guard=f"robot_holding_item:{alias}&&stove_ready_for:{alias}",
+            ),
+            _transition(
+                _pickup_item_action(alias),
+                names[2],
+                f"Robot is already at a clear {alias}; pick it up for cooking.",
+                guard=(
+                    f"stove_ready_for:{alias}"
+                    f"&&robot_at_station_containing:{alias}"
+                    f"&&not_item_blocked_for:{alias}"
+                    f"&&not_robot_holding_item:{alias}"
+                    f"&&not_robot_holding_unrelated_for:{alias}"
+                ),
             ),
             _transition(
                 _move_action(f"station containing {alias}"),
                 names[1],
                 f"At least one stove can accept {alias}; move to the item.",
-                guard=f"stove_ready_for:{alias}",
+                guard=(
+                    f"stove_ready_for:{alias}"
+                    f"&&not_item_blocked_for:{alias}"
+                    f"&&not_robot_holding_item:{alias}"
+                    f"&&not_robot_holding_unrelated_for:{alias}"
+                ),
             ),
         ],
+    )
+    add_state(
+        clear_held_names[1],
+        "place-item",
+        f"Put down the unrelated held item before cooking {alias}.",
+        [
+            {
+                "template": "place-item",
+                "target": "temporary surface away from stove",
+                "constraint": "Place the currently held unrelated item on a table.",
+            }
+        ],
+        ["robot is holding nothing"],
+        next_state=names[0],
     )
     add_state(
         clear_names[0],
@@ -701,8 +1039,8 @@ def build_branching_cook_cluster(req: ObjectRequirement, add_state) -> None:
     add_state(
         clear_names[1],
         "navigate",
-        f"Move the stove blocker to an empty table so {alias} can be cooked.",
-        [_move_action("empty table while holding item")],
+        f"Move the stove blocker to a table so {alias} can be cooked.",
+        [_move_action("temporary surface away from stove")],
         ["robot is at an empty table with stove blocker"],
         next_state=clear_names[2],
     )
@@ -713,11 +1051,47 @@ def build_branching_cook_cluster(req: ObjectRequirement, add_state) -> None:
         [
             {
                 "template": "place-item",
-                "target": "table",
-                "constraint": "Place the held blocker on an empty table; item identity is runtime-bound.",
+                "target": "non-serving table",
+                "constraint": "Place the held blocker on a table; item identity is runtime-bound.",
             }
         ],
         ["stove blocker is no longer on stove"],
+        next_state=names[0],
+    )
+    add_state(
+        clear_item_names[0],
+        "clear-blocker",
+        f"Pick up the top item blocking {alias}.",
+        [
+            {
+                "template": "pick-up-item",
+                "target": f"station containing {alias}",
+                "constraint": f"Pick up the clear item stacked on top of {alias}.",
+            }
+        ],
+        ["robot holds item blocker"],
+        next_state=clear_item_names[1],
+    )
+    add_state(
+        clear_item_names[1],
+        "navigate",
+        f"Move the blocker away from {alias}.",
+        [_move_action(f"temporary surface away from {alias} and stove")],
+        ["robot is at a table with item blocker"],
+        next_state=clear_item_names[2],
+    )
+    add_state(
+        clear_item_names[2],
+        "place-item",
+        f"Place the blocker away from {alias}.",
+        [
+            {
+                "template": "place-item",
+                "target": f"temporary surface away from {alias} and stove",
+                "constraint": "Place the held blocker away from the target item.",
+            }
+        ],
+        ["item blocker is no longer on target"],
         next_state=names[0],
     )
     add_state(
@@ -732,9 +1106,25 @@ def build_branching_cook_cluster(req: ObjectRequirement, add_state) -> None:
         names[2],
         "navigate",
         f"Bring {alias} to an empty stove.",
-        [_move_action("empty stove while holding item")],
+        [],
         [f"robot is at an empty stove with {alias}"],
-        next_state=names[3],
+        transitions=[
+            _transition(
+                {
+                    "template": "place-item",
+                    "item": alias,
+                    "target": "empty stove",
+                    "constraint": f"If already at an empty stove, place {alias} directly on it.",
+                },
+                names[4],
+                f"{alias} is already at an empty stove; place it directly.",
+            ),
+            _transition(
+                _move_action("empty stove while holding item"),
+                names[3],
+                f"Move to an empty stove while holding {alias}.",
+            ),
+        ],
     )
     add_state(
         names[3],
@@ -887,6 +1277,10 @@ def build_branching_fry_cluster(req: ObjectRequirement, add_state) -> None:
         f"NAVIGATE_TO_CLEAR_TABLE_WITH_FRYER_BLOCKER_FOR_{alias}",
         f"PLACE_FRYER_BLOCKER_ON_TABLE_FOR_{alias}",
     ]
+    clear_held_names = [
+        f"NAVIGATE_TO_CLEAR_TABLE_WITH_HELD_ITEM_FOR_{alias}",
+        f"PLACE_HELD_ITEM_ON_TABLE_FOR_{alias}",
+    ]
     add_state(
         names[0],
         "guarded-fry-entry",
@@ -900,18 +1294,50 @@ def build_branching_fry_cluster(req: ObjectRequirement, add_state) -> None:
         ],
         transitions=[
             _transition(
+                _place_held_item_action("non-serving table"),
+                names[0],
+                f"The robot is already at a table; put down the unrelated item before handling {alias}.",
+                guard=f"robot_holding_unrelated_for:{alias}",
+            ),
+            _transition(
+                _move_action("non-serving table"),
+                clear_held_names[1],
+                f"The robot is holding another item; move to a table before handling {alias}.",
+                guard=f"robot_holding_unrelated_for:{alias}",
+            ),
+            _transition(
                 _move_action("occupied fryer"),
                 clear_names[0],
                 f"A fryer is occupied by an item other than {alias}.",
-                guard=f"fryer_blocked_for:{alias}",
+                guard=f"fryer_blocked_for:{alias}&&not_robot_holding_item:{alias}&&not_robot_holding_unrelated_for:{alias}",
+            ),
+            _transition(
+                _move_action("empty fryer while holding item"),
+                names[3],
+                f"The robot already holds {alias}; bring it to an empty fryer.",
+                guard=f"robot_holding_item:{alias}&&fryer_ready_for:{alias}",
             ),
             _transition(
                 _move_action(f"station containing {alias}"),
                 names[1],
                 f"At least one fryer can accept {alias}; move to the item.",
-                guard=f"fryer_ready_for:{alias}",
+                guard=f"fryer_ready_for:{alias}&&not_robot_holding_item:{alias}&&not_robot_holding_unrelated_for:{alias}",
             ),
         ],
+    )
+    add_state(
+        clear_held_names[1],
+        "place-item",
+        f"Put down the unrelated held item before frying {alias}.",
+        [
+            {
+                "template": "place-item",
+                "target": "non-serving table",
+                "constraint": "Place the currently held unrelated item on a table.",
+            }
+        ],
+        ["robot is holding nothing"],
+        next_state=names[0],
     )
     add_state(
         clear_names[0],
@@ -930,8 +1356,8 @@ def build_branching_fry_cluster(req: ObjectRequirement, add_state) -> None:
     add_state(
         clear_names[1],
         "navigate",
-        f"Move the fryer blocker to an empty table so {alias} can be fried.",
-        [_move_action("empty table while holding item")],
+        f"Move the fryer blocker to a table so {alias} can be fried.",
+        [_move_action("temporary surface away from fryer")],
         ["robot is at an empty table with fryer blocker"],
         next_state=clear_names[2],
     )
@@ -942,8 +1368,8 @@ def build_branching_fry_cluster(req: ObjectRequirement, add_state) -> None:
         [
             {
                 "template": "place-item",
-                "target": "table",
-                "constraint": "Place the held blocker on an empty table; item identity is runtime-bound.",
+                "target": "temporary surface away from fryer",
+                "constraint": "Place the held blocker on a table; item identity is runtime-bound.",
             }
         ],
         ["fryer blocker is no longer on fryer"],
@@ -961,9 +1387,25 @@ def build_branching_fry_cluster(req: ObjectRequirement, add_state) -> None:
         names[2],
         "navigate",
         f"Bring {alias} to an empty fryer.",
-        [_move_action("empty fryer while holding item")],
+        [],
         [f"robot is at an empty fryer with {alias}"],
-        next_state=names[3],
+        transitions=[
+            _transition(
+                {
+                    "template": "place-item",
+                    "item": alias,
+                    "target": "empty fryer",
+                    "constraint": f"If already at an empty fryer, place {alias} directly on it.",
+                },
+                names[4],
+                f"{alias} is already at an empty fryer; place it directly.",
+            ),
+            _transition(
+                _move_action("empty fryer while holding item"),
+                names[3],
+                f"Move to an empty fryer while holding {alias}.",
+            ),
+        ],
     )
     add_state(
         names[3],
@@ -1026,6 +1468,9 @@ def build_soup_base_cluster(add_state) -> None:
         "NAVIGATE_TO_SINK_WITH_POT",
         "PLACE_POT_ON_SINK",
         "FILL_POT_WITH_WATER",
+        "WAIT_FOR_WATER_IN_POT",
+        "WAIT_FOR_WATER_IN_POT_FINAL",
+        "WAIT_FOR_WATER_IN_POT_SETTLED",
         "PICK_UP_POT_WITH_WATER",
         "NAVIGATE_TO_STOVE_WITH_POT",
         "PLACE_POT_ON_STOVE",
@@ -1095,6 +1540,45 @@ def build_soup_base_cluster(add_state) -> None:
     )
     add_state(
         names[5],
+        "wait",
+        "Wait for the filled pot to actually contain water.",
+        [
+            {
+                "template": "wait",
+                "constraint": "Filling creates water on a delayed simulator tick while the pot remains on the sink.",
+            }
+        ],
+        ["pot contains water"],
+        next_state=names[6],
+    )
+    add_state(
+        names[6],
+        "wait",
+        "Wait one more tick for water creation to finish.",
+        [
+            {
+                "template": "wait",
+                "constraint": "Robotouille creates the water object after the fill delayed effects settle.",
+            }
+        ],
+        ["pot contains water"],
+        next_state=names[7],
+    )
+    add_state(
+        names[7],
+        "wait",
+        "Wait until the water object exists in the pot.",
+        [
+            {
+                "template": "wait",
+                "constraint": "The fill action's nested delayed effect takes three simulator ticks in Robotouille.",
+            }
+        ],
+        ["pot contains water"],
+        next_state=names[8],
+    )
+    add_state(
+        names[8],
         "pick-up-container",
         "Pick up the water-filled pot.",
         [
@@ -1105,18 +1589,18 @@ def build_soup_base_cluster(add_state) -> None:
             }
         ],
         ["robot has pot with water"],
-        next_state=names[6],
+        next_state=names[9],
     )
     add_state(
-        names[6],
+        names[9],
         "navigate",
         "Bring the pot to an empty stove.",
         [_move_action("empty stove while holding water-filled pot")],
         ["robot is at empty stove with pot"],
-        next_state=names[7],
+        next_state=names[10],
     )
     add_state(
-        names[7],
+        names[10],
         "place-container",
         "Place the pot on the stove.",
         [
@@ -1128,10 +1612,10 @@ def build_soup_base_cluster(add_state) -> None:
             }
         ],
         ["pot is on stove"],
-        next_state=names[8],
+        next_state=names[11],
     )
     add_state(
-        names[8],
+        names[11],
         "boil-water",
         "Start boiling the water in the pot.",
         [
@@ -1144,10 +1628,10 @@ def build_soup_base_cluster(add_state) -> None:
             }
         ],
         ["isboiling(water) or boiling in progress"],
-        next_state=names[9],
+        next_state=names[12],
     )
     add_state(
-        names[9],
+        names[12],
         "async-branch",
         "Preserve boiling water while advancing independent ingredient subgoals.",
         [
@@ -1226,12 +1710,29 @@ def build_fill_bowl_cluster(add_state) -> None:
     ]
     add_state(
         names[0],
-        "navigate",
+        "guarded-pot-entry",
         "Reach the pot so soup can be transferred to the bowl.",
-        [_move_action("pot location")],
+        [],
         ["robot is at pot"],
-        next_state=names[1],
         root_cluster=True,
+        transitions=[
+            _transition(
+                {
+                    "template": "pick-up-container",
+                    "container": "pot",
+                    "constraint": "If already at the pot, pick it up for bowl filling.",
+                },
+                names[2],
+                "Robot is already at the pot; pick it up.",
+                guard="robot_at_station_containing:pot",
+            ),
+            _transition(
+                _move_action("pot location"),
+                names[1],
+                "Move to the pot before picking it up.",
+                guard="not_robot_at_station_containing:pot",
+            ),
+        ],
     )
     add_state(
         names[1],
@@ -1268,6 +1769,29 @@ def build_fill_bowl_cluster(add_state) -> None:
             }
         ],
         ["in(water, bowl)"],
+        next_state="NAVIGATE_TO_CLEAR_TABLE_WITH_POT_AFTER_BOWL_FILL",
+    )
+    add_state(
+        "NAVIGATE_TO_CLEAR_TABLE_WITH_POT_AFTER_BOWL_FILL",
+        "navigate",
+        "Move the empty pot away from the filled bowl.",
+        [_move_action("non-serving table")],
+        ["robot is at a table with pot"],
+        next_state="PLACE_POT_AFTER_BOWL_FILL",
+    )
+    add_state(
+        "PLACE_POT_AFTER_BOWL_FILL",
+        "place-container",
+        "Put the empty pot down before serving the bowl.",
+        [
+            {
+                "template": "place-container",
+                "container": "pot",
+                "target": "non-serving table",
+                "constraint": "The robot must free its hands before picking up the filled bowl.",
+            }
+        ],
+        ["robot is holding nothing"],
         next_state=names[4],
     )
     add_state(
@@ -1324,6 +1848,20 @@ def build_serve_cluster(req: ObjectRequirement, add_state) -> None:
         f"NAVIGATE_TO_TABLE_WITH_{alias}",
         f"PLACE_{alias}_ON_TABLE",
     ]
+    clear_held_names = [
+        f"NAVIGATE_TO_CLEAR_TABLE_WITH_HELD_ITEM_FOR_SERVE_{alias}",
+        f"PLACE_HELD_ITEM_ON_TABLE_FOR_SERVE_{alias}",
+    ]
+    clear_item_names = [
+        f"PICK_UP_ITEM_BLOCKER_FOR_SERVE_{alias}",
+        f"NAVIGATE_TO_CLEAR_TABLE_WITH_ITEM_BLOCKER_FOR_SERVE_{alias}",
+        f"PLACE_ITEM_BLOCKER_ON_TABLE_FOR_SERVE_{alias}",
+    ]
+    clear_serving_names = [
+        f"PICK_UP_SERVING_TABLE_BLOCKER_FOR_{alias}",
+        f"NAVIGATE_TO_CLEAR_TABLE_WITH_SERVING_TABLE_BLOCKER_FOR_{alias}",
+        f"PLACE_SERVING_TABLE_BLOCKER_ON_TABLE_FOR_{alias}",
+    ]
     add_state(
         names[0],
         "guarded-serve-entry",
@@ -1333,18 +1871,134 @@ def build_serve_cluster(req: ObjectRequirement, add_state) -> None:
         root_cluster=True,
         transitions=[
             _transition(
+                _place_held_item_action("non-serving table"),
+                names[0],
+                f"The robot is already at a table; put down the unrelated item before serving {alias}.",
+                guard=f"robot_holding_unrelated_for:{alias}",
+            ),
+            _transition(
+                _move_action("non-serving table"),
+                clear_held_names[1],
+                f"The robot is holding another item; move to a table before serving {alias}.",
+                guard=f"robot_holding_unrelated_for:{alias}",
+            ),
+            _transition(
+                _move_action("occupied serving table"),
+                clear_serving_names[0],
+                f"The serving table is occupied by another item; clear it before serving {alias}.",
+                guard=f"serving_table_blocked_for:{alias}&&not_robot_holding_item:{alias}&&not_robot_holding_unrelated_for:{alias}",
+            ),
+            _transition(
+                _move_action(f"station containing {alias}"),
+                clear_item_names[0],
+                f"{alias} is buried under another item; move to its station and clear the blocker.",
+                guard=f"item_blocked_for:{alias}&&not_robot_holding_item:{alias}&&not_robot_holding_unrelated_for:{alias}",
+            ),
+            _transition(
+                _move_action("serving table while holding item"),
+                names[3],
+                f"The robot already holds {alias}; bring it to the serving table.",
+                guard=f"robot_holding_item:{alias}",
+            ),
+            _transition(
                 _pickup_item_action(alias),
                 names[2],
                 f"Robot is already at the station containing {alias}; pick it up.",
-                guard=f"robot_at_station_containing:{alias}",
+                guard=f"robot_at_station_containing:{alias}&&not_robot_holding_item:{alias}&&not_robot_holding_unrelated_for:{alias}",
             ),
             _transition(
                 _move_action(f"station containing {alias}"),
                 names[1],
                 f"Robot is not at {alias}; navigate to its station.",
-                guard=f"not_robot_at_station_containing:{alias}",
+                guard=f"not_robot_at_station_containing:{alias}&&not_robot_holding_item:{alias}&&not_robot_holding_unrelated_for:{alias}",
             ),
         ],
+    )
+    add_state(
+        clear_held_names[1],
+        "place-item",
+        f"Put down the unrelated held item before serving {alias}.",
+        [
+            {
+                "template": "place-item",
+                "target": "non-serving table",
+                "constraint": "Place the currently held unrelated item on a table.",
+            }
+        ],
+        ["robot is holding nothing"],
+        next_state=names[0],
+    )
+    add_state(
+        clear_item_names[0],
+        "clear-blocker",
+        f"Pick up the top item blocking {alias}.",
+        [
+            {
+                "template": "pick-up-item",
+                "target": f"station containing {alias}",
+                "constraint": f"Pick up the clear item stacked on top of {alias}.",
+            }
+        ],
+        ["robot holds item blocker"],
+        next_state=clear_item_names[1],
+    )
+    add_state(
+        clear_item_names[1],
+        "navigate",
+        f"Move the blocker away from {alias}.",
+        [_move_action("non-serving table")],
+        ["robot is at a table with item blocker"],
+        next_state=clear_item_names[2],
+    )
+    add_state(
+        clear_item_names[2],
+        "place-item",
+        f"Place the blocker away from {alias}.",
+        [
+            {
+                "template": "place-item",
+                "target": f"temporary surface away from {alias}",
+                "constraint": "Place the held blocker away from the target item.",
+            }
+        ],
+        ["item blocker is no longer on target"],
+        next_state=names[0],
+    )
+    add_state(
+        clear_serving_names[0],
+        "clear-blocker",
+        f"Pick up the top item blocking the serving table before serving {alias}.",
+        [
+            {
+                "template": "pick-up-item",
+                "target": "occupied serving table",
+                "constraint": "Pick up any clear item currently sitting on the serving table.",
+            }
+        ],
+        ["robot holds serving-table blocker"],
+        next_state=clear_serving_names[1],
+    )
+    add_state(
+        clear_serving_names[1],
+        "navigate",
+        f"Move the serving-table blocker away before serving {alias}.",
+        [_move_action("non-serving table")],
+        ["robot is at a table with serving-table blocker"],
+        next_state=clear_serving_names[2],
+    )
+    add_state(
+        clear_serving_names[2],
+        "place-item",
+        f"Place the serving-table blocker away from the target table.",
+        [
+            {
+                "template": "place-item",
+                "target": "non-serving table",
+                "constraint": "Place the held blocker on a non-serving table.",
+            }
+        ],
+        ["serving-table blocker is no longer on target table"],
+        next_state=names[0],
     )
     add_state(
         names[1],
@@ -1942,6 +2596,14 @@ def _place_item_action(alias: str, target: str) -> dict[str, Any]:
         "item": alias,
         "target": target,
         "constraint": f"The robot must be holding {alias} and be at the destination {target}.",
+    }
+
+
+def _place_held_item_action(target: str) -> dict[str, Any]:
+    return {
+        "template": "place-item",
+        "target": target,
+        "constraint": f"Place the currently held runtime-bound item at {target}.",
     }
 
 

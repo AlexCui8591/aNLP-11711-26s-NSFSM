@@ -512,9 +512,18 @@ class NSFSMTests(unittest.TestCase):
             "NAVIGATE_TO_STOVE_WITH_chicken__3",
         )
 
-        adapter._predicate_true = (
-            lambda name, *args: name == "container_at" and args == ("pot", "board1")
-        )
+        class Pred:
+            def __init__(self, name, params):
+                self.name = name
+                self.params = params
+
+        class State:
+            predicates = {Pred("container_at", [Obj("pot1"), Obj("board1", "station")]): True}
+
+        class Env:
+            current_state = State()
+
+        adapter.env = Env()
         self.assertTrue(
             adapter._target_matches(
                 "station containing pot",
@@ -539,9 +548,11 @@ class NSFSMTests(unittest.TestCase):
             for state in task["state_list"]
             if state["name"] == "NAVIGATE_TO_STOVE_WITH_chicken__3"
         )
-        self.assertEqual(
-            navigate_state["fsm_allowed_actions"][0]["target"],
-            "empty stove while holding item",
+        self.assertTrue(
+            any(
+                action.get("target") == "empty stove while holding item"
+                for action in navigate_state["fsm_allowed_actions"]
+            )
         )
 
     def test_robotouille_place_on_stove_requires_empty_direct_surface(self):
